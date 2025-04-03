@@ -67,14 +67,35 @@ const SkyfallSnakeGame = () => {
           currentSteer = p.createVector(0, 0);
         };
         
+        // Define the continuous input processing function for the game loop
+        function processFrameInput() {
+          // Compute the actual direction based on ALL currently held keys
+          // This is called every frame to ensure responsive movement
+          let dirX = 0;
+          let dirY = 0;
+          
+          // Check all direction keys (both WASD and arrows)
+          if (keysHeld.has('a') || keysHeld.has('arrowleft')) dirX -= 1;
+          if (keysHeld.has('d') || keysHeld.has('arrowright')) dirX += 1;
+          if (keysHeld.has('w') || keysHeld.has('arrowup')) dirY -= 1;
+          if (keysHeld.has('s') || keysHeld.has('arrowdown')) dirY += 1;
+          
+          // Only update direction if there's actual input
+          if (dirX !== 0 || dirY !== 0) {
+            currentSteer.set(dirX, dirY);
+            currentSteer.normalize();
+            snake.setDirection(currentSteer);
+          }
+        }
+        
         p.draw = () => {
           if (!gameStarted) {
             drawTitleScreen();
             return;
           }
           
-          // We've moved the input handling to keyPressed for immediate response
-          // so we don't need to call handleInput() every frame
+          // Process input EVERY frame to ensure responsiveness
+          processFrameInput();
           p.background(30);
           
           p.stroke(255);
@@ -252,10 +273,9 @@ const SkyfallSnakeGame = () => {
           }
         };
         
+        // This function is kept for backwards compatibility but no longer needed
         function handleInput() {
-          // We don't need this function anymore since we're handling
-          // input directly in keyPressed where we apply the input immediately
-          // This is only kept for backwards compatibility
+          // Now handled by processFrameInput
         }
         
         function resetGame() {
