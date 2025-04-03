@@ -24,7 +24,7 @@ export default function InstructionsSection() {
             <h3 className="font-bold text-white">Move Your Basket</h3>
           </div>
           <p className="text-gray-400">
-            Use your mouse, touch, or arrow keys (left/right) to move the basket at the bottom of the screen.
+            Use arrow keys or A/D keys to move the basket. On mobile, tap the left or right side of the screen to move in that direction.
           </p>
         </div>
         
