@@ -29,6 +29,82 @@ export default function SnakeGame({ className }: SnakeGameProps) {
     currentSteer = p5.createVector(0, 0);
   };
 
+  const drawTitleScreen = (p5: p5Types) => {
+    p5.background(30);
+    p5.fill(255);
+    p5.textSize(32);
+    p5.textAlign(p5.CENTER);
+    p5.text('Snake Game', p5.width/2, p5.height/2 - 20);
+    p5.textSize(16);
+    p5.text('Press any key to start', p5.width/2, p5.height/2 + 20);
+  };
+
+  const handleInput = (p5: p5Types) => {
+    if (keysHeld.has('a') || keysHeld.has('arrowleft')) currentSteer.x = -1;
+    if (keysHeld.has('d') || keysHeld.has('arrowright')) currentSteer.x = 1;
+    if (keysHeld.has('w') || keysHeld.has('arrowup')) currentSteer.y = -1;
+    if (keysHeld.has('s') || keysHeld.has('arrowdown')) currentSteer.y = 1;
+  };
+
+  const startGame = () => {
+    gameStarted = true;
+    snake = new Snake(p5);
+  };
+
+  const resetGame = () => {
+    score = 0;
+    obstacles = [];
+    fallingFood = [];
+    snake = new Snake(p5);
+  };
+
+  const gameOver = (p5: p5Types) => {
+    gameStarted = false;
+    resetGame();
+  };
+
+  class Snake {
+    pos: any;
+    vel: any;
+    speed: number;
+
+    constructor(p5: p5Types) {
+      this.pos = p5.createVector(p5.width/2, p5.height - 100);
+      this.vel = p5.createVector(0, 0);
+      this.speed = 5;
+    }
+
+    update(p5: p5Types) {
+      this.vel.x = currentSteer.x * this.speed;
+      this.vel.y = currentSteer.y * this.speed;
+      this.pos.add(this.vel);
+      
+      // Keep snake in bounds
+      this.pos.x = p5.constrain(this.pos.x, 0, p5.width);
+      this.pos.y = p5.constrain(this.pos.y, p5.height - playAreaHeight, p5.height);
+    }
+
+    show(p5: p5Types) {
+      p5.fill(0, 255, 0);
+      p5.circle(this.pos.x, this.pos.y, gridSize * 0.8);
+    }
+
+    eat(food: any) {
+      return this.pos.dist(p5.createVector(food.x + gridSize/2, food.y + gridSize/2)) < gridSize;
+    }
+
+    increaseSpeed() {
+      this.speed = Math.min(this.speed + 0.5, 10);
+    }
+  }
+
+  const drawHUD = (p5: p5Types) => {
+    p5.fill(255);
+    p5.textSize(24);
+    p5.textAlign(p5.LEFT);
+    p5.text(`Score: ${score}`, 20, 40);
+  };
+
   const draw = (p5: p5Types) => {
     if (!gameStarted) {
       drawTitleScreen(p5);
