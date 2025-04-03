@@ -68,9 +68,11 @@ export function useSound() {
 
   // Create and play a sound
   const playSound = (type: SoundType) => {
-    if (!soundEnabled || !audioContextRef.current) {
-      if (!audioContextRef.current) initializeAudio();
-      if (!soundEnabled) return;
+    if (!soundEnabled) return;
+    
+    if (!audioContextRef.current) {
+      // Only try to initialize once if audio context is not created
+      initializeAudio();
     }
     
     const context = audioContextRef.current;
