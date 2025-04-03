@@ -13,6 +13,7 @@ interface GameObject {
   width: number;
   height: number;
   type: 'product' | 'obstacle';
+  foodType?: string; // for displaying different food emojis
   speed: number;
 }
 
@@ -38,6 +39,9 @@ const OBJECT_HEIGHT = 40;
 const SPAWN_RATE = 1500; // ms between spawns
 const PRODUCT_PROBABILITY = 0.7; // 70% chance of product, 30% chance of obstacle
 const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
+
+// Food emojis for products
+const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,13 +72,17 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Function to create game objects
     const createGameObject = (): GameObject => {
+      const isProduct = Math.random() < PRODUCT_PROBABILITY;
+      const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
+      
       return {
         id: Math.random(),
         x: Math.random() * (GAME_WIDTH - OBJECT_WIDTH),
         y: -OBJECT_HEIGHT, // Start above the canvas
         width: OBJECT_WIDTH,
         height: OBJECT_HEIGHT,
-        type: Math.random() < PRODUCT_PROBABILITY ? 'product' : 'obstacle',
+        type: isProduct ? 'product' : 'obstacle',
+        foodType: isProduct ? FOOD_EMOJIS[randomFoodIndex] : undefined,
         speed: 2 + Math.random() * 3, // Random speed between 2-5
       };
     };
@@ -529,29 +537,21 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   // Draw game objects
   const drawObject = (ctx: CanvasRenderingContext2D, obj: GameObject) => {
     if (obj.type === 'product') {
-      // Draw a star shape for products
-      ctx.fillStyle = '#10B981'; // Emerald color for products
       const centerX = obj.x + obj.width / 2;
       const centerY = obj.y + obj.height / 2;
-      const spikes = 5;
-      const outerRadius = obj.width / 2;
-      const innerRadius = obj.width / 4;
       
-      ctx.beginPath();
-      for (let i = 0; i < spikes * 2; i++) {
-        const radius = i % 2 === 0 ? outerRadius : innerRadius;
-        const angle = (Math.PI / spikes) * i + Math.PI / 2;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.fill();
+      // Draw food emoji
+      ctx.font = `${obj.width * 0.8}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       
-      // Add glow effect
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#10B981';
-      ctx.fill();
+      // Draw the food emoji
+      ctx.fillText(obj.foodType || '🍕', centerX, centerY);
+      
+      // Add subtle glow effect for the emoji
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillText(obj.foodType || '🍕', centerX, centerY);
       ctx.shadowBlur = 0;
     } else {
       // Draw obstacle as a spiky circle
@@ -636,12 +636,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           
           <div className="mt-8 text-gray-300 text-center max-w-md">
             <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Help your dog catch the green products</p>
+            <p className="mb-1">• Help your dog catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• The dog wags its tail when happy!</p>
-            <p className="mb-1">• Missing products costs you a life</p>
+            <p className="mb-1">• Missing food costs you a life</p>
           </div>
         </div>
       )}
