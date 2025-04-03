@@ -1,0 +1,251 @@
+// Skyfall Snake with Realistic Visuals
+let snake;
+let food;
+let gridSize = 40;
+let keysHeld = new Set();
+let boost = false;
+let score = 0;
+let gameStarted = false;
+let obstacles = [];
+let fallingFood = [];
+let laneCount = 5;
+let obstacleSpeed = 4;
+let playAreaHeight = 200;
+let currentSteer;
+
+function setup() {
+  createCanvas(800, 600);
+  textFont('Courier New');
+  frameRate(60);
+  currentSteer = createVector(0, 0);
+}
+
+function draw() {
+  if (!gameStarted) {
+    drawTitleScreen();
+    return;
+  }
+
+  handleInput();
+  background(30);
+
+  stroke(255);
+  strokeWeight(2);
+  line(0, height - playAreaHeight, width, height - playAreaHeight);
+  noStroke();
+
+  // Draw rocks (obstacles)
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].y += obstacleSpeed;
+    fill(120);
+    ellipse(obstacles[i].x + gridSize/2, obstacles[i].y + gridSize/2, gridSize * 0.9, gridSize * 0.9);
+    if (snake.head.dist(createVector(obstacles[i].x + gridSize/2, obstacles[i].y + gridSize/2)) < gridSize) {
+      gameOver();
+    }
+    if (obstacles[i].y > height) {
+      obstacles.splice(i, 1);
+    }
+  }
+
+  // Draw apples (falling food)
+  for (let i = fallingFood.length - 1; i >= 0; i--) {
+    fallingFood[i].y += obstacleSpeed;
+    fill(255, 0, 0);
+    ellipse(fallingFood[i].x + gridSize / 2, fallingFood[i].y + gridSize / 2, gridSize * 0.9);
+    fill(34, 139, 34);
+    rect(fallingFood[i].x + gridSize / 2 - 2, fallingFood[i].y + gridSize / 2 - 15, 4, 8);
+    if (snake.eat(fallingFood[i])) {
+      fallingFood.splice(i, 1);
+      score++;
+      snake.increaseSpeed();
+    } else if (fallingFood[i].y > height) {
+      fallingFood.splice(i, 1);
+    }
+  }
+
+  // Spawn rocks
+  if (frameCount % 30 === 0) {
+    let lane = floor(random(laneCount));
+    let x = lane * (width / laneCount) + (width / laneCount - gridSize) / 2;
+    obstacles.push({ x: x, y: -gridSize });
+  }
+
+  // Spawn apples
+  if (frameCount % 90 === 0) {
+    let lane = floor(random(laneCount));
+    let x = lane * (width / laneCount) + (width / laneCount - gridSize) / 2;
+    fallingFood.push(createVector(x, -gridSize));
+  }
+
+  snake.update();
+  snake.show();
+  drawHUD();
+}
+
+function drawTitleScreen() {
+  background(0);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(width / 20);
+  text("Mico's Skyfall Snake ;)" , width / 2, height / 2 - 100);
+  textSize(width / 40);
+  text("Press any key to start fullscreen", width / 2, height / 2 - 30);
+  text("Use WASD or Arrow Keys to Move", width / 2, height / 2 + 10);
+  text("Hold SHIFT to Boost (loses health)", width / 2, height / 2 + 40);
+  text("Catch the apples, dodge the rocks!", width / 2, height / 2 + 80);
+}
+
+function gameOver() {
+  background(150, 0, 0);
+  noLoop();
+  fill(255);
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  text("GAME OVER\nPress R to Restart", width / 2, height / 2);
+}
+
+function keyPressed() {
+  if (!gameStarted) {
+    if (!fullscreen()) fullscreen(true);
+    setTimeout(() => {
+      resizeCanvas(windowWidth, windowHeight);
+      startGame();
+    }, 100);
+    return;
+  }
+
+  keysHeld.add(key.toLowerCase());
+  if (key === 'Shift') boost = true;
+  if (key.toLowerCase() === 'r') resetGame();
+}
+
+function keyReleased() {
+  keysHeld.delete(key.toLowerCase());
+  if (key === 'Shift') boost = false;
+}
+
+function handleInput() {
+  currentSteer.set(0, 0);
+  if (keysHeld.has('a') || keysHeld.has('arrowleft')) currentSteer.x = -1;
+  if (keysHeld.has('d') || keysHeld.has('arrowright')) currentSteer.x = 1;
+  if (keysHeld.has('w') || keysHeld.has('arrowup')) currentSteer.y = -1;
+  if (keysHeld.has('s') || keysHeld.has('arrowdown')) currentSteer.y = 1;
+
+  if (currentSteer.mag() > 0) {
+    snake.setDirection(currentSteer);
+  }
+}
+
+function resetGame() {
+  score = 0;
+  snake = new Snake();
+  obstacles = [];
+  fallingFood = [];
+  loop();
+}
+
+function startGame() {
+  gameStarted = true;
+  snake = new Snake();
+  obstacles = [];
+  fallingFood = [];
+}
+
+function drawHUD() {
+  fill(255);
+  noStroke();
+  textSize(24);
+  textAlign(LEFT, TOP);
+  text(`Score: ${score}`, 20, 20);
+  text(`Health: ${snake.length.toFixed(0)}`, 20, 50);
+  if (boost) {
+    fill(255, 100, 100);
+    text("BOOSTING!", 20, 80);
+  }
+}
+
+class Snake {
+  constructor() {
+    this.head = createVector(width / 2, height - playAreaHeight / 2);
+    this.segments = [this.head.copy()];
+    this.length = 1;
+    this.speed = 4;
+    this.maxSpeed = 8;
+    this.speedIncrease = 0.2;
+    this.boostMultiplier = 1.5;
+    this.vel = createVector(0, 0);
+  }
+
+  setDirection(dir) {
+    this.vel = dir.copy().normalize();
+  }
+
+  update() {
+    if (this.vel.mag() === 0) return;
+
+    let step = this.vel.copy().normalize().mult(
+      boost ? this.speed * this.boostMultiplier : this.speed
+    );
+
+    this.head.add(step);
+    this.head.x = constrain(this.head.x, 0, width);
+    this.head.y = constrain(this.head.y, height - playAreaHeight, height);
+
+    this.segments.push(this.head.copy());
+
+    let effectiveLength = boost ? this.length * 0.97 : this.length;
+    while (this.totalDistance() > effectiveLength * gridSize) {
+      this.segments.shift();
+    }
+
+    if (boost) {
+      this.length = max(1, this.length - 0.01);
+    }
+  }
+
+  increaseSpeed() {
+    this.speed = min(this.speed + this.speedIncrease, this.maxSpeed);
+    this.length += 1;
+  }
+
+  totalDistance() {
+    let d = 0;
+    for (let i = 1; i < this.segments.length; i++) {
+      d += p5.Vector.dist(this.segments[i], this.segments[i - 1]);
+    }
+    return d;
+  }
+
+  eat(pos) {
+    return this.head.dist(pos) < gridSize * 0.9;
+  }
+
+  endGame() {
+    for (let i = 0; i < this.segments.length - gridSize; i++) {
+      if (this.head.dist(this.segments[i]) < gridSize / 2) return true;
+    }
+    return false;
+  }
+
+  show() {
+    for (let i = 0; i < this.segments.length; i++) {
+      let seg = this.segments[i];
+      let alpha = map(i, 0, this.segments.length, 100, 255);
+      let green = map(i, 0, this.segments.length, 180, 90);
+      fill(0, green, 0, alpha);
+      noStroke();
+      ellipse(seg.x, seg.y, gridSize * 0.9);
+    }
+
+    // Draw snake head
+    fill(0, 255, 0);
+    stroke(0);
+    strokeWeight(2);
+    ellipse(this.head.x, this.head.y, gridSize);
+
+    // Draw eyes
+    fill(0);
+    ellipse(this.head.x - 5, this.head.y - 5, 5);
+    ellipse(this.head.x + 5, this.head.y - 5, 5);
+  }
+}
