@@ -27,6 +27,7 @@ interface Player {
   movingRight: boolean;
   movingUp: boolean;
   movingDown: boolean;
+  boosting: boolean;
 }
 
 const GAME_WIDTH = 800;
@@ -65,6 +66,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     movingRight: false,
     movingUp: false,
     movingDown: false,
+    boosting: false,
   });
   
   // Game loop with animation frame
@@ -145,30 +147,60 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!isPlaying) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        setPlayer(prev => ({ ...prev, boosting: true }));
-      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setPlayer(prev => ({ ...prev, movingLeft: true }));
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setPlayer(prev => ({ ...prev, movingRight: true }));
-      } else if (e.key === 'ArrowUp' || e.key === 'w') {
-        setPlayer(prev => ({ ...prev, movingUp: true }));
-      } else if (e.key === 'ArrowDown' || e.key === 's') {
-        setPlayer(prev => ({ ...prev, movingDown: true }));
+      // Handle each key separately without using else if to allow multiple keys
+      switch(e.key) {
+        case 'Shift':
+          setPlayer(prev => ({ ...prev, boosting: true }));
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          setPlayer(prev => ({ ...prev, movingLeft: true }));
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          setPlayer(prev => ({ ...prev, movingRight: true }));
+          break;
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          setPlayer(prev => ({ ...prev, movingUp: true }));
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          setPlayer(prev => ({ ...prev, movingDown: true }));
+          break;
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        setPlayer(prev => ({ ...prev, boosting: false }));
-      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setPlayer(prev => ({ ...prev, movingLeft: false }));
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setPlayer(prev => ({ ...prev, movingRight: false }));
-      } else if (e.key === 'ArrowUp' || e.key === 'w') {
-        setPlayer(prev => ({ ...prev, movingUp: false }));
-      } else if (e.key === 'ArrowDown' || e.key === 's') {
-        setPlayer(prev => ({ ...prev, movingDown: false }));
+      // Handle each key separately without using else if to allow multiple keys
+      switch(e.key) {
+        case 'Shift':
+          setPlayer(prev => ({ ...prev, boosting: false }));
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          setPlayer(prev => ({ ...prev, movingLeft: false }));
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          setPlayer(prev => ({ ...prev, movingRight: false }));
+          break;
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          setPlayer(prev => ({ ...prev, movingUp: false }));
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          setPlayer(prev => ({ ...prev, movingDown: false }));
+          break;
       }
     };
     
@@ -646,6 +678,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Help your dog catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
+            <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• The dog wags its tail when happy!</p>
             <p className="mb-1">• Missing food costs you a life</p>
