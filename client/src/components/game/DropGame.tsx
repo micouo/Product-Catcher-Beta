@@ -33,7 +33,8 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const PLAYER_WIDTH = 70; // Increased width for dog sprite
 const PLAYER_HEIGHT = 45; // Increased height for dog sprite
-const PLAYER_SPEED = 7;
+const PLAYER_SPEED = 5;
+const BOOST_MULTIPLIER = 1.8;
 const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
 const SPAWN_RATE = 1500; // ms between spawns
@@ -144,7 +145,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!isPlaying) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (e.key === 'Shift') {
+        setPlayer(prev => ({ ...prev, boosting: true }));
+      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
         setPlayer(prev => ({ ...prev, movingLeft: true }));
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
         setPlayer(prev => ({ ...prev, movingRight: true }));
@@ -156,7 +159,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (e.key === 'Shift') {
+        setPlayer(prev => ({ ...prev, boosting: false }));
+      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
         setPlayer(prev => ({ ...prev, movingLeft: false }));
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
         setPlayer(prev => ({ ...prev, movingRight: false }));
@@ -237,12 +242,14 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       let newY = prev.y;
       
       // Apply horizontal movement
-      if (prev.movingLeft) newX -= prev.speed;
-      if (prev.movingRight) newX += prev.speed;
+      const currentSpeed = prev.boosting ? prev.speed * BOOST_MULTIPLIER : prev.speed;
+      
+      if (prev.movingLeft) newX -= currentSpeed;
+      if (prev.movingRight) newX += currentSpeed;
       
       // Apply vertical movement
-      if (prev.movingUp) newY -= prev.speed;
-      if (prev.movingDown) newY += prev.speed;
+      if (prev.movingUp) newY -= currentSpeed;
+      if (prev.movingDown) newY += currentSpeed;
       
       // Clamp to game bounds
       newX = Math.max(0, Math.min(GAME_WIDTH - prev.width, newX));
