@@ -179,7 +179,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier]);
   
   // Handle keyboard controls
   useEffect(() => {
@@ -440,67 +440,170 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.fillRect(0, areaY, GAME_WIDTH, PLAYER_AREA_HEIGHT);
   };
   
-  // Move dog image loading to component level
-  const dogImageRef = useRef<HTMLImageElement | null>(null);
-  const [dogImageLoaded, setDogImageLoaded] = useState(false);
-  
-  // Load dog image when component mounts (in a separate effect to avoid render-time setState)
-  useEffect(() => {
-    const dogImage = new Image();
-    dogImage.src = '/images/dog.png';
-    dogImage.onload = () => {
-      dogImageRef.current = dogImage;
-      setDogImageLoaded(true);
-    };
-    
-    return () => {
-      // Clean up
-      if (dogImageRef.current) {
-        dogImageRef.current.onload = null;
-      }
-    };
-  }, []);
-  
   // Draw player as a dog sprite
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
-    // If dog image is loaded, draw it
-    if (dogImageLoaded && dogImageRef.current) {
-      const image = dogImageRef.current;
-      
-      // Center the dog image in the player's bounding box
-      const scaleFactor = 1.2; // Make dog slightly larger than the player's hitbox
-      const dogWidth = player.width * scaleFactor;
-      const dogHeight = player.height * scaleFactor;
-      
-      const centerX = player.x + player.width / 2 - dogWidth / 2;
-      const centerY = player.y + player.height / 2 - dogHeight / 2;
-      
-      // Draw dog sprite with a subtle glow effect
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-      ctx.shadowBlur = 10;
-      
-      // Optional: Add a subtle bounce animation based on movement
-      let yOffset = 0;
-      if (player.movingLeft || player.movingRight || player.movingUp || player.movingDown) {
-        yOffset = Math.sin(Date.now() / 100) * 2;
-      }
-      
-      // Draw the dog image with bounce effect if moving
-      ctx.drawImage(
-        image,
-        centerX,
-        centerY + yOffset,
-        dogWidth,
-        dogHeight
-      );
-      
-      // Reset shadow
-      ctx.shadowBlur = 0;
-    } else {
-      // Fallback to a simple rectangle if image isn't loaded yet
-      ctx.fillStyle = '#8B4513'; // Brown
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
+    const centerX = player.x + player.width / 2;
+    const bottomY = player.y + player.height;
+    
+    // Body dimensions
+    const bodyWidth = player.width * 0.8;
+    const bodyHeight = player.height * 0.6;
+    const headRadius = player.height * 0.4;
+    
+    // Colors
+    const bodyColor = '#8B4513'; // Brown
+    const earColor = '#6B3311'; // Darker brown
+    const faceColor = '#D2B48C'; // Tan
+    const noseColor = '#000000'; // Black
+    
+    // Draw body (oval shape)
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX,
+      bottomY - bodyHeight / 2,
+      bodyWidth / 2,
+      bodyHeight / 2,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw head (circle)
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      player.y + headRadius,
+      headRadius,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw ears
+    ctx.fillStyle = earColor;
+    // Left ear
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX - headRadius * 0.8,
+      player.y + headRadius * 0.4,
+      headRadius * 0.5,
+      headRadius * 0.7,
+      -Math.PI / 4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right ear
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX + headRadius * 0.8,
+      player.y + headRadius * 0.4,
+      headRadius * 0.5,
+      headRadius * 0.7,
+      Math.PI / 4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw eyes
+    ctx.fillStyle = '#000000';
+    // Left eye
+    ctx.beginPath();
+    ctx.arc(
+      centerX - headRadius * 0.4,
+      player.y + headRadius * 0.8,
+      headRadius * 0.15,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right eye
+    ctx.beginPath();
+    ctx.arc(
+      centerX + headRadius * 0.4,
+      player.y + headRadius * 0.8,
+      headRadius * 0.15,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw nose
+    ctx.fillStyle = noseColor;
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      player.y + headRadius * 1.3,
+      headRadius * 0.2,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw mouth
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      player.y + headRadius * 1.5,
+      headRadius * 0.3,
+      0.1 * Math.PI,
+      0.9 * Math.PI
+    );
+    ctx.stroke();
+    
+    // Draw tail (curved line)
+    ctx.strokeStyle = bodyColor;
+    ctx.lineWidth = headRadius * 0.3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(centerX - bodyWidth / 2, bottomY - bodyHeight / 3);
+    
+    // Create a wagging animation based on time
+    const wagAngle = Math.sin(Date.now() / 200) * 0.3; // Subtle wagging
+    const tailEnd = {
+      x: centerX - bodyWidth * 0.8 * Math.cos(wagAngle),
+      y: bottomY - bodyHeight - bodyHeight * 0.5 * Math.sin(wagAngle)
+    };
+    
+    ctx.quadraticCurveTo(
+      centerX - bodyWidth,
+      bottomY - bodyHeight / 2,
+      tailEnd.x,
+      tailEnd.y
+    );
+    ctx.stroke();
+    
+    // Draw paws (two front circles)
+    ctx.fillStyle = faceColor;
+    // Left paw
+    ctx.beginPath();
+    ctx.arc(
+      centerX - bodyWidth * 0.3,
+      bottomY - 2,
+      headRadius * 0.25,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right paw
+    ctx.beginPath();
+    ctx.arc(
+      centerX + bodyWidth * 0.3,
+      bottomY - 2,
+      headRadius * 0.25,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
   };
   
   // Draw game objects
