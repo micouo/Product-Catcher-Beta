@@ -21,19 +21,22 @@ interface Player {
   width: number;
   height: number;
   speed: number;
-  direction: 'left' | 'right' | 'none';
+  movingLeft: boolean;
+  movingRight: boolean;
+  movingUp: boolean;
+  movingDown: boolean;
 }
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
-const PLAYER_WIDTH = 80;
-const PLAYER_HEIGHT = 30;
-const PLAYER_SPEED = 5;
+const PLAYER_WIDTH = 60;
+const PLAYER_HEIGHT = 25;
+const PLAYER_SPEED = 7;
 const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
 const SPAWN_RATE = 1500; // ms between spawns
 const PRODUCT_PROBABILITY = 0.7; // 70% chance of product, 30% chance of obstacle
-const PLAYER_AREA_HEIGHT = 100; // Height of the player movement area
+const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,7 +54,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
     speed: PLAYER_SPEED,
-    direction: 'none',
+    movingLeft: false,
+    movingRight: false,
+    movingUp: false,
+    movingDown: false,
   });
   
   // Game loop with animation frame
@@ -121,7 +127,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, player.direction, gameObjects]);
+  }, [isPlaying, player, gameObjects]);
   
   // Handle keyboard controls
   useEffect(() => {
@@ -129,17 +135,25 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setPlayer(prev => ({ ...prev, direction: 'left' }));
+        setPlayer(prev => ({ ...prev, movingLeft: true }));
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setPlayer(prev => ({ ...prev, direction: 'right' }));
+        setPlayer(prev => ({ ...prev, movingRight: true }));
+      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+        setPlayer(prev => ({ ...prev, movingUp: true }));
+      } else if (e.key === 'ArrowDown' || e.key === 's') {
+        setPlayer(prev => ({ ...prev, movingDown: true }));
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      if ((e.key === 'ArrowLeft' || e.key === 'a') && player.direction === 'left') {
-        setPlayer(prev => ({ ...prev, direction: 'none' }));
-      } else if ((e.key === 'ArrowRight' || e.key === 'd') && player.direction === 'right') {
-        setPlayer(prev => ({ ...prev, direction: 'none' }));
+      if (e.key === 'ArrowLeft' || e.key === 'a') {
+        setPlayer(prev => ({ ...prev, movingLeft: false }));
+      } else if (e.key === 'ArrowRight' || e.key === 'd') {
+        setPlayer(prev => ({ ...prev, movingRight: false }));
+      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+        setPlayer(prev => ({ ...prev, movingUp: false }));
+      } else if (e.key === 'ArrowDown' || e.key === 's') {
+        setPlayer(prev => ({ ...prev, movingDown: false }));
       }
     };
     
@@ -152,17 +166,34 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       const rect = canvas.getBoundingClientRect();
       const touchX = e.touches[0].clientX - rect.left;
+      const touchY = e.touches[0].clientY - rect.top;
       
-      // Determine direction based on touch position relative to player
-      if (touchX < player.x + player.width / 2) {
-        setPlayer(prev => ({ ...prev, direction: 'left' }));
-      } else {
-        setPlayer(prev => ({ ...prev, direction: 'right' }));
-      }
+      // Calculate movement directions based on touch position relative to center
+      const centerX = GAME_WIDTH / 2;
+      const centerY = GAME_HEIGHT / 2;
+      
+      const moveLeft = touchX < centerX;
+      const moveRight = touchX >= centerX;
+      const moveUp = touchY < centerY;
+      const moveDown = touchY >= centerY;
+      
+      setPlayer(prev => ({
+        ...prev,
+        movingLeft: moveLeft,
+        movingRight: moveRight,
+        movingUp: moveUp,
+        movingDown: moveDown
+      }));
     };
     
     const handleTouchEnd = () => {
-      setPlayer(prev => ({ ...prev, direction: 'none' }));
+      setPlayer(prev => ({
+        ...prev,
+        movingLeft: false,
+        movingRight: false,
+        movingUp: false,
+        movingDown: false
+      }));
     };
     
     // Add event listeners
@@ -185,21 +216,34 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [isPlaying, player]);
+  }, [isPlaying]);
   
-  // Update player position based on direction
+  // Update player position based on movement flags
   const updatePlayerPosition = () => {
-    if (player.direction === 'left') {
-      setPlayer(prev => ({
+    const areaY = GAME_HEIGHT - PLAYER_AREA_HEIGHT;
+    
+    setPlayer(prev => {
+      let newX = prev.x;
+      let newY = prev.y;
+      
+      // Apply horizontal movement
+      if (prev.movingLeft) newX -= prev.speed;
+      if (prev.movingRight) newX += prev.speed;
+      
+      // Apply vertical movement
+      if (prev.movingUp) newY -= prev.speed;
+      if (prev.movingDown) newY += prev.speed;
+      
+      // Clamp to game bounds
+      newX = Math.max(0, Math.min(GAME_WIDTH - prev.width, newX));
+      newY = Math.max(areaY, Math.min(GAME_HEIGHT - prev.height, newY));
+      
+      return {
         ...prev,
-        x: Math.max(0, prev.x - prev.speed),
-      }));
-    } else if (player.direction === 'right') {
-      setPlayer(prev => ({
-        ...prev,
-        x: Math.min(GAME_WIDTH - prev.width, prev.x + prev.speed),
-      }));
-    }
+        x: newX,
+        y: newY
+      };
+    });
   };
   
   // Move objects and check collisions
@@ -403,7 +447,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Use ← → arrow keys or A/D to move', GAME_WIDTH / 2, GAME_HEIGHT - 10);
+      ctx.fillText('Use arrow keys or WASD to move in any direction', GAME_WIDTH / 2, GAME_HEIGHT - 10);
     }
   };
   
@@ -435,8 +479,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-2"><b>How to Play:</b></p>
             <p className="mb-1">• Catch the green products with your basket</p>
             <p className="mb-1">• Avoid the red obstacles</p>
-            <p className="mb-1">• Move using arrow keys or A/D keys</p>
-            <p className="mb-1">• On mobile, tap left or right side to move</p>
+            <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
+            <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• Missing products costs you a life</p>
           </div>
         </div>

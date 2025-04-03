@@ -56,19 +56,19 @@ export default function GameContainer() {
         
         {/* Info text */}
         <p className="text-gray-400 text-sm text-center mb-4">
-          Move the basket with keyboard or touch to catch falling products and avoid obstacles!
+          Move freely in any direction with keyboard or touch to catch products and avoid obstacles!
         </p>
         
         {/* Responsive control explanation */}
         <div className="mt-2 text-center">
           <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
-            <i className="ri-arrow-left-right-line mr-1"></i> Arrow Keys
+            <i className="ri-arrow-up-down-line mr-1"></i><i className="ri-arrow-left-right-line mr-1"></i> Arrow Keys
           </span>
           <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
-            <i className="ri-keyboard-box-line mr-1"></i> A / D Keys
+            <i className="ri-keyboard-box-line mr-1"></i> WASD Keys
           </span>
           <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mb-2">
-            <i className="ri-smartphone-line mr-1"></i> Tap Left/Right
+            <i className="ri-smartphone-line mr-1"></i> Tap Anywhere
           </span>
         </div>
       </div>
