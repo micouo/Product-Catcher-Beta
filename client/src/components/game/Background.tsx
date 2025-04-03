@@ -217,7 +217,8 @@ export default function Background({ width, height }: BackgroundProps) {
       ref={canvasRef}
       width={width}
       height={height}
-      className="absolute top-0 left-0 -z-10"
+      className="absolute top-0 left-0 z-0"
+      style={{ pointerEvents: 'none' }}
     />
   );
 }

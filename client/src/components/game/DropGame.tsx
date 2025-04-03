@@ -588,19 +588,23 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
-      {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
-      
-      {/* Game Canvas */}
-      <canvas
-        ref={canvasRef}
-        width={GAME_WIDTH}
-        height={GAME_HEIGHT}
-        className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
-      />
+      {/* Wrap both layers in a relative positioned container */}
+      <div className="relative">
+        {/* Background Layer */}
+        <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
+        
+        {/* Game Canvas */}
+        <canvas
+          ref={canvasRef}
+          width={GAME_WIDTH}
+          height={GAME_HEIGHT}
+          className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10 inset-0"
+          style={{ position: 'absolute', top: 0, left: 0 }}
+        />
+      </div>
       
       {!isPlaying && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80">
+        <div className="absolute inset-0 top-0 left-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <h2 className="text-3xl font-game text-blue-500 mb-4">
             {score > 0 ? 'Game Over!' : 'Doggy Product Catcher'}
           </h2>
