@@ -493,45 +493,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       player.height
     );
     
-    // Create a wagging tail effect when moving or boosting
-    if (isMoving || player.boosting) {
-      // Draw a wagging tail
-      const tailWidth = player.width * 0.2;
-      const tailLength = player.height * 0.4;
-      
-      // Calculate tail position (attached to the back of the dog)
-      const tailX = -player.width / 2 - tailWidth / 2;
-      const tailY = 0;
-      
-      // Create wagging animation
-      const wagSpeed = player.boosting ? 15 : 8; // Wag faster when boosting
-      const wagAngle = Math.sin(Date.now() / wagSpeed) * 0.5;
-      
-      // Set tail style
-      ctx.fillStyle = '#8B4513'; // Brown
-      ctx.strokeStyle = '#6B3311'; // Darker brown
-      ctx.lineWidth = 2;
-      
-      // Draw the tail with wagging animation
-      ctx.save();
-      ctx.translate(tailX, tailY);
-      ctx.rotate(wagAngle);
-      
-      // Draw tail as a curved line
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(
-        -tailLength / 2,
-        tailLength / 4,
-        -tailLength,
-        0
-      );
-      ctx.lineWidth = tailWidth;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-      
-      ctx.restore();
-    }
+    // No tail animation as requested
     
     // Restore context state
     ctx.restore();
@@ -650,7 +612,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• The dog wags its tail when happy!</p>
+            <p className="mb-1">• Your dog loves catching tasty treats!</p>
             <p className="mb-1">• Objects get faster as the game progresses - test your reflexes!</p>
           </div>
         </div>
