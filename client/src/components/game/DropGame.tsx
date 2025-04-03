@@ -41,7 +41,7 @@ const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
 const BASE_SPAWN_RATE = 1500; // Starting ms between spawns
 const MIN_SPAWN_RATE = 600; // Minimum spawn rate (fastest)
-const PRODUCT_PROBABILITY = 0.7; // 70% chance of product, 30% chance of obstacle
+const BASE_PRODUCT_PROBABILITY = 0.7; // Base probability for products (decreases with score)
 const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
 const BASE_OBJECT_SPEED = 2; // Starting speed
 const MAX_OBJECT_SPEED = 7; // Maximum object speed
@@ -90,7 +90,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Function to create game objects
     const createGameObject = (): GameObject => {
-      const isProduct = Math.random() < PRODUCT_PROBABILITY;
+      // Calculate dynamic product probability based on score
+      // As score increases, reduce product probability (increase obstacles)
+      // Minimum probability will be 40% products even at high scores
+      const scoreFactor = score / 100; // Reduce by 1% per 100 points
+      const productProbability = Math.max(0.4, BASE_PRODUCT_PROBABILITY - (scoreFactor * 0.05));
+      
+      const isProduct = Math.random() < productProbability;
       const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
       
       // Apply speed multiplier to make objects faster over time
@@ -610,7 +616,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• Your dog loves catching tasty treats!</p>
-            <p className="mb-1">• Objects get faster as your score increases - test your reflexes!</p>
+            <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
           </div>
         </div>
       )}
