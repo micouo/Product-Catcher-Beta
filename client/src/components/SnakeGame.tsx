@@ -56,8 +56,9 @@ export default function SnakeGame({ className }: SnakeGameProps) {
       p5.circle(this.pos.x, this.pos.y, gridSize * 0.8);
     }
 
-    eat(food: any) {
-      const d = this.pos.dist(p5.createVector(food.x + gridSize/2, food.y + gridSize/2));
+    eat(food: any, p5: p5Types) {
+      const foodPos = p5.createVector(food.x + gridSize/2, food.y + gridSize/2);
+      const d = this.pos.dist(foodPos);
       return d < gridSize;
     }
 
@@ -141,7 +142,7 @@ export default function SnakeGame({ className }: SnakeGameProps) {
       p5.fill(255, 0, 100);
       p5.ellipse(fallingFood.current[i].x + gridSize/2, fallingFood.current[i].y + gridSize/2, gridSize * 0.9);
       
-      if (snake.current.eat(fallingFood.current[i])) {
+      if (snake.current.eat(fallingFood.current[i], p5)) {
         fallingFood.current.splice(i, 1);
         score.current++;
         snake.current.increaseSpeed();
