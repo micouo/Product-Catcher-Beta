@@ -45,19 +45,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const lastSpawnTimeRef = useRef<number>(Date.now());
   const { playSound, initializeAudio } = useSound();
   
-  // Refs to track game events for sound effects to avoid state updates during render
-  const gameEventsRef = useRef<{
-    productCollected: boolean;
-    obstacleHit: boolean;
-    productMissed: boolean;
-    gameOver: boolean;
-  }>({
-    productCollected: false,
-    obstacleHit: false,
-    productMissed: false,
-    gameOver: false
-  });
-  
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -277,8 +264,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ) {
           // Handle collision based on object type
           if (updatedObj.type === 'product') {
-            // Mark product as collected in the ref for sound effect
-            gameEventsRef.current.productCollected = true;
+            // Play collection sound
+            playSound('collect');
             
             setScore(prevScore => {
               const newScore = prevScore + 10;
@@ -287,14 +274,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             });
             return { ...updatedObj, y: GAME_HEIGHT + 100 }; // Move it out of the game area
           } else {
-            // Mark obstacle as hit in the ref for sound effect
-            gameEventsRef.current.obstacleHit = true;
+            // Play hit sound
+            playSound('hit');
             
             // If obstacle hits player, reduce lives
             setLives(prevLives => {
               if (prevLives <= 1) {
-                // Mark game over in the ref for sound effect
-                gameEventsRef.current.gameOver = true;
+                playSound('gameOver');
                 endGame();
                 if (onGameOver) onGameOver();
               }
@@ -308,13 +294,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         if (updatedObj.y > GAME_HEIGHT) {
           // If it's a product that player missed, reduce lives
           if (updatedObj.type === 'product') {
-            // Mark product as missed in the ref for sound effect
-            gameEventsRef.current.productMissed = true;
+            // Play lose sound
+            playSound('lose');
             
             setLives(prevLives => {
               if (prevLives <= 1) {
-                // Mark game over in the ref for sound effect
-                gameEventsRef.current.gameOver = true;
+                playSound('gameOver');
                 endGame();
                 if (onGameOver) onGameOver();
               }
@@ -334,7 +319,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Start game
   const startGame = () => {
-    // We'll play the start sound in useEffect after state update
+    // Initialize audio context on game start
+    initializeAudio();
+    
+    // Play start sound
+    playSound('start');
+    
     setIsPlaying(true);
     setScore(0);
     setLives(3);
@@ -342,56 +332,14 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     lastSpawnTimeRef.current = Date.now();
   };
   
-  // Handle game start effects
-  useEffect(() => {
-    if (isPlaying) {
-      // Initialize audio context on game start
-      initializeAudio();
-      // Play start sound
-      playSound('start');
-    }
-  }, [isPlaying, initializeAudio, playSound]);
-  
   // End game
   const endGame = () => {
     setIsPlaying(false);
     setHighScore(prev => Math.max(prev, score));
-    // We'll play game over sound in a useEffect to avoid state updates during render
+    
+    // Play game over sound
+    playSound('gameOver');
   };
-  
-  // Handle game end effects
-  useEffect(() => {
-    if (!isPlaying && score > 0) {
-      // Play game over sound
-      playSound('gameOver');
-    }
-  }, [isPlaying, score, playSound]);
-  
-  // Handle game event sounds
-  useEffect(() => {
-    // Only check game events if audio is initialized and we're playing
-    if (!isPlaying) return;
-
-    // Handle product collection sound
-    if (gameEventsRef.current.productCollected) {
-      playSound('collect');
-      gameEventsRef.current.productCollected = false;
-    }
-    
-    // Handle obstacle hit sound
-    if (gameEventsRef.current.obstacleHit) {
-      playSound('hit');
-      gameEventsRef.current.obstacleHit = false;
-    }
-    
-    // Handle product missed sound
-    if (gameEventsRef.current.productMissed) {
-      playSound('lose');
-      gameEventsRef.current.productMissed = false;
-    }
-    
-    // Handle game over sound - don't need this here as we handle it in the gameOver effect
-  }, [isPlaying, gameObjects, playSound]);
   
   // Draw player area border
   const drawPlayerArea = (ctx: CanvasRenderingContext2D) => {
