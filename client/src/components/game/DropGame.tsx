@@ -600,7 +600,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       />
       
       {!isPlaying && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <h2 className="text-3xl font-game text-blue-500 mb-4">
             {score > 0 ? 'Game Over!' : 'Doggy Product Catcher'}
           </h2>
@@ -609,7 +609,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           )}
           <button
             onClick={startGame}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg cursor-pointer"
           >
             <i className="ri-play-fill mr-2"></i> {score > 0 ? 'Play Again' : 'Start Game'}
           </button>
