@@ -45,7 +45,7 @@ const PRODUCT_PROBABILITY = 0.7; // 70% chance of product, 30% chance of obstacl
 const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
 const BASE_OBJECT_SPEED = 2; // Starting speed
 const MAX_OBJECT_SPEED = 7; // Maximum object speed
-const SPEED_INCREASE_INTERVAL = 10000; // Speed increases every 10 seconds
+const SCORE_SPEED_MULTIPLIER = 0.02; // Speed increases by 2% for every 10 points
 const ANIM_INTERVAL = 150; // milliseconds between animation frames
 
 // Food emojis for products
@@ -132,32 +132,29 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         lastSpawnTimeRef.current = Date.now();
       }
       
-      // Increase difficulty over time
-      const gameTime = Date.now() - gameStartTimeRef.current;
-      const timeIntervals = Math.floor(gameTime / SPEED_INCREASE_INTERVAL);
+      // Increase difficulty based on score
+      // Calculate score-based difficulty 
+      const scoreFactor = score / 10; // Difficulty increase per 10 points
       
-      // Update spawn rate and speed multiplier every interval
-      if (timeIntervals > 0) {
-        // Calculate new spawn rate (gets faster over time)
-        const newSpawnRate = Math.max(
-          MIN_SPAWN_RATE,
-          BASE_SPAWN_RATE - (timeIntervals * 100)
-        );
-        
-        // Calculate new speed multiplier (increases over time)
-        const newSpeedMultiplier = Math.min(
-          MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
-          1 + (timeIntervals * 0.2)
-        );
-        
-        // Only update if values have changed
-        if (newSpawnRate !== currentSpawnRate) {
-          setCurrentSpawnRate(newSpawnRate);
-        }
-        
-        if (newSpeedMultiplier !== speedMultiplier) {
-          setSpeedMultiplier(newSpeedMultiplier);
-        }
+      // Calculate new spawn rate (gets faster as score increases)
+      const newSpawnRate = Math.max(
+        MIN_SPAWN_RATE,
+        BASE_SPAWN_RATE - (scoreFactor * 50)
+      );
+      
+      // Calculate new speed multiplier (increases as score increases)
+      const newSpeedMultiplier = Math.min(
+        MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
+        1 + (scoreFactor * SCORE_SPEED_MULTIPLIER)
+      );
+      
+      // Only update if values have changed
+      if (newSpawnRate !== currentSpawnRate) {
+        setCurrentSpawnRate(newSpawnRate);
+      }
+      
+      if (newSpeedMultiplier !== speedMultiplier) {
+        setSpeedMultiplier(newSpeedMultiplier);
       }
       
       // Move existing objects and check collisions
@@ -613,7 +610,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• Your dog loves catching tasty treats!</p>
-            <p className="mb-1">• Objects get faster as the game progresses - test your reflexes!</p>
+            <p className="mb-1">• Objects get faster as your score increases - test your reflexes!</p>
           </div>
         </div>
       )}
