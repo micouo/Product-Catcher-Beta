@@ -2,8 +2,8 @@ export default function FeaturesSection() {
   const features = [
     {
       id: 1,
-      title: "Fast-Paced Action",
-      description: "Experience thrilling gameplay with responsive controls and exciting challenges.",
+      title: "Dynamic Gameplay",
+      description: "Experience exciting snake gameplay with falling obstacles and collectibles for a unique challenge.",
       icon: (
         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -12,21 +12,21 @@ export default function FeaturesSection() {
     },
     {
       id: 2,
-      title: "Multiple Levels",
-      description: "Progress through increasingly challenging stages with unique environments and obstacles.",
+      title: "Boost Mechanic",
+      description: "Strategically use the boost feature to catch apples faster, but be careful as it consumes your health.",
       icon: (
         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 15l0 9M13 9l0-6M4 15l9 0M4 9l9 0" />
         </svg>
       ),
     },
     {
       id: 3,
-      title: "Score Tracking",
-      description: "Compete with yourself and others with our real-time leaderboard and achievement system.",
+      title: "Score System",
+      description: "Collect apples to increase your score and challenge yourself to beat your previous high scores.",
       icon: (
         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
         </svg>
       ),
     },
@@ -34,7 +34,7 @@ export default function FeaturesSection() {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold font-heading mb-6">Game Features</h2>
+      <h2 className="text-2xl font-bold font-heading mb-6">Skyfall Snake Features</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {features.map((feature) => (
           <div key={feature.id} className="bg-white rounded-lg shadow-md overflow-hidden">

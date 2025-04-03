@@ -15,12 +15,12 @@ export default function InstructionsSection() {
       title: "Getting Started",
       content: (
         <>
-          <p className="text-gray-600 mb-3">Welcome to our game! Here's how to get started:</p>
+          <p className="text-gray-600 mb-3">Welcome to Skyfall Snake! Here's how to get started:</p>
           <ol className="list-decimal list-inside space-y-2 text-gray-600">
-            <li>Press the Start button to begin</li>
-            <li>Use arrow keys to navigate through the game world</li>
-            <li>Press Space to interact with elements</li>
-            <li>Complete objectives to advance to the next level</li>
+            <li>Click the Start Game button to begin</li>
+            <li>Use WASD or arrow keys to move your snake</li>
+            <li>Hold Shift to boost (this will reduce your health)</li>
+            <li>Press R to restart if you crash into a rock</li>
           </ol>
         </>
       ),
@@ -30,12 +30,12 @@ export default function InstructionsSection() {
       title: "Game Objectives",
       content: (
         <>
-          <p className="text-gray-600 mb-3">The main objectives of the game are:</p>
+          <p className="text-gray-600 mb-3">The main objectives of Skyfall Snake are:</p>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
-            <li>Collect all key items in each level</li>
-            <li>Avoid obstacles and enemies</li>
-            <li>Reach the exit point before time runs out</li>
-            <li>Achieve high scores for bonus content</li>
+            <li>Catch falling red apples to increase your score</li>
+            <li>Avoid gray rocks that fall from the sky</li>
+            <li>Survive as long as possible to get the highest score</li>
+            <li>Manage your boost usage as it drains your health</li>
           </ul>
         </>
       ),
@@ -47,10 +47,10 @@ export default function InstructionsSection() {
         <>
           <p className="text-gray-600 mb-3">Here are some helpful tips to improve your gameplay:</p>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
-            <li>Look for hidden paths and secret areas</li>
-            <li>Save power-ups for challenging sections</li>
-            <li>Learn enemy movement patterns</li>
-            <li>Practice timing for precision jumps</li>
+            <li>Each apple increases your snake's length and health</li>
+            <li>Use the boost sparingly when you need to grab an apple</li>
+            <li>Try to predict where rocks will fall and avoid those lanes</li>
+            <li>Watch your health meter - if you boost too much, you'll become too small</li>
           </ul>
         </>
       ),

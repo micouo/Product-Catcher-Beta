@@ -7,18 +7,18 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
             <div className="text-3xl font-bold font-game text-primary">
-              Game<span className="text-secondary">Portal</span>
+              Skyfall<span className="text-secondary">Snake</span>
             </div>
           </div>
           <nav className="flex space-x-6">
             <Link href="/">
-              <a className="text-text-main hover:text-primary font-medium">Home</a>
+              <span className="text-text-main hover:text-primary font-medium cursor-pointer">Home</span>
             </Link>
-            <Link href="/games">
-              <a className="text-text-main hover:text-primary font-medium">Games</a>
+            <Link href="/how-to-play">
+              <span className="text-text-main hover:text-primary font-medium cursor-pointer">How to Play</span>
             </Link>
             <Link href="/about">
-              <a className="text-text-main hover:text-primary font-medium">About</a>
+              <span className="text-text-main hover:text-primary font-medium cursor-pointer">About</span>
             </Link>
           </nav>
         </div>
