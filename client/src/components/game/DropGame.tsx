@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
-import dogSprite from '@assets/dog.png';
+import carSpriteSheet from '@assets/Red_SPORT_CLEAN_8D_000-sheet.png';
 import Background from './Background';
 
 interface GameProps {
@@ -34,8 +34,8 @@ interface Player {
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
-const PLAYER_WIDTH = 80; // Increased width for dog sprite
-const PLAYER_HEIGHT = 60; // Increased height for dog sprite
+const PLAYER_WIDTH = 80; // Width for car sprite
+const PLAYER_HEIGHT = 50; // Height for car sprite - slightly smaller for better proportions
 const PLAYER_SPEED = 5;
 const BOOST_MULTIPLIER = 1.8;
 const OBJECT_WIDTH = 40;
@@ -59,9 +59,15 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const gameStartTimeRef = useRef<number>(0);
   const { playSound, initializeAudio } = useSound();
   
-  // Create an image object for the dog sprite
-  const dogImage = new Image();
-  dogImage.src = dogSprite;
+  // Create an image object for the car sprite sheet
+  const carImage = new Image();
+  carImage.src = carSpriteSheet;
+  
+  // Define sprite sheet dimensions
+  // The sprite sheet has 9 car directions in a 3x3 grid
+  const CAR_SPRITE_GRID = 3; // 3x3 grid
+  const CAR_SPRITE_COUNT = 9; // 9 sprites total
+  const CAR_SPRITE_SIZE = 100; // Each sprite is roughly 100x100 px
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
@@ -453,7 +459,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // No need for background fill as we're now using the sidewalk from the background
   };
   
-  // Draw player as a dog sprite
+  // Draw player as a car sprite
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
     // Only animate when the player is moving
     const isMoving = player.movingLeft || player.movingRight || player.movingUp || player.movingDown;
@@ -489,13 +495,34 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.rotate(rotation);
     ctx.scale(bounceScale, bounceScale);
     
-    // Draw the dog sprite
+    // Determine which car sprite to use based on movement direction
+    let spriteIndex = 4; // Default to center (no movement) - index 4 in a 3x3 grid (zero-based)
+    
+    // Determine movement direction and select appropriate sprite
+    // The car sprite sheet is organized in a 3x3 grid:
+    // NW  N  NE
+    // W   C  E
+    // SW  S  SE
+    if (player.movingUp && player.movingLeft) spriteIndex = 0; // NW
+    else if (player.movingUp && !player.movingLeft && !player.movingRight) spriteIndex = 1; // N
+    else if (player.movingUp && player.movingRight) spriteIndex = 2; // NE
+    else if (!player.movingUp && !player.movingDown && player.movingLeft) spriteIndex = 3; // W
+    else if (!player.movingUp && !player.movingDown && player.movingRight) spriteIndex = 5; // E
+    else if (player.movingDown && player.movingLeft) spriteIndex = 6; // SW
+    else if (player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 7; // S
+    else if (player.movingDown && player.movingRight) spriteIndex = 8; // SE
+
+    // Calculate sprite position in the sheet
+    const spriteX = (spriteIndex % CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
+    const spriteY = Math.floor(spriteIndex / CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
+    
+    // Draw the car sprite from the sheet
     ctx.drawImage(
-      dogImage, 
-      -player.width / 2, 
-      -player.height / 2,
-      player.width,
-      player.height
+      carImage,
+      spriteX, spriteY, // Source position in sprite sheet
+      CAR_SPRITE_SIZE, CAR_SPRITE_SIZE, // Source dimensions
+      -player.width / 2, -player.height / 2, // Destination position
+      player.width, player.height // Destination dimensions
     );
     
     // No tail animation as requested
@@ -602,7 +629,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       {!isPlaying && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <h2 className="text-3xl font-game text-blue-500 mb-4">
-            {score > 0 ? 'Game Over!' : 'Doggy Product Catcher'}
+            {score > 0 ? 'Game Over!' : 'Speed Racer Food Delivery'}
           </h2>
           {score > 0 && (
             <p className="text-2xl text-white mb-4">Your Score: {score}</p>
@@ -616,12 +643,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           
           <div className="mt-8 text-gray-300 text-center max-w-md">
             <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Help your dog catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
+            <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• Your dog loves catching tasty treats!</p>
+            <p className="mb-1">• Your car will automatically face the direction you're moving</p>
             <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
           </div>
         </div>
