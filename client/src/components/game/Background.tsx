@@ -38,20 +38,22 @@ export default function Background({ width, height }: BackgroundProps) {
     // Draw buildings - pixelated style
     drawBuildings(ctx, width, height);
     
-    // Draw sidewalk
-    const sidewalkHeight = height * 0.2;
+    // Calculate the position of the player area (where the white border is)
+    const playerAreaY = height - 202; // 2px for the border
+    
+    // Draw sidewalk - end at the white border line
     ctx.fillStyle = '#A9A9A9'; // Concrete gray
-    ctx.fillRect(0, height * 0.6, width, sidewalkHeight);
+    ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
     
-    // Draw sidewalk texture - grid lines
-    drawSidewalkTexture(ctx, width, height);
+    // Draw sidewalk texture - grid lines (pass playerAreaY as parameter)
+    drawSidewalkTexture(ctx, width, height, playerAreaY);
     
-    // Draw street
+    // The street should start where the sidewalk ends
     ctx.fillStyle = '#333333'; // Asphalt dark gray
-    ctx.fillRect(0, height * 0.8, width, height * 0.2);
+    ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
     
     // Draw street markings
-    drawStreetMarkings(ctx, width, height);
+    drawStreetMarkings(ctx, width, height, playerAreaY);
   };
 
   const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -166,36 +168,48 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  const drawSidewalkTexture = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const drawSidewalkTexture = (
+    ctx: CanvasRenderingContext2D, 
+    width: number, 
+    height: number, 
+    playerAreaY: number = height * 0.8
+  ) => {
     ctx.strokeStyle = '#888888';
     ctx.lineWidth = 1;
     
-    // Draw horizontal lines
-    for (let y = height * 0.65; y < height * 0.8; y += 20) {
+    // Draw horizontal lines - stop at the player area
+    for (let y = height * 0.65; y < playerAreaY; y += 20) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(width, y);
       ctx.stroke();
     }
     
-    // Draw vertical lines
+    // Draw vertical lines - stop at the player area
     for (let x = 0; x < width; x += 40) {
       ctx.beginPath();
       ctx.moveTo(x, height * 0.6);
-      ctx.lineTo(x, height * 0.8);
+      ctx.lineTo(x, playerAreaY);
       ctx.stroke();
     }
   };
 
-  const drawStreetMarkings = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const drawStreetMarkings = (
+    ctx: CanvasRenderingContext2D, 
+    width: number, 
+    height: number, 
+    playerAreaY: number
+  ) => {
+    
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 6;
     ctx.setLineDash([20, 15]); // Dashed line pattern
     
-    // Draw center line
+    // Draw center line in middle of street area (playerAreaY to bottom)
+    const centerY = playerAreaY + (height - playerAreaY) / 2;
     ctx.beginPath();
-    ctx.moveTo(0, height * 0.9);
-    ctx.lineTo(width, height * 0.9);
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(width, centerY);
     ctx.stroke();
     
     // Reset line style
