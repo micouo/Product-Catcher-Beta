@@ -1,56 +1,82 @@
 import { useState } from 'react';
 
 export default function InstructionsSection() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleInstructions = () => {
-    setIsOpen(!isOpen);
-  };
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8">
-      <div 
-        className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700 cursor-pointer" 
-        onClick={toggleInstructions}
-      >
-        <h3 className="font-game text-lg text-emerald-500">Game Instructions</h3>
-        <button className="text-gray-400 hover:text-white transition p-1">
-          <i className={`ri-arrow-${isOpen ? 'up' : 'down'}-s-line text-xl`}></i>
+    <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-white">How To Play</h2>
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          className="text-blue-400 hover:text-blue-300 transition"
+        >
+          {expanded ? 'Show Less' : 'Show More'}
         </button>
       </div>
       
-      {isOpen && (
-        <div className="p-5 bg-gray-800">
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-amber-500 mb-2 flex items-center">
-                <i className="ri-gamepad-line mr-2"></i> Controls
-              </h4>
-              <ul className="list-disc list-inside space-y-1 text-gray-300 ml-4">
-                <li>Use <span className="px-2 py-1 bg-gray-700 rounded text-xs">WASD</span> or arrow keys to move</li>
-                <li>Press <span className="px-2 py-1 bg-gray-700 rounded text-xs">SPACE</span> to jump/interact</li>
-                <li>Press <span className="px-2 py-1 bg-gray-700 rounded text-xs">E</span> to use items</li>
-                <li>Press <span className="px-2 py-1 bg-gray-700 rounded text-xs">ESC</span> to pause the game</li>
-              </ul>
+      <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${expanded ? '' : 'md:grid-rows-1'}`}>
+        <div className="bg-gray-900 p-4 rounded-lg">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
+              1
             </div>
-            <div>
-              <h4 className="font-semibold text-amber-500 mb-2 flex items-center">
-                <i className="ri-trophy-line mr-2"></i> Objective
-              </h4>
-              <p className="text-gray-300 ml-4">
-                Collect all the items and reach the finish line before time runs out. Watch out for obstacles!
-              </p>
+            <h3 className="font-bold text-white">Move Your Basket</h3>
+          </div>
+          <p className="text-gray-400">
+            Use your mouse, touch, or arrow keys (left/right) to move the basket at the bottom of the screen.
+          </p>
+        </div>
+        
+        <div className="bg-gray-900 p-4 rounded-lg">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold mr-3">
+              2
             </div>
-            <div>
-              <h4 className="font-semibold text-amber-500 mb-2 flex items-center">
-                <i className="ri-information-line mr-2"></i> Tips
-              </h4>
-              <ul className="list-disc list-inside space-y-1 text-gray-300 ml-4">
-                <li>Special power-ups appear every 30 seconds</li>
-                <li>Bonus points for completing levels quickly</li>
-                <li>Save your progress by reaching checkpoints</li>
-              </ul>
+            <h3 className="font-bold text-white">Catch Products</h3>
+          </div>
+          <p className="text-gray-400">
+            Catch the green star-shaped products in your basket to earn points. Each product is worth 10 points!
+          </p>
+        </div>
+        
+        <div className="bg-gray-900 p-4 rounded-lg">
+          <div className="flex items-center mb-3">
+            <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold mr-3">
+              3
             </div>
+            <h3 className="font-bold text-white">Avoid Obstacles</h3>
+          </div>
+          <p className="text-gray-400">
+            Avoid the red spiky obstacles. Hitting them will cost you a life! You start with 3 lives.
+          </p>
+        </div>
+      </div>
+      
+      {expanded && (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <div className="flex items-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mr-3">
+                4
+              </div>
+              <h3 className="font-bold text-white">Watch Your Lives</h3>
+            </div>
+            <p className="text-gray-400">
+              Missing a product will also cost you a life! The game ends when you run out of lives. Try to get the highest score possible!
+            </p>
+          </div>
+          
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <div className="flex items-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold mr-3">
+                5
+              </div>
+              <h3 className="font-bold text-white">Beat Your High Score</h3>
+            </div>
+            <p className="text-gray-400">
+              Your high score is saved during your session. Challenge yourself to beat your own records each time you play!
+            </p>
           </div>
         </div>
       )}

@@ -1,69 +1,75 @@
 import { useState, useEffect } from "react";
 import LoadingState from "./LoadingState";
+import DropGame from "./game/DropGame";
 
 export default function GameContainer() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentScore, setCurrentScore] = useState(0);
+  const [gameActive, setGameActive] = useState(false);
 
-  // This effect simulates loading states that would occur
-  // when the actual game logic is implemented
+  // Simulate loading time for game assets
   useEffect(() => {
-    // No automatic loading state simulation is needed
-    // Loading state will be controlled by actual game implementation
+    // In a real app, this would load assets, sounds, etc.
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    
     return () => {
-      // Cleanup effect if needed when component unmounts
+      clearTimeout(timer);
     };
   }, []);
+
+  // Handle score updates from the game
+  const handleScoreUpdate = (score: number) => {
+    setCurrentScore(score);
+  };
+
+  // Handle game over event
+  const handleGameOver = () => {
+    setGameActive(false);
+  };
 
   return (
     <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden mb-8">
       {/* Game area */}
-      <div id="game-area" className="relative bg-gray-900 h-80 sm:h-96 md:h-[450px] lg:h-[500px] flex items-center justify-center border-2 border-gray-700">
+      <div id="game-area" className="relative bg-gray-900 flex items-center justify-center border-2 border-gray-700 overflow-hidden">
         {isLoading ? (
-          <LoadingState />
-        ) : (
-          <div id="game-placeholder" className="text-center px-4">
-            <i className="ri-gamepad-line text-6xl mb-4 text-blue-500 opacity-50"></i>
-            <h3 className="font-game text-xl mb-2 text-blue-500">Game Coming Soon</h3>
-            <p className="text-gray-400 max-w-md mx-auto">
-              Our developers are working hard to bring you an amazing gaming experience.
-              Check back soon!
-            </p>
+          <div className="h-80 sm:h-96 md:h-[450px] lg:h-[500px] flex items-center justify-center">
+            <LoadingState />
           </div>
+        ) : (
+          <DropGame 
+            onScoreUpdate={handleScoreUpdate}
+            onGameOver={handleGameOver}
+          />
         )}
       </div>
 
-      {/* Game controls */}
+      {/* Game controls and info */}
       <div className="bg-gray-800 p-4 border-t border-gray-700">
-        <div className="flex flex-wrap justify-center gap-3">
-          <button 
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition shadow-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled
-          >
-            <i className="ri-play-fill mr-1"></i> Start
-          </button>
-          <button 
-            className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition shadow-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled
-          >
-            <i className="ri-restart-line mr-1"></i> Restart
-          </button>
-          <button 
-            className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition shadow-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled
-          >
-            <i className="ri-settings-3-line mr-1"></i> Settings
-          </button>
-          <button 
-            className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition shadow-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled
-          >
-            <i className="ri-fullscreen-line mr-1"></i> Fullscreen
-          </button>
+        {/* Current score display */}
+        <div className="mb-3 text-center">
+          <p className="text-white font-bold">
+            Current Score: <span className="text-blue-400">{currentScore}</span>
+          </p>
         </div>
-
-        {/* Mobile-specific controls - initially hidden */}
-        <div id="mobile-controls" className="mt-4 hidden">
-          {/* Mobile controls will be implemented later */}
+        
+        {/* Info text */}
+        <p className="text-gray-400 text-sm text-center mb-4">
+          Use your mouse, touch, or arrow keys to move the basket and catch falling products!
+        </p>
+        
+        {/* Responsive control explanation */}
+        <div className="mt-2 text-center">
+          <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
+            <i className="ri-mouse-line mr-1"></i> Mouse
+          </span>
+          <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
+            <i className="ri-keyboard-box-line mr-1"></i> Arrow Keys
+          </span>
+          <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mb-2">
+            <i className="ri-smartphone-line mr-1"></i> Touch
+          </span>
         </div>
       </div>
     </div>
