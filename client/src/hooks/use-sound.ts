@@ -1,0 +1,201 @@
+import { useEffect, useRef, useState } from 'react';
+
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
+
+// Sound generation parameters
+const SOUND_CONFIG = {
+  collect: {
+    type: 'sine',
+    frequency: 880,
+    duration: 0.1,
+    ramp: 'up',
+    notes: [440, 660, 880]
+  },
+  hit: {
+    type: 'sawtooth',
+    frequency: 150,
+    duration: 0.3,
+    ramp: 'down',
+    notes: [200, 150, 100]
+  },
+  gameOver: {
+    type: 'triangle',
+    frequency: 220,
+    duration: 0.8,
+    ramp: 'down',
+    notes: [440, 330, 220, 110]
+  },
+  start: {
+    type: 'sine',
+    frequency: 440,
+    duration: 0.2,
+    ramp: 'up',
+    notes: [330, 440, 550, 660]
+  },
+  lose: {
+    type: 'square',
+    frequency: 200,
+    duration: 0.3,
+    ramp: 'down',
+    notes: [200, 150]
+  }
+};
+
+export function useSound() {
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const musicOscillatorRef = useRef<OscillatorNode | null>(null);
+  const musicGainRef = useRef<GainNode | null>(null);
+  const interactionRef = useRef<boolean>(false);
+  
+  // Initialize audio context on first user interaction
+  const initializeAudio = () => {
+    if (!interactionRef.current && !audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        interactionRef.current = true;
+        
+        if (musicEnabled) {
+          startBackgroundMusic();
+        }
+      } catch (error) {
+        console.error('Web Audio API not supported', error);
+      }
+    }
+  };
+
+  // Create and play a sound
+  const playSound = (type: SoundType) => {
+    if (!soundEnabled || !audioContextRef.current) {
+      if (!audioContextRef.current) initializeAudio();
+      if (!soundEnabled) return;
+    }
+    
+    const context = audioContextRef.current;
+    if (!context) return;
+    
+    const config = SOUND_CONFIG[type];
+    const now = context.currentTime;
+    
+    // Play a sequence of notes for more interesting sounds
+    config.notes.forEach((note, index) => {
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+      
+      oscillator.type = config.type as OscillatorType;
+      oscillator.frequency.setValueAtTime(note, now + index * (config.duration / config.notes.length));
+      
+      gainNode.gain.setValueAtTime(0.5, now + index * (config.duration / config.notes.length));
+      
+      if (config.ramp === 'up') {
+        gainNode.gain.linearRampToValueAtTime(0, now + (index + 1) * (config.duration / config.notes.length));
+      } else {
+        gainNode.gain.linearRampToValueAtTime(0, now + (index + 1) * (config.duration / config.notes.length));
+      }
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+      
+      oscillator.start(now + index * (config.duration / config.notes.length));
+      oscillator.stop(now + (index + 1) * (config.duration / config.notes.length));
+    });
+  };
+  
+  // Start background music using oscillators
+  const startBackgroundMusic = () => {
+    if (!audioContextRef.current || !musicEnabled) return;
+    
+    const context = audioContextRef.current;
+    
+    // Stop existing music if playing
+    if (musicOscillatorRef.current) {
+      musicOscillatorRef.current.stop();
+      musicOscillatorRef.current = null;
+    }
+    
+    // Create gain node for volume control
+    const gainNode = context.createGain();
+    gainNode.gain.value = 0.2; // Lower volume for background music
+    gainNode.connect(context.destination);
+    musicGainRef.current = gainNode;
+    
+    // Pattern of notes for a simple melody
+    const notes = [330, 370, 392, 440, 494, 440, 392, 370];
+    const noteDuration = 0.5;
+    const now = context.currentTime;
+    
+    // Play each note in sequence
+    notes.forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, now + index * noteDuration);
+      
+      oscillator.connect(gainNode);
+      
+      const startTime = now + index * noteDuration;
+      const stopTime = now + (index + 0.9) * noteDuration;
+      
+      oscillator.start(startTime);
+      oscillator.stop(stopTime);
+      
+      // For the last note, set up the next pattern
+      if (index === notes.length - 1) {
+        setTimeout(() => {
+          if (musicEnabled) startBackgroundMusic();
+        }, (stopTime - now) * 1000);
+      }
+    });
+  };
+
+  // Toggle sound effects on/off
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
+  };
+
+  // Toggle background music on/off
+  const toggleMusic = () => {
+    setMusicEnabled(prev => {
+      const newState = !prev;
+      if (newState) {
+        initializeAudio();
+        startBackgroundMusic();
+      } else if (musicOscillatorRef.current) {
+        musicOscillatorRef.current.stop();
+        musicOscillatorRef.current = null;
+      }
+      return newState;
+    });
+  };
+
+  // Set volume for music
+  const setMusicVolume = (volume: number) => {
+    if (musicGainRef.current) {
+      musicGainRef.current.gain.value = volume;
+    }
+  };
+
+  // Clean up when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (musicOscillatorRef.current) {
+        musicOscillatorRef.current.stop();
+        musicOscillatorRef.current = null;
+      }
+      
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(console.error);
+      }
+    };
+  }, []);
+
+  return {
+    playSound,
+    toggleSound,
+    toggleMusic,
+    soundEnabled,
+    musicEnabled,
+    setMusicVolume,
+    initializeAudio,
+  };
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSound } from '../../hooks/use-sound';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -42,6 +43,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastSpawnTimeRef = useRef<number>(Date.now());
+  const { playSound, initializeAudio } = useSound();
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
@@ -262,6 +264,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ) {
           // Handle collision based on object type
           if (updatedObj.type === 'product') {
+            // Play collection sound
+            playSound('collect');
+            
             setScore(prevScore => {
               const newScore = prevScore + 10;
               if (onScoreUpdate) onScoreUpdate(newScore);
@@ -269,9 +274,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             });
             return { ...updatedObj, y: GAME_HEIGHT + 100 }; // Move it out of the game area
           } else {
+            // Play hit sound
+            playSound('hit');
+            
             // If obstacle hits player, reduce lives
             setLives(prevLives => {
               if (prevLives <= 1) {
+                playSound('gameOver');
                 endGame();
                 if (onGameOver) onGameOver();
               }
@@ -285,8 +294,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         if (updatedObj.y > GAME_HEIGHT) {
           // If it's a product that player missed, reduce lives
           if (updatedObj.type === 'product') {
+            // Play lose sound
+            playSound('lose');
+            
             setLives(prevLives => {
               if (prevLives <= 1) {
+                playSound('gameOver');
                 endGame();
                 if (onGameOver) onGameOver();
               }
@@ -306,6 +319,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Start game
   const startGame = () => {
+    // Initialize audio context on game start
+    initializeAudio();
+    
+    // Play start sound
+    playSound('start');
+    
     setIsPlaying(true);
     setScore(0);
     setLives(3);
@@ -317,6 +336,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const endGame = () => {
     setIsPlaying(false);
     setHighScore(prev => Math.max(prev, score));
+    
+    // Play game over sound
+    playSound('gameOver');
   };
   
   // Draw player area border

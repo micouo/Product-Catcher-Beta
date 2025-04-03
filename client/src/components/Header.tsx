@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import SoundControls from './SoundControls';
 
 export default function Header() {
   return (
@@ -17,31 +18,35 @@ export default function Header() {
             </Link>
           </div>
           
-          {/* Navigation */}
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <Link href="/">
-                  <span className="text-white hover:text-blue-400 transition cursor-pointer">Home</span>
-                </Link>
-              </li>
-              <li>
-                <a href="#game" className="text-white hover:text-blue-400 transition">
-                  Play
-                </a>
-              </li>
-              <li>
-                <a href="#instructions" className="text-white hover:text-blue-400 transition">
-                  How to Play
-                </a>
-              </li>
-              <li>
-                <a href="#upcoming-features" className="text-white hover:text-blue-400 transition">
-                  Coming Soon
-                </a>
-              </li>
-            </ul>
-          </nav>
+          {/* Controls and Navigation */}
+          <div className="flex items-center space-x-4">
+            <SoundControls className="mr-4" />
+            
+            <nav>
+              <ul className="flex space-x-6">
+                <li>
+                  <Link href="/">
+                    <span className="text-white hover:text-blue-400 transition cursor-pointer">Home</span>
+                  </Link>
+                </li>
+                <li>
+                  <a href="#game" className="text-white hover:text-blue-400 transition">
+                    Play
+                  </a>
+                </li>
+                <li>
+                  <a href="#instructions" className="text-white hover:text-blue-400 transition">
+                    How to Play
+                  </a>
+                </li>
+                <li>
+                  <a href="#upcoming-features" className="text-white hover:text-blue-400 transition">
+                    Coming Soon
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
       </div>
     </header>
