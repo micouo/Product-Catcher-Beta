@@ -13,7 +13,7 @@ export default function Header() {
                 <span className="bg-blue-500 p-2 rounded-md mr-3">
                   <i className="ri-gamepad-line text-white text-xl"></i>
                 </span>
-                <span className="font-bold text-xl text-white">ProductCatcher</span>
+                <span className="font-bold text-xl text-white">Doggy Product Catcher</span>
               </div>
             </Link>
           </div>

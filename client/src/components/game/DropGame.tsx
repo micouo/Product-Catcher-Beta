@@ -30,8 +30,8 @@ interface Player {
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
-const PLAYER_WIDTH = 60;
-const PLAYER_HEIGHT = 25;
+const PLAYER_WIDTH = 70; // Increased width for dog sprite
+const PLAYER_HEIGHT = 45; // Increased height for dog sprite
 const PLAYER_SPEED = 7;
 const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
@@ -360,33 +360,170 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.fillRect(0, areaY, GAME_WIDTH, PLAYER_AREA_HEIGHT);
   };
   
-  // Draw player
+  // Draw player as a dog sprite
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
-    // Draw basket base
-    ctx.fillStyle = '#3B82F6'; // Blue color
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    const centerX = player.x + player.width / 2;
+    const bottomY = player.y + player.height;
     
-    // Draw a basket shape
+    // Body dimensions
+    const bodyWidth = player.width * 0.8;
+    const bodyHeight = player.height * 0.6;
+    const headRadius = player.height * 0.4;
+    
+    // Colors
+    const bodyColor = '#8B4513'; // Brown
+    const earColor = '#6B3311'; // Darker brown
+    const faceColor = '#D2B48C'; // Tan
+    const noseColor = '#000000'; // Black
+    
+    // Draw body (oval shape)
+    ctx.fillStyle = bodyColor;
     ctx.beginPath();
-    ctx.moveTo(player.x, player.y);
-    ctx.lineTo(player.x + player.width / 3, player.y - 10);
-    ctx.lineTo(player.x + (player.width * 2) / 3, player.y - 10);
-    ctx.lineTo(player.x + player.width, player.y);
-    ctx.closePath();
-    ctx.fillStyle = '#2563EB'; // Darker blue
+    ctx.ellipse(
+      centerX,
+      bottomY - bodyHeight / 2,
+      bodyWidth / 2,
+      bodyHeight / 2,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     
-    // Draw basket details
-    ctx.strokeStyle = '#93C5FD'; // Light blue
+    // Draw head (circle)
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      player.y + headRadius,
+      headRadius,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw ears
+    ctx.fillStyle = earColor;
+    // Left ear
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX - headRadius * 0.8,
+      player.y + headRadius * 0.4,
+      headRadius * 0.5,
+      headRadius * 0.7,
+      -Math.PI / 4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right ear
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX + headRadius * 0.8,
+      player.y + headRadius * 0.4,
+      headRadius * 0.5,
+      headRadius * 0.7,
+      Math.PI / 4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw eyes
+    ctx.fillStyle = '#000000';
+    // Left eye
+    ctx.beginPath();
+    ctx.arc(
+      centerX - headRadius * 0.4,
+      player.y + headRadius * 0.8,
+      headRadius * 0.15,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right eye
+    ctx.beginPath();
+    ctx.arc(
+      centerX + headRadius * 0.4,
+      player.y + headRadius * 0.8,
+      headRadius * 0.15,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw nose
+    ctx.fillStyle = noseColor;
+    ctx.beginPath();
+    ctx.arc(
+      centerX,
+      player.y + headRadius * 1.3,
+      headRadius * 0.2,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw mouth
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(player.x + player.width / 4, player.y);
-    ctx.lineTo(player.x + player.width / 4, player.y + player.height);
-    ctx.moveTo(player.x + player.width / 2, player.y);
-    ctx.lineTo(player.x + player.width / 2, player.y + player.height);
-    ctx.moveTo(player.x + (player.width * 3) / 4, player.y);
-    ctx.lineTo(player.x + (player.width * 3) / 4, player.y + player.height);
+    ctx.arc(
+      centerX,
+      player.y + headRadius * 1.5,
+      headRadius * 0.3,
+      0.1 * Math.PI,
+      0.9 * Math.PI
+    );
     ctx.stroke();
+    
+    // Draw tail (curved line)
+    ctx.strokeStyle = bodyColor;
+    ctx.lineWidth = headRadius * 0.3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(centerX - bodyWidth / 2, bottomY - bodyHeight / 3);
+    
+    // Create a wagging animation based on time
+    const wagAngle = Math.sin(Date.now() / 200) * 0.3; // Subtle wagging
+    const tailEnd = {
+      x: centerX - bodyWidth * 0.8 * Math.cos(wagAngle),
+      y: bottomY - bodyHeight - bodyHeight * 0.5 * Math.sin(wagAngle)
+    };
+    
+    ctx.quadraticCurveTo(
+      centerX - bodyWidth,
+      bottomY - bodyHeight / 2,
+      tailEnd.x,
+      tailEnd.y
+    );
+    ctx.stroke();
+    
+    // Draw paws (two front circles)
+    ctx.fillStyle = faceColor;
+    // Left paw
+    ctx.beginPath();
+    ctx.arc(
+      centerX - bodyWidth * 0.3,
+      bottomY - 2,
+      headRadius * 0.25,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Right paw
+    ctx.beginPath();
+    ctx.arc(
+      centerX + bodyWidth * 0.3,
+      bottomY - 2,
+      headRadius * 0.25,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
   };
   
   // Draw game objects
@@ -485,7 +622,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       {!isPlaying && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80">
           <h2 className="text-3xl font-game text-blue-500 mb-4">
-            {score > 0 ? 'Game Over!' : 'Product Catcher'}
+            {score > 0 ? 'Game Over!' : 'Doggy Product Catcher'}
           </h2>
           {score > 0 && (
             <p className="text-2xl text-white mb-4">Your Score: {score}</p>
@@ -499,10 +636,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           
           <div className="mt-8 text-gray-300 text-center max-w-md">
             <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Catch the green products with your basket</p>
-            <p className="mb-1">• Avoid the red obstacles</p>
+            <p className="mb-1">• Help your dog catch the green products</p>
+            <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
+            <p className="mb-1">• The dog wags its tail when happy!</p>
             <p className="mb-1">• Missing products costs you a life</p>
           </div>
         </div>
