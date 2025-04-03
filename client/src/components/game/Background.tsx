@@ -7,6 +7,7 @@ interface BackgroundProps {
 
 export default function Background({ width, height }: BackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasDrawnRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,8 +16,12 @@ export default function Background({ width, height }: BackgroundProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Draw pixelated shopping district background
-    drawBackground(ctx, width, height);
+    // Only draw the background once, unless the dimensions change
+    if (!hasDrawnRef.current || canvas.width !== width || canvas.height !== height) {
+      // Draw pixelated shopping district background
+      drawBackground(ctx, width, height);
+      hasDrawnRef.current = true;
+    }
   }, [width, height]);
 
   const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -66,9 +71,10 @@ export default function Background({ width, height }: BackgroundProps) {
     // Generate buildings with different heights and colors
     let xPos = 0;
     while (xPos < width) {
-      const buildingWidth = Math.floor(Math.random() * 80) + 60; // Random width between 60-140
-      const buildingHeight = Math.floor(Math.random() * height * 0.3) + height * 0.2; // Random height
-      const colorIndex = Math.floor(Math.random() * buildingColors.length);
+      // Use fixed values for a consistent background
+      const buildingWidth = ((xPos % 3) + 1) * 30 + 50; // 80-140 width
+      const buildingHeight = ((xPos % 4) + 1) * 30 + (height * 0.2); // Varied heights
+      const colorIndex = Math.floor(xPos % buildingColors.length);
       
       // Draw building - base structure with pixelated effect
       ctx.fillStyle = buildingColors[colorIndex];
@@ -76,8 +82,8 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw with pixelated effect by creating grid of squares
       for (let y = height * 0.6 - buildingHeight; y < height * 0.6; y += pixelSize) {
         for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
-          // Add slight color variation to create texture
-          if (Math.random() > 0.8) {
+          // Deterministic color variation based on position
+          if ((x + y) % 10 === 0) {
             ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
           } else {
             ctx.fillStyle = buildingColors[colorIndex];
@@ -92,8 +98,8 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw windows
       drawWindows(ctx, xPos, height * 0.6 - buildingHeight, buildingWidth, buildingHeight, pixelSize);
       
-      // Store shop signs on some buildings
-      if (Math.random() > 0.3) {
+      // Store shop signs on some buildings deterministically
+      if (xPos % 2 === 0) {
         drawStoreSign(ctx, xPos, buildingWidth, height * 0.6 - buildingHeight * 0.3);
       }
       
@@ -124,8 +130,8 @@ export default function Background({ width, height }: BackgroundProps) {
         const windowX = buildingX + marginX + col * (windowSize + windowSpacing);
         const windowY = buildingY + windowSpacing + row * (windowSize + windowSpacing);
         
-        // Decide if window is lit (yellow) or dark
-        if (Math.random() > 0.4) {
+        // Deterministically decide if window is lit (yellow) or dark
+        if ((row + col + Math.floor(buildingX)) % 3 !== 0) {
           ctx.fillStyle = 'rgba(255, 255, 190, 0.8)'; // Lit window
         } else {
           ctx.fillStyle = 'rgba(50, 50, 80, 0.8)'; // Dark window
@@ -150,11 +156,11 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillStyle = '#FFD54F';
     ctx.fillRect(signX, signY, signWidth, signHeight);
     
-    // Draw colored decorative elements on sign
+    // Draw colored decorative elements on sign deterministically
     const signElements = Math.floor(signWidth / 8);
     for (let i = 0; i < signElements; i++) {
-      if (Math.random() > 0.5) {
-        ctx.fillStyle = i % 2 === 0 ? '#E63946' : '#2A9D8F';
+      if (i % 2 === 0) {
+        ctx.fillStyle = i % 4 === 0 ? '#E63946' : '#2A9D8F';
         ctx.fillRect(signX + i * 8, signY, 6, signHeight);
       }
     }
