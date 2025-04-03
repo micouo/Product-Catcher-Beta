@@ -43,7 +43,7 @@ const SOUND_CONFIG = {
 
 export function useSound() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(false); // Set default to false
   const audioContextRef = useRef<AudioContext | null>(null);
   const musicOscillatorRef = useRef<OscillatorNode | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
@@ -56,9 +56,10 @@ export function useSound() {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         interactionRef.current = true;
         
-        if (musicEnabled) {
-          startBackgroundMusic();
-        }
+        // Music is disabled by default, so we don't start it here
+        // if (musicEnabled) {
+        //   startBackgroundMusic();
+        // }
       } catch (error) {
         console.error('Web Audio API not supported', error);
       }
@@ -86,7 +87,7 @@ export function useSound() {
       oscillator.type = config.type as OscillatorType;
       oscillator.frequency.setValueAtTime(note, now + index * (config.duration / config.notes.length));
       
-      gainNode.gain.setValueAtTime(0.5, now + index * (config.duration / config.notes.length));
+      gainNode.gain.setValueAtTime(0.2, now + index * (config.duration / config.notes.length)); // Lower volume for sound effects
       
       if (config.ramp === 'up') {
         gainNode.gain.linearRampToValueAtTime(0, now + (index + 1) * (config.duration / config.notes.length));
@@ -153,10 +154,13 @@ export function useSound() {
     setSoundEnabled(prev => !prev);
   };
 
-  // Toggle background music on/off
+  // Toggle background music on/off - currently disabled
   const toggleMusic = () => {
+    // Since we've disabled music, just toggle the state but don't play music
     setMusicEnabled(prev => {
       const newState = !prev;
+      // Comment out music playback for now
+      /*
       if (newState) {
         initializeAudio();
         startBackgroundMusic();
@@ -164,6 +168,7 @@ export function useSound() {
         musicOscillatorRef.current.stop();
         musicOscillatorRef.current = null;
       }
+      */
       return newState;
     });
   };
