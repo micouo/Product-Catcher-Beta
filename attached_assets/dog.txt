@@ -1,0 +1,28 @@
+# Adding multi-directional dog animations to the game
+
+# Load dog sprites (placeholder paths)
+sprites['dog_right'] = pygame.image.load('dog_right_sprite.png')
+sprites['dog_left'] = pygame.image.load('dog_left_sprite.png')
+sprites['dog_up'] = pygame.image.load('dog_up_sprite.png')
+sprites['dog_down'] = pygame.image.load('dog_down_sprite.png')
+
+# Dog animation function
+def animate_dog(direction, x, y):
+    frame_count = 4
+    if direction == 'right':
+        sprite = sprites['dog_right']
+    elif direction == 'left':
+        sprite = sprites['dog_left']
+    elif direction == 'up':
+        sprite = sprites['dog_up']
+    elif direction == 'down':
+        sprite = sprites['dog_down']
+    frame_width = sprite.get_width() // frame_count
+    frame = (pygame.time.get_ticks() // 100) % frame_count
+    screen.blit(sprite, (x, y), (frame * frame_width, 0, frame_width, sprite.get_height()))
+
+# Test dog animation with multi-directional sprites
+animate_dog('right', 500, 100)
+animate_dog('left', 600, 100)
+animate_dog('up', 500, 200)
+animate_dog('down', 600, 200)

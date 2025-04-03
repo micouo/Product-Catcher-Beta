@@ -378,11 +378,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         
         // Remove objects that went below the screen
         if (updatedObj.y > GAME_HEIGHT) {
-          // If it's a product that player missed, don't reduce lives, just remove it
-          // We still play a small sound for feedback
-          if (updatedObj.type === 'product') {
-            playSound('lose');
-          }
+          // Just silently remove objects that go below the screen
+          // No sound or penalty for missed products
           return { ...updatedObj, y: GAME_HEIGHT + 100 }; // Flag for removal
         }
         
