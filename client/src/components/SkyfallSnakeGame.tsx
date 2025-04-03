@@ -134,12 +134,18 @@ const SkyfallSnakeGame = () => {
           p.fill(255);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(p.width / 20);
-          p.text("Mico's Skyfall Snake ;)", p.width / 2, p.height / 2 - 100);
+          p.text("Skyfall Snake", p.width / 2, p.height / 2 - 100);
           p.textSize(p.width / 40);
           p.text("Click to Start", p.width / 2, p.height / 2 - 30);
           p.text("Use WASD or Arrow Keys to Move", p.width / 2, p.height / 2 + 10);
           p.text("Hold SHIFT to Boost (loses health)", p.width / 2, p.height / 2 + 40);
-          p.text("Catch the apples, dodge the rocks!", p.width / 2, p.height / 2 + 80);
+          p.text("Catch the apples, dodge the rocks!", p.width / 2, p.height / 2 + 70);
+          
+          // Blink "Click Game Area for Keyboard Control" message
+          if (Math.floor(p.frameCount / 30) % 2 === 0) {
+            p.fill(255, 255, 0);
+            p.text("Click Game Area for Keyboard Control", p.width / 2, p.height / 2 + 110);
+          }
         }
         
         function gameOver() {
@@ -157,14 +163,36 @@ const SkyfallSnakeGame = () => {
             return;
           }
           
-          keysHeld.add(p.key.toLowerCase());
-          if (p.key === 'Shift') boost = true;
-          if (p.key.toLowerCase() === 'r') resetGame();
+          const keyLower = p.key.toLowerCase();
+          keysHeld.add(keyLower);
+          
+          // Also handle arrow keys which come as special codes
+          if (p.keyCode === p.UP_ARROW) keysHeld.add('arrowup');
+          if (p.keyCode === p.DOWN_ARROW) keysHeld.add('arrowdown');
+          if (p.keyCode === p.LEFT_ARROW) keysHeld.add('arrowleft');
+          if (p.keyCode === p.RIGHT_ARROW) keysHeld.add('arrowright');
+          
+          if (p.key === 'Shift' || p.keyCode === p.SHIFT) boost = true;
+          if (keyLower === 'r') resetGame();
+          
+          // Prevent default behavior for game keys
+          return false;
         };
         
         p.keyReleased = () => {
-          keysHeld.delete(p.key.toLowerCase());
-          if (p.key === 'Shift') boost = false;
+          const keyLower = p.key.toLowerCase();
+          keysHeld.delete(keyLower);
+          
+          // Also handle arrow keys
+          if (p.keyCode === p.UP_ARROW) keysHeld.delete('arrowup');
+          if (p.keyCode === p.DOWN_ARROW) keysHeld.delete('arrowdown');
+          if (p.keyCode === p.LEFT_ARROW) keysHeld.delete('arrowleft');
+          if (p.keyCode === p.RIGHT_ARROW) keysHeld.delete('arrowright');
+          
+          if (p.key === 'Shift' || p.keyCode === p.SHIFT) boost = false;
+          
+          // Prevent default behavior for game keys
+          return false;
         };
         
         p.mousePressed = () => {
@@ -327,12 +355,38 @@ const SkyfallSnakeGame = () => {
     }
   }, []);
   
+  useEffect(() => {
+    // Add global event listeners to better capture keyboard events
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameContainerRef.current) {
+        // Capture keys for game control - prevent scrolling with arrows
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+          e.preventDefault();
+        }
+      }
+    };
+    
+    // Add event listeners to window to ensure keys are captured
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <div 
       ref={gameContainerRef} 
-      className="w-full rounded-lg overflow-hidden bg-black"
+      className="w-full rounded-lg overflow-hidden bg-black focus:outline-none focus:ring-2 focus:ring-primary"
       style={{ minHeight: '400px', height: 'calc(min(600px, 70vh))' }}
       tabIndex={0}
+      onClick={(e) => {
+        // Make sure the container gets focus when clicked
+        if (e.currentTarget) {
+          e.currentTarget.focus();
+        }
+      }}
+      onFocus={() => console.log('Game container focused')}
     />
   );
 };

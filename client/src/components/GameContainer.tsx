@@ -16,6 +16,14 @@ export default function GameContainer() {
 
   const handleStartClick = () => {
     setGameReady(true);
+    
+    // Focus the game container after a short delay to ensure it's mounted
+    setTimeout(() => {
+      const gameDiv = document.querySelector('#game-container div');
+      if (gameDiv) {
+        (gameDiv as HTMLElement).focus();
+      }
+    }, 100);
   };
 
   return (
