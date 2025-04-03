@@ -445,7 +445,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.fillRect(0, areaY, GAME_WIDTH, PLAYER_AREA_HEIGHT);
   };
   
-  // Draw player as a dog sprite
+  // Draw player as a dog sprite with animated legs
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
     // Only animate when the player is moving
     const isMoving = player.movingLeft || player.movingRight || player.movingUp || player.movingDown;
@@ -453,7 +453,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Update animation frame
     const now = Date.now();
     if (isMoving && now - lastAnimTime > ANIM_INTERVAL) {
-      setAnimFrame((prev) => (prev + 1) % 4); // 4 animation frames (we'll simulate this with scaling/rotation)
+      setAnimFrame((prev) => (prev + 1) % 4); // 4 animation frames for leg animation
       setLastAnimTime(now);
     }
     
@@ -490,7 +490,60 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       player.height
     );
     
-    // No tail animation as requested
+    // Draw animated legs if moving
+    if (isMoving) {
+      const legWidth = player.width * 0.12;
+      const legHeight = player.height * 0.25;
+      
+      // Set leg style
+      ctx.fillStyle = '#8B4513'; // Brown
+      ctx.strokeStyle = '#6B3311'; // Darker brown
+      ctx.lineWidth = 2;
+      
+      // Positions for the four legs (relative to center)
+      const frontLegX = player.width * 0.2;
+      const backLegX = -player.width * 0.2;
+      const legY = player.height * 0.25;
+      
+      // Leg animation based on frame
+      // Create a running motion with the legs
+      const frontLegAngle = Math.sin((animFrame + 0) * Math.PI / 2) * 0.3;
+      const backLegAngle = Math.sin((animFrame + 2) * Math.PI / 2) * 0.3;
+      
+      // Draw front legs
+      // Front right leg
+      ctx.save();
+      ctx.translate(frontLegX, legY);
+      ctx.rotate(frontLegAngle);
+      ctx.fillRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.strokeRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.restore();
+      
+      // Front left leg
+      ctx.save();
+      ctx.translate(frontLegX, -legY);
+      ctx.rotate(-frontLegAngle);
+      ctx.fillRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.strokeRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.restore();
+      
+      // Draw back legs
+      // Back right leg
+      ctx.save();
+      ctx.translate(backLegX, legY);
+      ctx.rotate(backLegAngle);
+      ctx.fillRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.strokeRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.restore();
+      
+      // Back left leg
+      ctx.save();
+      ctx.translate(backLegX, -legY);
+      ctx.rotate(-backLegAngle);
+      ctx.fillRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.strokeRect(-legWidth/2, 0, legWidth, legHeight);
+      ctx.restore();
+    }
     
     // Restore context state
     ctx.restore();
@@ -609,7 +662,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• Your dog loves catching tasty treats!</p>
+            <p className="mb-1">• Watch your dog's legs run as you move!</p>
             <p className="mb-1">• Objects get faster as your score increases - test your reflexes!</p>
           </div>
         </div>
