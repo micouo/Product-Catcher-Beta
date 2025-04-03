@@ -38,9 +38,13 @@ const PLAYER_SPEED = 5;
 const BOOST_MULTIPLIER = 1.8;
 const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
-const SPAWN_RATE = 1500; // ms between spawns
+const BASE_SPAWN_RATE = 1500; // Starting ms between spawns
+const MIN_SPAWN_RATE = 600; // Minimum spawn rate (fastest)
 const PRODUCT_PROBABILITY = 0.7; // 70% chance of product, 30% chance of obstacle
 const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
+const BASE_OBJECT_SPEED = 2; // Starting speed
+const MAX_OBJECT_SPEED = 7; // Maximum object speed
+const SPEED_INCREASE_INTERVAL = 10000; // Speed increases every 10 seconds
 
 // Food emojis for products
 const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
@@ -49,6 +53,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastSpawnTimeRef = useRef<number>(Date.now());
+  const gameStartTimeRef = useRef<number>(0);
   const { playSound, initializeAudio } = useSound();
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -56,6 +61,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [gameObjects, setGameObjects] = useState<GameObject[]>([]);
+  const [currentSpawnRate, setCurrentSpawnRate] = useState(BASE_SPAWN_RATE);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -78,6 +85,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       const isProduct = Math.random() < PRODUCT_PROBABILITY;
       const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
       
+      // Apply speed multiplier to make objects faster over time
+      const baseSpeed = BASE_OBJECT_SPEED + Math.random() * 3; // Random base speed
+      const scaledSpeed = baseSpeed * speedMultiplier; // Apply speed multiplier
+      
       return {
         id: Math.random(),
         x: Math.random() * (GAME_WIDTH - OBJECT_WIDTH),
@@ -86,7 +97,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         height: OBJECT_HEIGHT,
         type: isProduct ? 'product' : 'obstacle',
         foodType: isProduct ? FOOD_EMOJIS[randomFoodIndex] : undefined,
-        speed: 2 + Math.random() * 3, // Random speed between 2-5
+        speed: scaledSpeed,
       };
     };
     
@@ -107,10 +118,38 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       updatePlayerPosition();
       
       // Spawn new objects periodically
-      if (Date.now() - lastSpawnTimeRef.current > SPAWN_RATE) {
+      if (Date.now() - lastSpawnTimeRef.current > currentSpawnRate) {
         const newObject = createGameObject();
         setGameObjects(prev => [...prev, newObject]);
         lastSpawnTimeRef.current = Date.now();
+      }
+      
+      // Increase difficulty over time
+      const gameTime = Date.now() - gameStartTimeRef.current;
+      const timeIntervals = Math.floor(gameTime / SPEED_INCREASE_INTERVAL);
+      
+      // Update spawn rate and speed multiplier every interval
+      if (timeIntervals > 0) {
+        // Calculate new spawn rate (gets faster over time)
+        const newSpawnRate = Math.max(
+          MIN_SPAWN_RATE,
+          BASE_SPAWN_RATE - (timeIntervals * 100)
+        );
+        
+        // Calculate new speed multiplier (increases over time)
+        const newSpeedMultiplier = Math.min(
+          MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
+          1 + (timeIntervals * 0.2)
+        );
+        
+        // Only update if values have changed
+        if (newSpawnRate !== currentSpawnRate) {
+          setCurrentSpawnRate(newSpawnRate);
+        }
+        
+        if (newSpeedMultiplier !== speedMultiplier) {
+          setSpeedMultiplier(newSpeedMultiplier);
+        }
       }
       
       // Move existing objects and check collisions
@@ -140,7 +179,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, player, gameObjects]);
+  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier]);
   
   // Handle keyboard controls
   useEffect(() => {
@@ -263,7 +302,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, playSound]);
   
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
@@ -339,19 +378,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         
         // Remove objects that went below the screen
         if (updatedObj.y > GAME_HEIGHT) {
-          // If it's a product that player missed, reduce lives
+          // If it's a product that player missed, don't reduce lives, just remove it
+          // We still play a small sound for feedback
           if (updatedObj.type === 'product') {
-            // Play lose sound
             playSound('lose');
-            
-            setLives(prevLives => {
-              if (prevLives <= 1) {
-                playSound('gameOver');
-                endGame();
-                if (onGameOver) onGameOver();
-              }
-              return prevLives - 1;
-            });
           }
           return { ...updatedObj, y: GAME_HEIGHT + 100 }; // Flag for removal
         }
@@ -372,11 +402,17 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Play start sound
     playSound('start');
     
+    // Reset game state
     setIsPlaying(true);
     setScore(0);
     setLives(3);
     setGameObjects([]);
+    setCurrentSpawnRate(BASE_SPAWN_RATE);
+    setSpeedMultiplier(1.0);
+    
+    // Reset timers
     lastSpawnTimeRef.current = Date.now();
+    gameStartTimeRef.current = Date.now();
   };
   
   // End game
@@ -681,7 +717,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• The dog wags its tail when happy!</p>
-            <p className="mb-1">• Missing food costs you a life</p>
+            <p className="mb-1">• Objects get faster as the game progresses - test your reflexes!</p>
           </div>
         </div>
       )}
