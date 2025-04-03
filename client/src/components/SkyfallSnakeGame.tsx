@@ -139,13 +139,14 @@ const SkyfallSnakeGame = () => {
           p.textSize(p.width / 40);
           p.text("Click to Start", p.width / 2, p.height / 2 - 30);
           p.text("Use WASD or Arrow Keys to Move", p.width / 2, p.height / 2 + 10);
-          p.text("Hold SHIFT to Boost (loses health)", p.width / 2, p.height / 2 + 40);
-          p.text("Catch the apples, dodge the rocks!", p.width / 2, p.height / 2 + 70);
+          p.text("Hold multiple keys for diagonal movement", p.width / 2, p.height / 2 + 40);
+          p.text("Hold SHIFT to Boost (loses health)", p.width / 2, p.height / 2 + 70);
+          p.text("Catch the apples, dodge the rocks!", p.width / 2, p.height / 2 + 100);
           
           // Blink "Click Game Area for Keyboard Control" message
           if (Math.floor(p.frameCount / 30) % 2 === 0) {
             p.fill(255, 255, 0);
-            p.text("Click Game Area for Keyboard Control", p.width / 2, p.height / 2 + 110);
+            p.text("Click Game Area for Keyboard Control", p.width / 2, p.height / 2 + 140);
           }
         }
         
@@ -166,64 +167,18 @@ const SkyfallSnakeGame = () => {
           
           const keyLower = p.key.toLowerCase();
           
-          // Handle special keys and add to keysHeld
+          // Add the pressed key to keysHeld set
           if (p.keyCode === p.UP_ARROW) {
             keysHeld.add('arrowup');
-            // Force immediate direction update with direct call
-            currentSteer.set(0, -1);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("UP pressed - Direction immediately set to 0,-1");
           } 
           else if (p.keyCode === p.DOWN_ARROW) {
             keysHeld.add('arrowdown');
-            currentSteer.set(0, 1);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer); 
-            console.log("DOWN pressed - Direction immediately set to 0,1");
           }
           else if (p.keyCode === p.LEFT_ARROW) {
             keysHeld.add('arrowleft');
-            currentSteer.set(-1, 0);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("LEFT pressed - Direction immediately set to -1,0");
           }
           else if (p.keyCode === p.RIGHT_ARROW) {
             keysHeld.add('arrowright');
-            currentSteer.set(1, 0);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("RIGHT pressed - Direction immediately set to 1,0");
-          }
-          // Handle WASD keys with same immediate direction changes
-          else if (keyLower === 'w') {
-            keysHeld.add(keyLower);
-            currentSteer.set(0, -1);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("W pressed - Direction immediately set to 0,-1");
-          }
-          else if (keyLower === 'a') {
-            keysHeld.add(keyLower);
-            currentSteer.set(-1, 0);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("A pressed - Direction immediately set to -1,0");
-          }
-          else if (keyLower === 's') {
-            keysHeld.add(keyLower);
-            currentSteer.set(0, 1);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("S pressed - Direction immediately set to 0,1");
-          }
-          else if (keyLower === 'd') {
-            keysHeld.add(keyLower);
-            currentSteer.set(1, 0);
-            currentSteer.normalize();
-            snake.setDirection(currentSteer);
-            console.log("D pressed - Direction immediately set to 1,0");
           }
           else {
             // For other keys, just add to keysHeld
@@ -234,8 +189,24 @@ const SkyfallSnakeGame = () => {
           if (p.key === 'Shift' || p.keyCode === p.SHIFT) boost = true;
           if (keyLower === 'r') resetGame();
           
-          // Apply the input immediately
-          handleInput();
+          // Now compute the actual direction based on ALL currently held keys
+          // This allows for diagonal movement when multiple direction keys are pressed
+          let dirX = 0;
+          let dirY = 0;
+          
+          // Check all direction keys (both WASD and arrows)
+          if (keysHeld.has('a') || keysHeld.has('arrowleft')) dirX -= 1;
+          if (keysHeld.has('d') || keysHeld.has('arrowright')) dirX += 1;
+          if (keysHeld.has('w') || keysHeld.has('arrowup')) dirY -= 1;
+          if (keysHeld.has('s') || keysHeld.has('arrowdown')) dirY += 1;
+          
+          // Only update direction if there's actual input
+          if (dirX !== 0 || dirY !== 0) {
+            currentSteer.set(dirX, dirY);
+            currentSteer.normalize();
+            snake.setDirection(currentSteer);
+            console.log(`Direction set to: ${dirX},${dirY} (normalized: ${currentSteer.x.toFixed(2)},${currentSteer.y.toFixed(2)})`);
+          }
           
           // Prevent default behavior for game keys
           return false;
@@ -252,6 +223,24 @@ const SkyfallSnakeGame = () => {
           else keysHeld.delete(keyLower);
           
           if (p.key === 'Shift' || p.keyCode === p.SHIFT) boost = false;
+          
+          // Recalculate direction based on remaining keys held down
+          let dirX = 0;
+          let dirY = 0;
+          
+          // Check all direction keys (both WASD and arrows)
+          if (keysHeld.has('a') || keysHeld.has('arrowleft')) dirX -= 1;
+          if (keysHeld.has('d') || keysHeld.has('arrowright')) dirX += 1;
+          if (keysHeld.has('w') || keysHeld.has('arrowup')) dirY -= 1;
+          if (keysHeld.has('s') || keysHeld.has('arrowdown')) dirY += 1;
+          
+          // Only update direction if there's actual input
+          if (dirX !== 0 || dirY !== 0) {
+            currentSteer.set(dirX, dirY);
+            currentSteer.normalize();
+            snake.setDirection(currentSteer);
+            console.log(`Key released - Direction updated to: ${dirX},${dirY} (normalized: ${currentSteer.x.toFixed(2)},${currentSteer.y.toFixed(2)})`);
+          }
           
           // Prevent default behavior for game keys
           return false;
