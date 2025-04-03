@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
 import dogSprite from '@assets/dog.png';
+import Background from './Background';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -124,6 +125,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // Clear canvas
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      
+      // Draw background first
+      // Note: The background is now rendered separately as its own canvas element
       
       // Draw player area border
       drawPlayerArea(ctx);
@@ -438,7 +442,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Draw dashed line to show player area
     ctx.setLineDash([10, 5]);
-    ctx.strokeStyle = '#4B5563'; // Gray color
+    ctx.strokeStyle = '#FFFFFF'; // White color with opacity
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, areaY);
@@ -446,9 +450,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Add subtle background for player area
-    ctx.fillStyle = 'rgba(55, 65, 81, 0.2)'; // Slightly visible gray
-    ctx.fillRect(0, areaY, GAME_WIDTH, PLAYER_AREA_HEIGHT);
+    // No need for background fill as we're now using the sidewalk from the background
   };
   
   // Draw player as a dog sprite
@@ -586,11 +588,15 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
+      {/* Background Layer */}
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
+      
+      {/* Game Canvas */}
       <canvas
         ref={canvasRef}
         width={GAME_WIDTH}
         height={GAME_HEIGHT}
-        className="border-2 border-gray-700 bg-gray-900 max-w-full h-auto"
+        className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
       />
       
       {!isPlaying && (
