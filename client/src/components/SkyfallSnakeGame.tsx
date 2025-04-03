@@ -175,12 +175,17 @@ const SkyfallSnakeGame = () => {
         
         function handleInput() {
           currentSteer.set(0, 0);
-          if (keysHeld.has('a') || keysHeld.has('arrowleft')) currentSteer.x = -1;
-          if (keysHeld.has('d') || keysHeld.has('arrowright')) currentSteer.x = 1;
-          if (keysHeld.has('w') || keysHeld.has('arrowup')) currentSteer.y = -1;
-          if (keysHeld.has('s') || keysHeld.has('arrowdown')) currentSteer.y = 1;
+          let dirX = 0;
+          let dirY = 0;
           
+          if (keysHeld.has('a') || keysHeld.has('arrowleft')) dirX -= 1;
+          if (keysHeld.has('d') || keysHeld.has('arrowright')) dirX += 1;
+          if (keysHeld.has('w') || keysHeld.has('arrowup')) dirY -= 1;
+          if (keysHeld.has('s') || keysHeld.has('arrowdown')) dirY += 1;
+          
+          currentSteer.set(dirX, dirY);
           if (currentSteer.mag() > 0) {
+            currentSteer.normalize();
             snake.setDirection(currentSteer);
           }
         }
