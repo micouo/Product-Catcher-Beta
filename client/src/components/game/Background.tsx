@@ -183,7 +183,7 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw clouds using the provided cloud image
+  // Draw clouds using the provided cloud image with seamless scrolling
   const drawClouds = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -192,12 +192,12 @@ export default function Background({ width, height }: BackgroundProps) {
     // Check if cloud image is loaded
     if (!cloudImgRef.current || !cloudLoadedRef.current) return;
 
-    // Define cloud positions - set these to fixed values for a consistent background
+    // Define cloud positions - these are base positions that will be offset by the scrolling effect
     const cloudPositions = [
       { x: width * 0.15, y: height * 0.12, scale: 0.2 },
       { x: width * 0.4, y: height * 0.08, scale: 0.15 },
       { x: width * 0.85, y: height * 0.1, scale: 0.18 },
-      { x: width * 0.65, y: height * 0.15, scale: 0.2 }, // Added fourth cloud
+      { x: width * 0.65, y: height * 0.15, scale: 0.2 },
     ];
 
     const cloudImg = cloudImgRef.current;
@@ -208,30 +208,55 @@ export default function Background({ width, height }: BackgroundProps) {
       const cloudWidth = cloudImg.width * cloud.scale;
       const cloudHeight = cloudImg.height * cloud.scale;
 
-      // Apply scrolling offset for this cloud - wrap around when out of view
-      const cloudXOffset = cloudOffsetsRef.current[index];
+      // Get the scrolling offset for this specific cloud
+      const cloudOffset = cloudOffsetsRef.current[index];
       
-      // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
-      // As offset increases, cloud appears to move left-to-right
-      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
+      // Calculate the wrapped x position for seamless scrolling
+      // This creates a continuous scrolling effect in which the clouds
+      // move from right to left (game scrolls from left to right)
+      let xPos = (cloud.x * width) - cloudOffset;
       
-      // Draw cloud image centered at the position
+      // Ensure the clouds wrap around smoothly by using modulo of the width
+      // This keeps the position value within a range (0 to width)
+      xPos = xPos % width;
+      
+      // If the position is negative, add width to ensure proper wrapping
+      if (xPos < 0) xPos += width;
+      
+      // Draw the main cloud image
       ctx.drawImage(
         cloudImg,
-        xPos, // Apply cloud offset for scrolling
-        cloud.y - cloudHeight / 2, // Vertical position stays the same
-        cloudWidth,
-        cloudHeight,
-      );
-      
-      // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
-      ctx.drawImage(
-        cloudImg,
-        xPos - width, // Draw a second cloud one screen-width to the left
+        xPos,
         cloud.y - cloudHeight / 2,
         cloudWidth,
-        cloudHeight,
+        cloudHeight
       );
+      
+      // Draw duplicate clouds for seamless scrolling 
+      // When a cloud moves partially off-screen, we need to draw its continuation
+      // on the other side of the screen
+      
+      // Draw to the left (for clouds partially off the left edge)
+      if (xPos + cloudWidth > width) {
+        ctx.drawImage(
+          cloudImg,
+          xPos - width,
+          cloud.y - cloudHeight / 2,
+          cloudWidth,
+          cloudHeight
+        );
+      }
+      
+      // Draw to the right (for clouds partially off the right edge)
+      if (xPos < cloudWidth) {
+        ctx.drawImage(
+          cloudImg,
+          xPos + width,
+          cloud.y - cloudHeight / 2,
+          cloudWidth,
+          cloudHeight
+        );
+      }
     });
   };
 
