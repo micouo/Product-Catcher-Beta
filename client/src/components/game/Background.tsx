@@ -88,7 +88,7 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
   
-  // Draw modern pixelated clouds in the sky
+  // Draw blocky pixelated clouds in the sky
   const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
@@ -99,83 +99,65 @@ export default function Background({ width, height }: BackgroundProps) {
     ];
     
     cloudPositions.forEach(cloud => {
-      // Use smaller pixel size for a more modern, subtle pixelated look
-      const pixelSize = 4;
+      // Use larger pixels for more blocky clouds
+      const pixelSize = 8; // Bigger pixels for blockier look
       
-      // Define the cloud shape as a collection of points
-      const cloudPoints = [
-        { x: cloud.x, y: cloud.y, radius: cloud.size },
-        { x: cloud.x - cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.7 },
-        { x: cloud.x + cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.8 },
-        { x: cloud.x - cloud.size * 0.3, y: cloud.y - cloud.size * 0.4, radius: cloud.size * 0.6 },
-        { x: cloud.x + cloud.size * 0.3, y: cloud.y - cloud.size * 0.3, radius: cloud.size * 0.5 }
+      // Clear fillStyle first
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Solid white clouds
+      
+      // Define the core cloud shape as a simple grid
+      const cloudWidth = cloud.size * 2;
+      const cloudHeight = cloud.size;
+      
+      // Cloud shape data - 1 means draw a pixel, 0 means skip
+      // This creates a blocky cloud shape that looks like classic pixel art
+      const cloudShape = [
+        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0]
       ];
       
-      // First pass: Draw a smoother cloud base
-      cloudPoints.forEach(point => {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
-        ctx.fill();
+      // Calculate the starting position so cloud is centered on its x,y position
+      const startX = cloud.x - (cloudShape[0].length * pixelSize) / 2;
+      const startY = cloud.y - (cloudShape.length * pixelSize) / 2;
+      
+      // Draw the cloud pixel by pixel according to the shape data
+      for (let row = 0; row < cloudShape.length; row++) {
+        for (let col = 0; col < cloudShape[row].length; col++) {
+          if (cloudShape[row][col] === 1) {
+            // Randomize the shade a bit to add texture, but keep it subtle
+            const brightness = 0.95 + Math.random() * 0.05;
+            const shade = Math.floor(255 * brightness);
+            ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+            
+            const x = startX + col * pixelSize;
+            const y = startY + row * pixelSize;
+            
+            // Make some blocks slightly smaller for a more interesting edge
+            const blockSize = ((row + col) % 3 === 0) ? 
+              pixelSize - 1 : 
+              pixelSize;
+              
+            ctx.fillRect(x, y, blockSize, blockSize);
+          }
+        }
+      }
+      
+      // Add a few highlight pixels at fixed positions
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      const highlightPositions = [
+        [1, 1], [2, 2], [3, 1], [2, 3], [4, 2]
+      ];
+      
+      highlightPositions.forEach(pos => {
+        const hx = startX + pos[0] * pixelSize;
+        const hy = startY + pos[1] * pixelSize;
+        ctx.fillRect(hx, hy, pixelSize, pixelSize);
       });
-      
-      // Second pass: Add subtle pixel details on top for texture
-      // Define the bounding box for the cloud
-      const boundLeft = cloud.x - cloud.size * 1.5;
-      const boundRight = cloud.x + cloud.size * 1.5;
-      const boundTop = cloud.y - cloud.size * 1.2;
-      const boundBottom = cloud.y + cloud.size;
-      
-      // Loop through the bounding box with pixel-sized steps
-      for (let px = boundLeft; px < boundRight; px += pixelSize) {
-        for (let py = boundTop; py < boundBottom; py += pixelSize) {
-          
-          // Add pixels mostly at the edges for visual interest
-          let edgeOfCloud = false;
-          
-          // Create a deterministic noise pattern that remains consistent
-          const noiseValue = Math.sin(px * 0.3) * Math.cos(py * 0.3) * 0.5 + 0.5;
-          
-          for (const point of cloudPoints) {
-            const distance = Math.sqrt(Math.pow(px - point.x, 2) + Math.pow(py - point.y, 2));
-            // Only add detail pixels near the edges
-            if (distance > point.radius * 0.85 && distance < point.radius * 1.15) {
-              if (noiseValue > 0.7) {
-                edgeOfCloud = true;
-                break;
-              }
-            }
-          }
-          
-          if (edgeOfCloud) {
-            // Variable opacity for pixels makes them look more natural
-            const opacity = 0.5 + noiseValue * 0.3;
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.fillRect(px, py, pixelSize, pixelSize);
-          }
-        }
-      }
-      
-      // Third pass: Add a few highlight pixels
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      for (const point of cloudPoints) {
-        const highlightX = point.x - point.radius * 0.2;
-        const highlightY = point.y - point.radius * 0.2;
-        
-        // Add a cluster of small highlight pixels
-        for (let i = 0; i < 3; i++) {
-          for (let j = 0; j < 3; j++) {
-            if ((i+j) % 2 === 0) {
-              ctx.fillRect(
-                highlightX + i * pixelSize, 
-                highlightY + j * pixelSize, 
-                pixelSize, 
-                pixelSize
-              );
-            }
-          }
-        }
-      }
     });
   };
 
