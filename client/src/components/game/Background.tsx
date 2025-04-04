@@ -389,15 +389,15 @@ export default function Background({ width, height }: BackgroundProps) {
     const treeImg = treeImgRef.current;
     
     // Calculate the size of the tree image while maintaining aspect ratio
-    const scale = size / Math.min(treeImg.width, treeImg.height) * 4.0; // Make tree larger
+    const scale = size / Math.min(treeImg.width, treeImg.height) * 4.5; // Make tree larger
     const treeWidth = treeImg.width * scale;
     const treeHeight = treeImg.height * scale;
     
-    // Draw tree image centered horizontally but positioned with trunk at the bottom
+    // Draw tree image centered horizontally and positioned higher up
     ctx.drawImage(
       treeImg,
       x - treeWidth / 2, // Center horizontally
-      y - treeHeight * 0.75, // Position so the trunk is at the sidewalk level
+      y - treeHeight * 0.8, // Position higher up on the sidewalk
       treeWidth,
       treeHeight
     );
@@ -437,18 +437,23 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Add trees along the sidewalk at regular intervals
-    // Use sidewalk offset to make trees move with the sidewalk
-    const treeSpacing = 300; // Increased space between trees for better visibility
-    const treeSize = 40; // Base size of trees
-    const treeY = height * 0.63; // Position trees in the middle of the sidewalk
+    // Add trees along the sidewalk at fixed positions
+    // Instead of having trees move with scrolling offset, we'll place them at fixed screen positions
+    const treeSpacing = 300; // Space between trees for better visibility
+    const treeSize = 45; // Fixed size for all trees
+    const treeY = height * 0.62; // Position trees higher up on the sidewalk
     
-    // Calculate positions to place trees, accounting for the scrolling offset
-    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
-      // Draw trees with slight random size variation
-      const sizeVariation = 1.0 + (Math.abs(Math.sin(x * 0.1)) * 0.2); // 0.8-1.2 variation
-      drawTree(ctx, x, treeY, treeSize * sizeVariation);
-    }
+    // Fixed tree positions - these will never change regardless of scrolling
+    const treePositions = [
+      { x: width * 0.2, y: treeY },
+      { x: width * 0.5, y: treeY },
+      { x: width * 0.8, y: treeY },
+    ];
+    
+    // Draw trees at these fixed positions
+    treePositions.forEach(tree => {
+      drawTree(ctx, tree.x, tree.y, treeSize);
+    });
   };
 
   // Draw road markings on street
