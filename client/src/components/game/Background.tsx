@@ -1,11 +1,19 @@
 import React, { useEffect, useRef } from "react";
 import cloudImage from "../../assets/cloud.png";
-import treeImage from "../../assets/tree.png";
+import treeImage from "../../assets/tree 1.png";
 
-// Constants for animation and variety
-const SCROLL_SPEED = 1;
-const CLOUD_SPEED = 0.3;
-const BUILDING_CYCLE = 5000; // Very large cycle to prevent obvious repeating
+// Constants for animation and parallax effect
+const BASE_SCROLL_SPEED = 1; // Base speed for reference
+const PARALLAX_LAYERS = {
+  CLOUDS: 0.2,  // Clouds move at 20% of the base speed (slowest)
+  SKY: 0.0,     // Sky doesn't move
+  SIDEWALK: 1.0, // Sidewalk moves at full base speed
+  ROAD: 1.5,    // Road moves faster than sidewalk for depth effect
+  TREES: 1.0    // Trees move with the sidewalk
+};
+
+// Very large cycle to prevent obvious repeating
+const BUILDING_CYCLE = 5000;
 
 interface BackgroundProps {
   width: number;
@@ -27,10 +35,9 @@ export default function Background({ width, height }: BackgroundProps) {
   const sidewalkOffsetRef = useRef(0);
   const roadOffsetRef = useRef(0);
   
-  // Animation speed (pixels per frame)
-  const SCROLL_SPEED = 1;
-  const CLOUD_SPEED = 0.2; // Clouds move slower
-  const BUILDING_CYCLE = 5000; // Very large cycle to prevent obvious repeating
+  // We'll use the constants defined above for parallax effect
+  // This keeps the local reference for the animation function
+  const animationFrameIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Load the cloud image
@@ -59,37 +66,45 @@ export default function Background({ width, height }: BackgroundProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Animation loop function
+    // Animation loop function with parallax effect
     const animate = () => {
-      // ALL ELEMENTS move to the RIGHT (using same direction for consistency)
+      // Increment the base offset - this is our "time" value
+      offsetXRef.current += BASE_SCROLL_SPEED;
       
-      // For road and sidewalk
-      sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
-      roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
+      // Update all layer positions based on their parallax factors
+      // Each layer moves at a different speed relative to the base speed
+      
+      // Sidewalk layer
+      sidewalkOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.SIDEWALK) % width;
+      
+      // Road markings - using a smaller repeat cycle for more frequent markers
+      roadOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.ROAD) % 100;
       
       // Building animation disabled since buildings have been removed
-      // Uncomment this when building assets are added
-      // buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % BUILDING_CYCLE;
+      // Uncomment when building assets are added with proper parallax factor
+      // buildingOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.SIDEWALK) % BUILDING_CYCLE;
       
-      // For clouds, move to the right (same direction as everything else)
-      cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
-        (offset + CLOUD_SPEED) % width
-      );
+      // Cloud layer - each cloud can move at slightly different speeds for more natural look
+      cloudOffsetsRef.current = cloudOffsetsRef.current.map((_, index) => {
+        // Add slight variation to cloud speeds based on index
+        const cloudVariation = 1 + (index * 0.05);
+        return (offsetXRef.current * PARALLAX_LAYERS.CLOUDS * cloudVariation) % (width * 2);
+      });
       
       // Redraw the background with updated offsets
       drawBackground(ctx, width, height);
       
       // Continue animation loop
-      animationRef.current = requestAnimationFrame(animate);
+      animationFrameIdRef.current = requestAnimationFrame(animate);
     };
     
     // Start animation
-    animationRef.current = requestAnimationFrame(animate);
+    animationFrameIdRef.current = requestAnimationFrame(animate);
     
     // Cleanup animation on unmount
     return () => {
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
+      if (animationFrameIdRef.current !== null) {
+        cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
   }, [width, height]);
