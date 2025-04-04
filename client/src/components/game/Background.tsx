@@ -88,7 +88,7 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
   
-  // Draw pixelated clouds in the sky
+  // Draw modern pixelated clouds in the sky
   const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
@@ -99,8 +99,8 @@ export default function Background({ width, height }: BackgroundProps) {
     ];
     
     cloudPositions.forEach(cloud => {
-      // Use larger pixel size for more pixelated clouds
-      const pixelSize = 6;
+      // Use smaller pixel size for a more modern, subtle pixelated look
+      const pixelSize = 4;
       
       // Define the cloud shape as a collection of points
       const cloudPoints = [
@@ -111,7 +111,15 @@ export default function Background({ width, height }: BackgroundProps) {
         { x: cloud.x + cloud.size * 0.3, y: cloud.y - cloud.size * 0.3, radius: cloud.size * 0.5 }
       ];
       
-      // Draw the cloud using a pixel grid
+      // First pass: Draw a smoother cloud base
+      cloudPoints.forEach(point => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      // Second pass: Add subtle pixel details on top for texture
       // Define the bounding box for the cloud
       const boundLeft = cloud.x - cloud.size * 1.5;
       const boundRight = cloud.x + cloud.size * 1.5;
@@ -122,32 +130,49 @@ export default function Background({ width, height }: BackgroundProps) {
       for (let px = boundLeft; px < boundRight; px += pixelSize) {
         for (let py = boundTop; py < boundBottom; py += pixelSize) {
           
-          // Check if this pixel is inside any of the cloud circles
-          let insideCloud = false;
+          // Add pixels mostly at the edges for visual interest
+          let edgeOfCloud = false;
           
-          // Deterministic variation for edges
-          const edgeNoise = ((px * 7) + (py * 13)) % 10 < 3;
+          // Create a deterministic noise pattern that remains consistent
+          const noiseValue = Math.sin(px * 0.3) * Math.cos(py * 0.3) * 0.5 + 0.5;
           
           for (const point of cloudPoints) {
             const distance = Math.sqrt(Math.pow(px - point.x, 2) + Math.pow(py - point.y, 2));
-            if (distance < point.radius) {
-              insideCloud = true;
-              break;
-            } else if (distance < point.radius + pixelSize * 2 && edgeNoise) {
-              // Add some edge pixels with noise for a more natural pixelated look
-              insideCloud = true;
-              break;
+            // Only add detail pixels near the edges
+            if (distance > point.radius * 0.85 && distance < point.radius * 1.15) {
+              if (noiseValue > 0.7) {
+                edgeOfCloud = true;
+                break;
+              }
             }
           }
           
-          if (insideCloud) {
-            // Add subtle shading variation to make clouds more interesting
-            const shade = ((px + py) % 2 === 0) ? 
-              'rgba(255, 255, 255, 0.9)' : 
-              'rgba(240, 240, 255, 0.9)';
-              
-            ctx.fillStyle = shade;
+          if (edgeOfCloud) {
+            // Variable opacity for pixels makes them look more natural
+            const opacity = 0.5 + noiseValue * 0.3;
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
             ctx.fillRect(px, py, pixelSize, pixelSize);
+          }
+        }
+      }
+      
+      // Third pass: Add a few highlight pixels
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      for (const point of cloudPoints) {
+        const highlightX = point.x - point.radius * 0.2;
+        const highlightY = point.y - point.radius * 0.2;
+        
+        // Add a cluster of small highlight pixels
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if ((i+j) % 2 === 0) {
+              ctx.fillRect(
+                highlightX + i * pixelSize, 
+                highlightY + j * pixelSize, 
+                pixelSize, 
+                pixelSize
+              );
+            }
           }
         }
       }
