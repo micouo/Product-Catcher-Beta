@@ -65,6 +65,9 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
   ctx.closePath();
 }
 
+// Store player image as a ref to avoid re-creating it
+let playerImage: HTMLImageElement | null = null;
+
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
@@ -81,6 +84,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
+  const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -93,6 +97,19 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     movingDown: false,
     boosting: false,
   });
+  
+  // Load the player image on component mount
+  useEffect(() => {
+    // Only load the image once
+    if (!playerImage) {
+      const img = new Image();
+      img.src = '/images/pixelcar.png';
+      img.onload = () => {
+        playerImage = img;
+        setPlayerImageLoaded(true);
+      };
+    }
+  }, []);
   
   // Game loop with animation frame
   useEffect(() => {
@@ -462,29 +479,33 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // No need for background fill as we're now using the sidewalk from the background
   };
   
-  // Draw player as a simple shape temporarily
+  // Draw the player using the pixel art sprite
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
     // Only animate when the player is moving
     const isMoving = player.movingLeft || player.movingRight || player.movingUp || player.movingDown;
     
-    // Update animation frame
+    // Update animation frame for bounce effect
     const now = Date.now();
     if (isMoving && now - lastAnimTime > ANIM_INTERVAL) {
-      setAnimFrame((prev) => (prev + 1) % 4); // 4 animation frames (we'll simulate this with scaling/rotation)
+      setAnimFrame((prev) => (prev + 1) % 4);
       setLastAnimTime(now);
     }
     
     // Apply shadow for better visibility
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 5;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
     
     // Save context state
     ctx.save();
     
+    // Calculate center position
+    const centerX = player.x + player.width / 2;
+    const centerY = player.y + player.height / 2;
+    
     // Translate to the player position
-    ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+    ctx.translate(centerX, centerY);
     
     // Apply slight rotation based on movement direction
     let rotation = 0;
@@ -498,105 +519,26 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.rotate(rotation);
     ctx.scale(bounceScale, bounceScale);
     
-    // Draw car body
-    const carWidth = player.width;
-    const carHeight = player.height;
-    const wheelSize = carHeight / 4;
+    // Image is loaded in the useEffect hook on component mount
     
-    // Car body (rounded rectangle)
-    ctx.fillStyle = '#FF3333'; // Sporty red color
-    ctx.beginPath();
-    drawRoundedRect(ctx, -carWidth / 2, -carHeight / 2, carWidth, carHeight, 10);
-    ctx.fill();
-    
-    // Car roof/top (smaller rounded rectangle)
-    ctx.fillStyle = '#CC2222'; // Slightly darker red for shadow
-    ctx.beginPath();
-    drawRoundedRect(ctx, -carWidth / 2.5, -carHeight / 2.5, carWidth / 1.5, carHeight / 1.8, 8);
-    ctx.fill();
-    
-    // Add windows (windshield and side windows)
-    ctx.fillStyle = '#333333'; // Dark gray/black for windows
-    
-    // Windshield - adjust position based on direction
-    let windshieldX = 0;
-    let windshieldY = 0;
-    let windshieldWidth = carWidth / 2.2;
-    let windshieldHeight = carHeight / 3;
-    
-    // Adjust windshield position based on movement direction
-    if (player.movingLeft) {
-      windshieldX = -carWidth / 8;
-    } else if (player.movingRight) {
-      windshieldX = carWidth / 8;
+    // Draw the sprite if image is loaded
+    if (playerImage) {
+      // Draw slightly larger than the collision box to make the sprite properly visible
+      const drawWidth = player.width * 1.5;  
+      const drawHeight = player.height * 1.5;
+      
+      ctx.drawImage(
+        playerImage, 
+        -drawWidth / 2, 
+        -drawHeight / 2, 
+        drawWidth, 
+        drawHeight
+      );
+    } else {
+      // Fallback simple colored rectangle if image hasn't loaded yet
+      ctx.fillStyle = '#3B82F6'; // Blue color matching the sprite
+      ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
     }
-    
-    if (player.movingUp) {
-      windshieldY = -carHeight / 10;
-    } else if (player.movingDown) {
-      windshieldY = carHeight / 10;
-    }
-    
-    ctx.beginPath();
-    drawRoundedRect(
-      ctx,
-      windshieldX - windshieldWidth / 2, 
-      windshieldY - windshieldHeight / 2,
-      windshieldWidth,
-      windshieldHeight,
-      5
-    );
-    ctx.fill();
-    
-    // Add headlights or taillights based on direction
-    ctx.fillStyle = player.movingLeft ? '#FF5555' : '#FFFF66'; // Red for taillights, yellow for headlights
-    
-    // Left light
-    ctx.beginPath();
-    ctx.arc(-carWidth / 2 + 5, -carHeight / 4, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Right light
-    ctx.beginPath();
-    ctx.arc(-carWidth / 2 + 5, carHeight / 4, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.fillStyle = player.movingRight ? '#FF5555' : '#FFFF66'; // Red for taillights, yellow for headlights
-    
-    // Left light
-    ctx.beginPath();
-    ctx.arc(carWidth / 2 - 5, -carHeight / 4, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Right light
-    ctx.beginPath();
-    ctx.arc(carWidth / 2 - 5, carHeight / 4, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Add wheels (black circles)
-    ctx.fillStyle = '#111111';
-    
-    // Front-left wheel
-    ctx.beginPath();
-    ctx.arc(-carWidth / 3, -carHeight / 2 + wheelSize/2, wheelSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Front-right wheel
-    ctx.beginPath();
-    ctx.arc(carWidth / 3, -carHeight / 2 + wheelSize/2, wheelSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Back-left wheel
-    ctx.beginPath();
-    ctx.arc(-carWidth / 3, carHeight / 2 - wheelSize/2, wheelSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Back-right wheel
-    ctx.beginPath();
-    ctx.arc(carWidth / 3, carHeight / 2 - wheelSize/2, wheelSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // No tail animation as requested
     
     // Restore context state
     ctx.restore();
