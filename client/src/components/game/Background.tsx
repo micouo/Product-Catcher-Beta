@@ -330,9 +330,6 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, width, height * 0.6);
     
-    // Draw sun in the sky
-    drawSun(ctx, width * 0.85, height * 0.15, 40);
-    
     // Draw clouds in the sky
     drawClouds(ctx, width, height);
     
