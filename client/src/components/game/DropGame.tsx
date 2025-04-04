@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
-import carSpriteSheet from '@assets/Red_SPORT_CLEAN_8D_000-sheet.png';
 import Background from './Background';
 
 interface GameProps {
@@ -58,16 +57,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const lastSpawnTimeRef = useRef<number>(Date.now());
   const gameStartTimeRef = useRef<number>(0);
   const { playSound, initializeAudio } = useSound();
-  
-  // Create an image object for the car sprite sheet
-  const carImage = new Image();
-  carImage.src = carSpriteSheet;
-  
-  // Define sprite sheet dimensions
-  // The sprite sheet has 9 car directions in a 3x3 grid
-  const CAR_SPRITE_GRID = 3; // 3x3 grid
-  const CAR_SPRITE_COUNT = 9; // 9 sprites total
-  const CAR_SPRITE_SIZE = 100; // Each sprite is roughly 100x100 px
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
@@ -459,7 +448,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // No need for background fill as we're now using the sidewalk from the background
   };
   
-  // Draw player as a car sprite
+  // Draw player as a simple shape temporarily
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
     // Only animate when the player is moving
     const isMoving = player.movingLeft || player.movingRight || player.movingUp || player.movingDown;
@@ -471,7 +460,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       setLastAnimTime(now);
     }
     
-    // Apply shadow for the sprite
+    // Apply shadow for better visibility
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 5;
     ctx.shadowOffsetX = 2;
@@ -495,52 +484,45 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.rotate(rotation);
     ctx.scale(bounceScale, bounceScale);
     
-    // Determine which car sprite to use based on movement direction
-    let spriteIndex = 4; // Default to center (no movement) - index 4 in a 3x3 grid (zero-based)
+    // Draw a simple colored rectangle for the player
+    ctx.fillStyle = '#FF5555'; // Bright red color
+    ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
     
-    // Determine movement direction and select appropriate sprite
-    // Based on examining the actual sprite sheet:
-    // 0: NW view
-    // 1: W view
-    // 2: SW view
-    // 3: N view
-    // 4: Center/still view
-    // 5: S view
-    // 6: NE view
-    // 7: E view
-    // 8: SE view
+    // Add simple car-like details with rounded corners
+    ctx.fillStyle = '#333333'; // Dark gray for windows
     
-    if (player.movingUp && player.movingLeft) spriteIndex = 0; // NW
-    else if (!player.movingUp && !player.movingDown && player.movingLeft) spriteIndex = 1; // W
-    else if (player.movingDown && player.movingLeft) spriteIndex = 2; // SW
-    else if (player.movingUp && !player.movingLeft && !player.movingRight) spriteIndex = 3; // N
-    else if (!player.movingUp && !player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 4; // Center
-    else if (player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 5; // S
-    else if (player.movingUp && player.movingRight) spriteIndex = 6; // NE
-    else if (!player.movingUp && !player.movingDown && player.movingRight) spriteIndex = 7; // E
-    else if (player.movingDown && player.movingRight) spriteIndex = 8; // SE
-
-    // Calculate sprite position in the sheet
-    const spriteX = (spriteIndex % CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
-    const spriteY = Math.floor(spriteIndex / CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
-    
-    // Based on examining the sprite sheet, the car sprites are naturally oriented in the correct directions
-    // No need to flip horizontally, as the sprite sheet already has proper facing for each direction
-    
-    // Save current transform state just in case we need to modify it in the future
-    ctx.save();
-    
-    // Draw the car sprite from the sheet with proper orientation
-    ctx.drawImage(
-      carImage,
-      spriteX, spriteY, // Source position in sprite sheet
-      CAR_SPRITE_SIZE, CAR_SPRITE_SIZE, // Source dimensions
-      -player.width / 2, -player.height / 2, // Destination position
-      player.width, player.height // Destination dimensions
-    );
-    
-    // Restore the saved transform state
-    ctx.restore();
+    // Add direction indicators
+    if (player.movingLeft || player.movingRight || player.movingUp || player.movingDown) {
+      // Direction indicator (a small triangle on top)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      
+      // Different triangle direction based on movement
+      if (player.movingUp) {
+        // Triangle pointing up
+        ctx.moveTo(0, -player.height / 2 - 5);
+        ctx.lineTo(-10, -player.height / 2 + 5);
+        ctx.lineTo(10, -player.height / 2 + 5);
+      } else if (player.movingDown) {
+        // Triangle pointing down
+        ctx.moveTo(0, player.height / 2 + 5);
+        ctx.lineTo(-10, player.height / 2 - 5);
+        ctx.lineTo(10, player.height / 2 - 5);
+      } else if (player.movingLeft) {
+        // Triangle pointing left
+        ctx.moveTo(-player.width / 2 - 5, 0);
+        ctx.lineTo(-player.width / 2 + 5, -10);
+        ctx.lineTo(-player.width / 2 + 5, 10);
+      } else if (player.movingRight) {
+        // Triangle pointing right
+        ctx.moveTo(player.width / 2 + 5, 0);
+        ctx.lineTo(player.width / 2 - 5, -10);
+        ctx.lineTo(player.width / 2 - 5, 10);
+      }
+      
+      ctx.closePath();
+      ctx.fill();
+    }
     
     // No tail animation as requested
     
