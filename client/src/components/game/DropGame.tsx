@@ -99,6 +99,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     boosting: false,
   });
   
+  // Share player position for parallax effect
+  const [playerPosition, setPlayerPosition] = useState({ x: player.x, y: player.y });
+  
   // Load the player image on component mount
   useEffect(() => {
     // Only load the image once
@@ -368,6 +371,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       newX = Math.max(0, Math.min(GAME_WIDTH - prev.width, newX));
       newY = Math.max(areaY, Math.min(GAME_HEIGHT - prev.height, newY));
       
+      // Update player position for parallax effect
+      setPlayerPosition({ x: newX, y: newY });
+      
       return {
         ...prev,
         x: newX,
@@ -633,8 +639,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
-      {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
+      {/* Background Layer with Parallax Effect */}
+      <Background 
+        width={GAME_WIDTH} 
+        height={GAME_HEIGHT} 
+        playerX={playerPosition.x}
+        playerY={playerPosition.y}
+      />
       
       {/* Game Canvas */}
       <canvas

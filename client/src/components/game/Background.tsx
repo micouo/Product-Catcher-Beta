@@ -1,16 +1,73 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import cloudImage from '@assets/cloud.png';
 
 interface BackgroundProps {
   width: number;
   height: number;
+  playerX?: number; // Optional player X position for parallax effect
+  playerY?: number; // Optional player Y position for parallax effect
 }
 
-export default function Background({ width, height }: BackgroundProps) {
+interface BackgroundLayer {
+  elements: {
+    x: number;
+    y: number;
+    scale: number;
+    originalX: number; // Store the original position for parallax calculations
+    originalY: number;
+  }[];
+  parallaxFactor: number; // How much this layer moves relative to player (0 = static, 1 = moves with player)
+  draw: (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => void;
+}
+
+export default function Background({ width, height, playerX = width / 2, playerY = height / 2 }: BackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const hasDrawnRef = useRef(false);
   const cloudImgRef = useRef<HTMLImageElement | null>(null);
   const cloudLoadedRef = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Define the background layers with parallax factors
+  const layersRef = useRef<BackgroundLayer[]>([]);
+  
+  // Initialize layers if they haven't been created yet
+  const initializeLayers = () => {
+    if (layersRef.current.length > 0) return; // Only initialize once
+    
+    // Layer 1: Sky & Clouds (slow movement)
+    layersRef.current.push({
+      elements: [
+        { x: width * 0.15, y: height * 0.12, scale: 0.2, originalX: width * 0.15, originalY: height * 0.12 },
+        { x: width * 0.4, y: height * 0.08, scale: 0.15, originalX: width * 0.4, originalY: height * 0.08 },
+        { x: width * 0.7, y: height * 0.15, scale: 0.25, originalX: width * 0.7, originalY: height * 0.15 },
+        { x: width * 0.85, y: height * 0.1, scale: 0.18, originalX: width * 0.85, originalY: height * 0.1 }
+      ],
+      parallaxFactor: 0.05, // Clouds move very slowly
+      draw: drawClouds
+    });
+    
+    // Layer 2: Buildings (medium movement)
+    layersRef.current.push({
+      elements: [], // Building positions are calculated in the draw function
+      parallaxFactor: 0.1, // Buildings move a bit faster than clouds
+      draw: drawBuildings
+    });
+    
+    // Layer 3: Sidewalk (faster movement)
+    layersRef.current.push({
+      elements: [],
+      parallaxFactor: 0.2, // Sidewalk moves faster than buildings
+      draw: drawSidewalk
+    });
+    
+    // Layer 4: Street (fastest movement - closest to player)
+    layersRef.current.push({
+      elements: [],
+      parallaxFactor: 0.3, // Street moves the fastest
+      draw: drawStreetLayer
+    });
+    
+    setIsInitialized(true);
+  };
 
   useEffect(() => {
     // Load the cloud image
@@ -20,31 +77,34 @@ export default function Background({ width, height }: BackgroundProps) {
       img.onload = () => {
         cloudLoadedRef.current = true;
         
-        // Redraw after image loads
+        // Initialize layers after image loads
+        initializeLayers();
+        
+        // Trigger initial render
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            drawBackground(ctx, width, height);
+            drawBackground(ctx, width, height, playerX, playerY);
           }
         }
       };
       cloudImgRef.current = img;
+    } else {
+      // Initialize layers if image is already loaded
+      initializeLayers();
     }
     
+    // Draw background when component mounts or when dimensions or player position change
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Only draw the background once, unless the dimensions change
-    if (!hasDrawnRef.current || canvas.width !== width || canvas.height !== height) {
-      // Draw pixelated shopping district background
-      drawBackground(ctx, width, height);
-      hasDrawnRef.current = true;
-    }
-  }, [width, height]);
+    drawBackground(ctx, width, height, playerX, playerY);
+    
+  }, [width, height, playerX, playerY, isInitialized]);
 
   // Helper function to adjust color brightness
   const adjustBrightness = (hex: string, factor: number): string => {
@@ -110,22 +170,14 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
   
-  // Draw clouds using the provided cloud image
-  const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  // Draw clouds using the provided cloud image with parallax
+  const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
     // Check if cloud image is loaded
     if (!cloudImgRef.current || !cloudLoadedRef.current) return;
     
-    // Define cloud positions - set these to fixed values for a consistent background
-    const cloudPositions = [
-      { x: width * 0.15, y: height * 0.12, scale: 0.2 },
-      { x: width * 0.4, y: height * 0.08, scale: 0.15 },
-      { x: width * 0.7, y: height * 0.15, scale: 0.25 },
-      { x: width * 0.85, y: height * 0.1, scale: 0.18 }
-    ];
-    
     const cloudImg = cloudImgRef.current;
     
-    cloudPositions.forEach(cloud => {
+    elements.forEach(cloud => {
       // Calculate size - scale based on the original image dimensions
       const cloudWidth = cloudImg.width * cloud.scale;
       const cloudHeight = cloudImg.height * cloud.scale;
@@ -202,8 +254,8 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw pixelated buildings for the city skyline
-  const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  // Draw pixelated buildings for the city skyline with parallax support
+  const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
     const buildingColors = [
       '#FF6B6B', // Red
       '#4ECDC4', // Teal
@@ -305,24 +357,8 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.setLineDash([]);
   };
 
-  // Draw the entire background scene
-  const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    // Draw sky gradient
-    const skyGradient = ctx.createLinearGradient(0, 0, 0, height * 0.6);
-    skyGradient.addColorStop(0, '#4B79A1');  // Deep blue at top
-    skyGradient.addColorStop(1, '#79A7D3');  // Lighter blue at horizon
-    ctx.fillStyle = skyGradient;
-    ctx.fillRect(0, 0, width, height * 0.6);
-    
-    // Draw clouds in the sky
-    drawClouds(ctx, width, height);
-    
-    // Draw buildings - pixelated style
-    drawBuildings(ctx, width, height);
-    
+  // Standalone Sidewalk drawing function for parallax
+  const drawSidewalk = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
     // Calculate the position of the player area (where the white border is)
     const playerAreaY = height - 202; // 2px for the border
     
@@ -332,6 +368,12 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Draw sidewalk texture - grid lines
     drawSidewalkTexture(ctx, width, height, playerAreaY);
+  };
+  
+  // Standalone Street drawing function for parallax
+  const drawStreetLayer = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
+    // Calculate the position of the player area (where the white border is)
+    const playerAreaY = height - 202; // 2px for the border
     
     // The street should start where the sidewalk ends
     ctx.fillStyle = '#333333'; // Asphalt dark gray
@@ -339,6 +381,70 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Draw street markings
     drawStreetMarkings(ctx, width, height, playerAreaY);
+  };
+  
+  // Draw the entire background scene with parallax effect
+  const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number, playerX: number, playerY: number) => {
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw sky gradient (always static, no parallax)
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, height * 0.6);
+    skyGradient.addColorStop(0, '#4B79A1');  // Deep blue at top
+    skyGradient.addColorStop(1, '#79A7D3');  // Lighter blue at horizon
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, width, height * 0.6);
+    
+    // Center point of the canvas
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Get offset from center (how much player has moved from center)
+    const offsetX = playerX - centerX;
+    const offsetY = playerY - centerY;
+    
+    // Draw each layer with its parallax effect
+    if (layersRef.current.length > 0 && isInitialized) {
+      layersRef.current.forEach((layer, index) => {
+        // Save the current state
+        ctx.save();
+        
+        // Apply parallax translation to this layer
+        // The further the player is from center, the more the layer moves in the opposite direction
+        // The parallaxFactor determines how much this layer moves relative to player movement
+        const parallaxX = -offsetX * layer.parallaxFactor;
+        const parallaxY = -offsetY * layer.parallaxFactor;
+        
+        // For elements with stored positions (like clouds)
+        if (layer.elements.length > 0) {
+          // Apply parallax to each element in the layer
+          const adjustedElements = layer.elements.map(element => {
+            return {
+              ...element,
+              x: element.originalX + parallaxX,
+              y: element.originalY + parallaxY
+            };
+          });
+          
+          // Draw this layer with parallax-adjusted elements
+          layer.draw(ctx, width, height, adjustedElements);
+        } else {
+          // For layers without specific elements (like buildings, sidewalk)
+          // Translate the entire canvas for drawing
+          ctx.translate(parallaxX, parallaxY);
+          layer.draw(ctx, width, height, []);
+        }
+        
+        // Restore to original state
+        ctx.restore();
+      });
+    } else {
+      // Fallback if layers aren't initialized yet - draw without parallax
+      drawClouds(ctx, width, height, []);
+      drawBuildings(ctx, width, height, []);
+      drawSidewalk(ctx, width, height, []);
+      drawStreetLayer(ctx, width, height, []);
+    }
   };
 
   return (
