@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface BackgroundProps {
   width: number;
@@ -7,9 +7,7 @@ interface BackgroundProps {
 
 export default function Background({ width, height }: BackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
-  const scrollOffsetRef = useRef(0);
-  const scrollSpeedRef = useRef(0.5); // Pixels per frame - much slower for a subtle effect
+  const hasDrawnRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,34 +15,16 @@ export default function Background({ width, height }: BackgroundProps) {
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    // Set up continuous animation for scrolling background
-    const animate = () => {
-      if (!ctx) return;
-      
-      // Update scroll offset using ref to avoid re-renders
-      scrollOffsetRef.current = (scrollOffsetRef.current + scrollSpeedRef.current) % 200;
-      
-      // Draw pixelated shopping district background with scrolling
-      ctx.clearRect(0, 0, width, height);
-      drawBackground(ctx, width, height, scrollOffsetRef.current);
-      
-      // Continue animation
-      animationRef.current = requestAnimationFrame(animate);
-    };
     
-    // Start animation
-    animationRef.current = requestAnimationFrame(animate);
-    
-    // Cleanup animation on unmount
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    // Only draw the background once, unless the dimensions change
+    if (!hasDrawnRef.current || canvas.width !== width || canvas.height !== height) {
+      // Draw pixelated shopping district background
+      drawBackground(ctx, width, height);
+      hasDrawnRef.current = true;
+    }
   }, [width, height]);
 
-  const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number, scrollOffset: number = 0) => {
+  const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
@@ -55,8 +35,8 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, width, height * 0.6);
     
-    // Draw buildings - pixelated style (all elements move at the same speed)
-    drawBuildings(ctx, width, height, scrollOffset);
+    // Draw buildings - pixelated style
+    drawBuildings(ctx, width, height);
     
     // Calculate the position of the player area (where the white border is)
     const playerAreaY = height - 202; // 2px for the border
@@ -65,18 +45,18 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillStyle = '#A9A9A9'; // Concrete gray
     ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
     
-    // Draw sidewalk texture - grid lines with scrolling offset
-    drawSidewalkTexture(ctx, width, height, playerAreaY, scrollOffset);
+    // Draw sidewalk texture - grid lines (pass playerAreaY as parameter)
+    drawSidewalkTexture(ctx, width, height, playerAreaY);
     
     // The street should start where the sidewalk ends
     ctx.fillStyle = '#333333'; // Asphalt dark gray
     ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
     
-    // Draw street markings with same scrolling offset for uniform movement
-    drawStreetMarkings(ctx, width, height, playerAreaY, scrollOffset);
+    // Draw street markings
+    drawStreetMarkings(ctx, width, height, playerAreaY);
   };
 
-  const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number, scrollOffset: number = 0) => {
+  const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const buildingColors = [
       '#FF6B6B', // Red
       '#4ECDC4', // Teal
@@ -90,18 +70,13 @@ export default function Background({ width, height }: BackgroundProps) {
 
     const pixelSize = 4; // Size of each "pixel" to create pixelated effect
     
-    // Calculate extra width to ensure seamless scrolling
-    const extraWidth = 200; // Draw beyond visible area for seamless scrolling
-    
     // Generate buildings with different heights and colors
-    // Start offscreen to the left to ensure continuous scrolling
-    let xPos = -extraWidth - scrollOffset;
-    while (xPos < width + extraWidth) {
-      // Ensure consistent building patterns based on absolute position
-      const absoluteX = Math.abs(xPos); // Use absolute position for deterministic pattern
-      const buildingWidth = ((absoluteX % 3) + 1) * 30 + 50; // 80-140 width
-      const buildingHeight = ((absoluteX % 4) + 1) * 30 + (height * 0.2); // Varied heights
-      const colorIndex = Math.floor(absoluteX % buildingColors.length);
+    let xPos = 0;
+    while (xPos < width) {
+      // Use fixed values for a consistent background
+      const buildingWidth = ((xPos % 3) + 1) * 30 + 50; // 80-140 width
+      const buildingHeight = ((xPos % 4) + 1) * 30 + (height * 0.2); // Varied heights
+      const colorIndex = Math.floor(xPos % buildingColors.length);
       
       // Draw building - base structure with pixelated effect
       ctx.fillStyle = buildingColors[colorIndex];
@@ -110,7 +85,7 @@ export default function Background({ width, height }: BackgroundProps) {
       for (let y = height * 0.6 - buildingHeight; y < height * 0.6; y += pixelSize) {
         for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
           // Deterministic color variation based on position
-          if ((Math.abs(x) + y) % 10 === 0) {
+          if ((x + y) % 10 === 0) {
             ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
           } else {
             ctx.fillStyle = buildingColors[colorIndex];
@@ -126,7 +101,7 @@ export default function Background({ width, height }: BackgroundProps) {
       drawWindows(ctx, xPos, height * 0.6 - buildingHeight, buildingWidth, buildingHeight, pixelSize);
       
       // Store shop signs on some buildings deterministically
-      if (absoluteX % 2 === 0) {
+      if (xPos % 2 === 0) {
         drawStoreSign(ctx, xPos, buildingWidth, height * 0.6 - buildingHeight * 0.3);
       }
       
@@ -197,8 +172,7 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx: CanvasRenderingContext2D, 
     width: number, 
     height: number, 
-    playerAreaY: number = height * 0.8,
-    scrollOffset: number = 0
+    playerAreaY: number = height * 0.8
   ) => {
     ctx.strokeStyle = '#888888';
     ctx.lineWidth = 1;
@@ -211,12 +185,8 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Draw vertical lines with scrolling - stop at the player area
-    // Calculate line positions based on scrollOffset for smooth scrolling
-    const lineSpacing = 40; // Space between vertical lines
-    const offsetX = scrollOffset % lineSpacing; // Ensure smooth repeat
-    
-    for (let x = -offsetX; x < width + lineSpacing; x += lineSpacing) {
+    // Draw vertical lines - stop at the player area
+    for (let x = 0; x < width; x += 40) {
       ctx.beginPath();
       ctx.moveTo(x, height * 0.6);
       ctx.lineTo(x, playerAreaY);
@@ -228,21 +198,12 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx: CanvasRenderingContext2D, 
     width: number, 
     height: number, 
-    playerAreaY: number,
-    scrollOffset: number = 0
+    playerAreaY: number
   ) => {
+    
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 6;
-    
-    // Create scrolling dashed lines
-    const dashLength = 20;
-    const gapLength = 15;
-    const totalLength = dashLength + gapLength;
-    
-    // Adjust the dash pattern based on scroll offset
-    const dashOffset = scrollOffset % totalLength;
-    ctx.setLineDash([dashLength, gapLength]);
-    ctx.lineDashOffset = -dashOffset; // Negative for forward movement
+    ctx.setLineDash([20, 15]); // Dashed line pattern
     
     // Draw center line in middle of street area (playerAreaY to bottom)
     const centerY = playerAreaY + (height - playerAreaY) / 2;
