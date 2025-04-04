@@ -42,15 +42,17 @@ export default function Background({ width, height }: BackgroundProps) {
 
     // Animation loop function
     const animate = () => {
-      // Update scrolling offsets
-      offsetXRef.current = (offsetXRef.current + SCROLL_SPEED) % width;
-      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % (width * 2);
+      // Update scrolling offsets for sidewalk and road (moving right)
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // Update cloud positions (slower speed)
+      // Update building and cloud positions in OPPOSITE direction (moving right to left)
+      // For clouds and buildings we SUBTRACT instead of add to make them move right
+      buildingOffsetRef.current = (buildingOffsetRef.current - SCROLL_SPEED + width * 2) % (width * 2);
+      
+      // Update cloud positions (slower speed but in opposite direction)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
-        (offset + CLOUD_SPEED) % width
+        (offset - CLOUD_SPEED + width) % width
       );
       
       // Redraw the background with updated offsets
@@ -173,8 +175,8 @@ export default function Background({ width, height }: BackgroundProps) {
       // Apply scrolling offset for this cloud - wrap around when out of view
       const cloudXOffset = cloudOffsetsRef.current[index];
       
-      // Draw main cloud with offset
-      const xPos = (cloud.x - cloudWidth / 2) - cloudXOffset;
+      // Draw main cloud with offset (positive offset since we're moving right)
+      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
       
       // Draw cloud image centered at the position
       ctx.drawImage(
@@ -188,7 +190,7 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
       ctx.drawImage(
         cloudImg,
-        xPos + width, // Draw a second cloud one screen-width away
+        xPos - width, // Draw a second cloud one screen-width away
         cloud.y - cloudHeight / 2,
         cloudWidth,
         cloudHeight,
@@ -295,8 +297,8 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Generate a deterministic sequence of buildings spanning 3x the screen width
     for (let basePos = startPos; basePos < endPos; basePos += 100) {
-      // Apply the scrolling offset to the building position
-      const xPos = basePos - offset;
+      // Apply the scrolling offset to the building position (add instead of subtract since we're moving right)
+      const xPos = basePos + offset;
       
       // Since buildings have different widths, we need to calculate each one deterministically
       const seed = Math.abs(Math.floor(basePos / 100)); // Deterministic seed based on position
