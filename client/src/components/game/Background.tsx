@@ -22,6 +22,7 @@ export default function Background({ width, height }: BackgroundProps) {
   // Animation speed (pixels per frame)
   const SCROLL_SPEED = 1;
   const CLOUD_SPEED = 0.2; // Clouds move slower
+  const BUILDING_CYCLE = 5000; // Very large cycle to prevent obvious repeating
 
   useEffect(() => {
     // Load the cloud image
@@ -44,15 +45,12 @@ export default function Background({ width, height }: BackgroundProps) {
     const animate = () => {
       // ALL ELEMENTS move to the RIGHT (using same direction for consistency)
       
-      // We'll use a larger cycle width for building offset to prevent visual gaps
-      const buildingCycleWidth = width * 5;
-      
       // For road and sidewalk
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // For buildings, use same direction (moving right) but with a larger cycle
-      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % buildingCycleWidth;
+      // For buildings, use same direction (moving right) but with a much larger cycle
+      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % BUILDING_CYCLE;
       
       // For clouds, move to the right (same direction as everything else)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
@@ -250,43 +248,10 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw decorative store signs on buildings
-  const drawStoreSign = (
-    ctx: CanvasRenderingContext2D,
-    buildingX: number,
-    buildingWidth: number,
-    signY: number,
-  ) => {
-    const signWidth = buildingWidth * 0.6;
-    const signHeight = 15;
-    const signX = buildingX + (buildingWidth - signWidth) / 2;
-
-    // Draw sign background (using neutral colors instead of the yellow block)
-    ctx.fillStyle = "#455A64"; // Dark blue-gray
-    ctx.fillRect(signX, signY, signWidth, signHeight);
-
-    // Add a simple white border
-    ctx.strokeStyle = "#EEEEEE";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(signX, signY, signWidth, signHeight);
-    
-    // Add simple dots to simulate text/logo without being too colorful
-    const dotCount = Math.floor(signWidth / 10);
-    const dotSize = 3;
-    const dotY = signY + signHeight/2 - dotSize/2;
-    
-    for (let i = 0; i < dotCount; i++) {
-      // Create a pattern of small dots to simulate text
-      if (i % 3 !== 0) {
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(
-          signX + 5 + i * 10, 
-          dotY, 
-          dotSize, 
-          dotSize
-        );
-      }
-    }
+  // Placeholder function for potential future store signs
+  // Currently not used as requested by user to remove all store signs
+  const drawStoreSign = () => {
+    // Empty function - store signs have been removed
   };
 
   // Draw pixelated buildings for the city skyline
@@ -314,8 +279,7 @@ export default function Background({ width, height }: BackgroundProps) {
     // Calculate base position for infinite building generation
     // We wrap the building offset around a large value to create a continuous loop
     // While also shifting the baseline to create new building patterns
-    const buildingCycle = 5000; // A very large cycle to prevent obvious repeating
-    const wrappedOffset = offset % buildingCycle;
+    const wrappedOffset = offset % BUILDING_CYCLE;
     
     // We'll always generate buildings in a window around the current view
     // By using modulo arithmetic, we create a continuous stream of buildings
@@ -334,7 +298,7 @@ export default function Background({ width, height }: BackgroundProps) {
     while (currentPos < endPos) {
       // Calculate absolute position (for deterministic building generation)
       // This uses the overall offset to create a "world position" that stays consistent
-      const absPos = currentPos + Math.floor(offset / buildingCycle) * buildingCycle;
+      const absPos = currentPos + Math.floor(offset / BUILDING_CYCLE) * BUILDING_CYCLE;
       
       // Create a deterministic seed based on the absolute position
       // This ensures each position always generates the same building
@@ -384,15 +348,7 @@ export default function Background({ width, height }: BackgroundProps) {
           seed, // Pass the seed value to keep window lights stable during animation
         );
 
-        // Store shop signs on some buildings deterministically
-        if (seed % 2 === 0) {
-          drawStoreSign(
-            ctx,
-            xPos,
-            buildingWidth,
-            height * 0.6 - buildingHeight * 0.3,
-          );
-        }
+        // Store signs have been removed as requested
       }
       
       // Move to the next building position
