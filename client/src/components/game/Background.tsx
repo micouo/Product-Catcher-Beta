@@ -356,7 +356,7 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw decorative pixel bushes on sidewalk
+  // Draw decorative round bushes on sidewalk
   const drawBush = (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -366,37 +366,38 @@ export default function Background({ width, height }: BackgroundProps) {
     // Base bush color
     ctx.fillStyle = "#228B22"; // Forest green for bushes
     
-    // Draw the main bush body (rounded rectangle)
-    const bushWidth = size * 0.8;
-    const bushHeight = size * 0.4;
+    // Draw a more circular bush shape
+    const bushSize = size * 0.8;
     
-    // Draw a rounded rectangle using arcs
-    const radius = bushHeight / 2;
+    // Draw main circular bush body
     ctx.beginPath();
-    ctx.moveTo(x - bushWidth/2 + radius, y - bushHeight/2);
-    ctx.lineTo(x + bushWidth/2 - radius, y - bushHeight/2);
-    ctx.arc(x + bushWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
-    ctx.lineTo(x - bushWidth/2 + radius, y + bushHeight/2);
-    ctx.arc(x - bushWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
-    ctx.closePath();
+    ctx.arc(x, y, bushSize/2, 0, Math.PI * 2);
     ctx.fill();
     
-    // Add some details to the bush (little bumps on top for texture)
-    const bumpCount = 5;
-    const bumpSize = size * 0.2;
-    
-    // Slightly darker shade for the bumps
+    // Add some details to the bush (smaller circles for texture)
+    // Slightly darker shade for the texture circles
     ctx.fillStyle = "#1E8449"; // Darker green for texture
     
-    for (let i = 0; i < bumpCount; i++) {
-      const bumpX = x - bushWidth/2 + (bushWidth / (bumpCount-1)) * i;
-      const bumpY = y - bushHeight/2;
+    // Draw smaller circles around the main circle for a fluffy look
+    const detailCount = 6;
+    const detailSize = size * 0.25;
+    const detailDistance = bushSize * 0.3; // Distance from center
+    
+    for (let i = 0; i < detailCount; i++) {
+      const angle = (i / detailCount) * Math.PI * 2;
+      const detailX = x + Math.cos(angle) * detailDistance;
+      const detailY = y + Math.sin(angle) * detailDistance;
       
-      // Draw circular bumps on top of the bush
       ctx.beginPath();
-      ctx.arc(bumpX, bumpY, bumpSize, 0, Math.PI * 2);
+      ctx.arc(detailX, detailY, detailSize, 0, Math.PI * 2);
       ctx.fill();
     }
+    
+    // Add a slightly lighter shade on top for highlight
+    ctx.fillStyle = "#2E8B57"; // Medium sea green
+    ctx.beginPath();
+    ctx.arc(x, y - bushSize/8, bushSize/4, 0, Math.PI * 2);
+    ctx.fill();
   };
 
   // Draw grid pattern on sidewalk and add bushes
