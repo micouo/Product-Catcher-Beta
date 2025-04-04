@@ -389,7 +389,7 @@ export default function Background({ width, height }: BackgroundProps) {
     const treeImg = treeImgRef.current;
     
     // Calculate the size of the tree image while maintaining aspect ratio
-    const scale = size / Math.min(treeImg.width, treeImg.height) * 4.5; // Make tree larger
+    const scale = size / Math.min(treeImg.width, treeImg.height) * 4.05; // Reduced by 10% from 4.5
     const treeWidth = treeImg.width * scale;
     const treeHeight = treeImg.height * scale;
     
@@ -440,7 +440,7 @@ export default function Background({ width, height }: BackgroundProps) {
     // Add trees along the sidewalk at regular intervals
     // Trees should scroll with the sidewalk but maintain fixed size
     const treeSpacing = 300; // Space between trees for better visibility
-    const treeSize = 45; // Fixed size for all trees
+    const treeSize = 40.5; // Fixed size for all trees (reduced by 10% from 45)
     const treeY = height * 0.62; // Position trees higher up on the sidewalk
     
     // Apply sidewalk scrolling offset
