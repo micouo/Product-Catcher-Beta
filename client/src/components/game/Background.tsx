@@ -436,9 +436,9 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Add bushes along the sidewalk at regular intervals
     // Use sidewalk offset to make bushes move with the sidewalk
-    const bushSpacing = 120; // Space between bushes
+    const bushSpacing = 200; // Increased space between bushes
     const bushSize = 40; // Size of bushes
-    const bushY = height * 0.67; // Position bushes near middle of sidewalk
+    const bushY = height * 0.63; // Position bushes higher up on the sidewalk
     
     // Calculate positions to place bushes, accounting for the scrolling offset
     for (let x = -bushSpacing + (offset % bushSpacing); x < width + bushSpacing; x += bushSpacing) {
