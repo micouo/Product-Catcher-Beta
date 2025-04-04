@@ -42,6 +42,8 @@ export default function GameContainer() {
   const handleStartGame = () => {
     setShowCharacterSelect(false);
     setGameActive(true);
+    // Reset score when starting a new game from character select
+    setCurrentScore(0);
   };
 
   return (

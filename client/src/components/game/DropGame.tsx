@@ -78,6 +78,21 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
+  const [gameInitialized, setGameInitialized] = useState(false);
+  
+  // Auto-start the game when component is mounted
+  useEffect(() => {
+    if (!gameInitialized) {
+      // Short delay to allow assets to load before starting
+      const startTimer = setTimeout(() => {
+        startGame();
+        setGameInitialized(true);
+        if (onScoreUpdate) onScoreUpdate(0); // Initialize parent score
+      }, 500);
+      
+      return () => clearTimeout(startTimer);
+    }
+  }, [gameInitialized, onScoreUpdate, startGame]);
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
