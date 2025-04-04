@@ -1,6 +1,20 @@
 import React, { useEffect, useRef } from "react";
 import cloudImage from "@assets/cloud.png";
 
+// Constants for animation and variety
+const SCROLL_SPEED = 1;
+const CLOUD_SPEED = 0.3;
+const BUILDING_CYCLE = 5000; // Very large cycle to prevent obvious repeating
+
+// Flower colors for variety
+const FLOWER_COLORS = [
+  "#FF5252", // Red
+  "#FFEB3B", // Yellow
+  "#E040FB", // Purple
+  "#FF9800", // Orange
+  "#FFCDD2", // Light pink
+];
+
 interface BackgroundProps {
   width: number;
   height: number;
@@ -356,6 +370,40 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
+  // Draw a simple flower
+  const drawFlower = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number
+  ) => {
+    // Randomize flower color based on position to keep it consistent
+    const colorIndex = Math.floor(Math.abs(x * 0.7) % FLOWER_COLORS.length);
+    const flowerColor = FLOWER_COLORS[colorIndex];
+    
+    // Draw flower petals
+    const petalCount = 5;
+    const petalSize = size * 0.5;
+    
+    for (let i = 0; i < petalCount; i++) {
+      const angle = (i / petalCount) * Math.PI * 2;
+      const petalX = x + Math.cos(angle) * size * 0.4;
+      const petalY = y + Math.sin(angle) * size * 0.4;
+      
+      // Draw petal
+      ctx.fillStyle = flowerColor;
+      ctx.beginPath();
+      ctx.arc(petalX, petalY, petalSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Draw flower center
+    ctx.fillStyle = "#FFEB3B"; // Yellow center
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
   // Draw decorative round bushes on sidewalk
   const drawBush = (
     ctx: CanvasRenderingContext2D,
@@ -444,6 +492,21 @@ export default function Background({ width, height }: BackgroundProps) {
     for (let x = -bushSpacing + (offset % bushSpacing); x < width + bushSpacing; x += bushSpacing) {
       // Draw bushes
       drawBush(ctx, x, bushY, bushSize);
+      
+      // Draw flowers beside each bush
+      const flowerCount = 3; // Number of flowers around each bush
+      const flowerSize = 10; // Size of flowers
+      
+      // Add small flowers near the bush with some variation
+      for (let i = 0; i < flowerCount; i++) {
+        // Calculate flower position - offset from bush
+        const flowerDistance = bushSize * 0.8 + flowerSize;
+        const angle = Math.PI * 0.5 + (i - 1) * Math.PI / 4; // Flowers in a slight arc in front of bush
+        const flowerX = x + Math.cos(angle) * flowerDistance;
+        
+        // Draw the flower - place slightly below the bush
+        drawFlower(ctx, flowerX, bushY + bushSize * 0.6, flowerSize);
+      }
     }
   };
 
