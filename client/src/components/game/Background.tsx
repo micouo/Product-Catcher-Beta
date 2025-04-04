@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import cloudImage from "@assets/cloud.png";
+import cloudImage from "../../assets/cloud.png";
+import treeImage from "../../assets/tree.png";
 
 // Constants for animation and variety
 const SCROLL_SPEED = 1;
@@ -16,6 +17,8 @@ export default function Background({ width, height }: BackgroundProps) {
   const animationRef = useRef<number | null>(null);
   const cloudImgRef = useRef<HTMLImageElement | null>(null);
   const cloudLoadedRef = useRef(false);
+  const treeImgRef = useRef<HTMLImageElement | null>(null);
+  const treeLoadedRef = useRef(false);
   
   // Offsets for scrolling different elements
   const offsetXRef = useRef(0);
@@ -38,6 +41,16 @@ export default function Background({ width, height }: BackgroundProps) {
         cloudLoadedRef.current = true;
       };
       cloudImgRef.current = img;
+    }
+    
+    // Load the tree image
+    if (!treeImgRef.current) {
+      const img = new Image();
+      img.src = treeImage;
+      img.onload = () => {
+        treeLoadedRef.current = true;
+      };
+      treeImgRef.current = img;
     }
 
     const canvas = canvasRef.current;
@@ -363,61 +376,31 @@ export default function Background({ width, height }: BackgroundProps) {
 
 
 
-  // Draw trees with round foliage on sidewalk
+  // Draw trees using the provided tree image
   const drawTree = (
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     size: number
   ) => {
-    // Draw the tree trunk first
-    ctx.fillStyle = "#8B4513"; // Saddle brown for trunk
-    const trunkWidth = size * 0.2;
-    const trunkHeight = size * 0.4;
+    // Check if tree image is loaded
+    if (!treeImgRef.current || !treeLoadedRef.current) return;
     
-    // Draw trunk below the foliage
-    ctx.fillRect(
-      x - trunkWidth/2,
-      y + size * 0.1, // Start below the center of the foliage
-      trunkWidth,
-      trunkHeight
+    const treeImg = treeImgRef.current;
+    
+    // Calculate the size of the tree image while maintaining aspect ratio
+    const scale = size / Math.min(treeImg.width, treeImg.height) * 4.0; // Make tree larger
+    const treeWidth = treeImg.width * scale;
+    const treeHeight = treeImg.height * scale;
+    
+    // Draw tree image centered horizontally but positioned with trunk at the bottom
+    ctx.drawImage(
+      treeImg,
+      x - treeWidth / 2, // Center horizontally
+      y - treeHeight * 0.75, // Position so the trunk is at the sidewalk level
+      treeWidth,
+      treeHeight
     );
-    
-    // Base foliage color (using the same style as the previous bushes)
-    ctx.fillStyle = "#228B22"; // Forest green for foliage
-    
-    // Draw a circular foliage shape (same as the bush shape)
-    const foliageSize = size * 0.8;
-    
-    // Draw main circular foliage body
-    ctx.beginPath();
-    ctx.arc(x, y, foliageSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Add some details to the foliage (smaller circles for texture)
-    // Slightly darker shade for the texture circles
-    ctx.fillStyle = "#1E8449"; // Darker green for texture
-    
-    // Draw smaller circles around the main circle for a fluffy look
-    const detailCount = 6;
-    const detailSize = size * 0.25;
-    const detailDistance = foliageSize * 0.3; // Distance from center
-    
-    for (let i = 0; i < detailCount; i++) {
-      const angle = (i / detailCount) * Math.PI * 2;
-      const detailX = x + Math.cos(angle) * detailDistance;
-      const detailY = y + Math.sin(angle) * detailDistance;
-      
-      ctx.beginPath();
-      ctx.arc(detailX, detailY, detailSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Add a slightly lighter shade on top for highlight
-    ctx.fillStyle = "#2E8B57"; // Medium sea green
-    ctx.beginPath();
-    ctx.arc(x, y - foliageSize/8, foliageSize/4, 0, Math.PI * 2);
-    ctx.fill();
   };
 
   // Draw grid pattern on sidewalk and add bushes
@@ -456,14 +439,15 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Add trees along the sidewalk at regular intervals
     // Use sidewalk offset to make trees move with the sidewalk
-    const treeSpacing = 200; // Increased space between trees
-    const treeSize = 40; // Size of trees
-    const treeY = height * 0.615; // Position trees higher up on the sidewalk
+    const treeSpacing = 300; // Increased space between trees for better visibility
+    const treeSize = 40; // Base size of trees
+    const treeY = height * 0.63; // Position trees in the middle of the sidewalk
     
     // Calculate positions to place trees, accounting for the scrolling offset
     for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
-      // Draw trees
-      drawTree(ctx, x, treeY, treeSize);
+      // Draw trees with slight random size variation
+      const sizeVariation = 1.0 + (Math.abs(Math.sin(x * 0.1)) * 0.2); // 0.8-1.2 variation
+      drawTree(ctx, x, treeY, treeSize * sizeVariation);
     }
   };
 
