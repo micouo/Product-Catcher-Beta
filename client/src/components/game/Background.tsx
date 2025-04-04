@@ -298,8 +298,9 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Generate a deterministic sequence of buildings spanning 3x the screen width
     for (let basePos = startPos; basePos < endPos; basePos += 100) {
-      // Apply the scrolling offset to the building position (add instead of subtract since we're moving right)
-      const xPos = basePos + offset;
+      // For RIGHT-TO-LEFT scrolling, SUBTRACT the offset from position
+      // As offset increases, buildings appear to move right-to-left
+      const xPos = basePos - offset;
       
       // Since buildings have different widths, we need to calculate each one deterministically
       const seed = Math.abs(Math.floor(basePos / 100)); // Deterministic seed based on position
