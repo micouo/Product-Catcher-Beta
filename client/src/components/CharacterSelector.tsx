@@ -93,76 +93,64 @@ export default function CharacterSelector({ onSelect, selectedHair }: CharacterS
   };
   
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-      <h2 className="text-2xl font-bold text-white mb-4">Character Customization</h2>
-      
-      {/* Current character preview */}
-      <div className="flex flex-col items-center mb-6">
-        <h3 className="text-lg text-gray-300 mb-2">Your Character</h3>
-        <div className="bg-gray-700 p-4 rounded-lg">
-          {renderCharacterPreview(selectedHair)}
-        </div>
-      </div>
-      
-      {/* Hair style options */}
-      <div>
-        <h3 className="text-lg text-gray-300 mb-2">Choose Hair Style</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {hairStyles.map((hairStyle) => (
-            <Button 
-              key={hairStyle.id}
-              variant={selectedHair === hairStyle.id ? "default" : "outline"}
-              className="flex flex-col items-center p-2 h-auto"
-              onClick={() => onSelect(hairStyle.id)}
-            >
-              <div className="mb-2 h-16 w-16 flex items-center justify-center">
-                {hairStyle.id !== 'none' ? 
-                  <div className="relative" style={{ width: 64, height: 64 }}>
-                    {/* Show mini character with this hair */}
-                    <div className="absolute inset-0">
-                      <div
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundImage: `url(${baseIdleSprite})`,
-                          backgroundPosition: `0px 0px`,
-                          backgroundSize: `${9 * 64}px ${64}px`,
-                          imageRendering: 'pixelated',
-                        }}
-                      />
-                    </div>
-                    <div className="absolute inset-0">
-                      <div
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundImage: `url(${hairStyle.sprite})`,
-                          backgroundPosition: `0px 0px`,
-                          backgroundSize: `${9 * 64}px ${64}px`,
-                          imageRendering: 'pixelated',
-                        }}
-                      />
-                    </div>
-                  </div>
-                : 
-                  <div className="relative" style={{ width: 64, height: 64 }}>
+    <div className="bg-gray-800 p-4 rounded-lg shadow-xl max-h-[350px] overflow-y-auto">      
+      {/* Choose Hair Style */}
+      <h3 className="text-lg text-gray-300 mb-2 text-center">Choose Hair Style</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {hairStyles.map((hairStyle) => (
+          <Button 
+            key={hairStyle.id}
+            variant={selectedHair === hairStyle.id ? "default" : "outline"}
+            className="flex flex-col items-center p-2 h-auto"
+            onClick={() => onSelect(hairStyle.id)}
+          >
+            <div className="mb-1 h-14 w-14 flex items-center justify-center">
+              {hairStyle.id !== 'none' ? 
+                <div className="relative" style={{ width: 48, height: 48 }}>
+                  {/* Show mini character with this hair */}
+                  <div className="absolute inset-0">
                     <div
                       style={{
-                        width: 64,
-                        height: 64,
+                        width: 48,
+                        height: 48,
                         backgroundImage: `url(${baseIdleSprite})`,
                         backgroundPosition: `0px 0px`,
-                        backgroundSize: `${9 * 64}px ${64}px`,
+                        backgroundSize: `${9 * 48}px ${48}px`,
                         imageRendering: 'pixelated',
                       }}
                     />
                   </div>
-                }
-              </div>
-              <span className="text-sm">{hairStyle.name}</span>
-            </Button>
-          ))}
-        </div>
+                  <div className="absolute inset-0">
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        backgroundImage: `url(${hairStyle.sprite})`,
+                        backgroundPosition: `0px 0px`,
+                        backgroundSize: `${9 * 48}px ${48}px`,
+                        imageRendering: 'pixelated',
+                      }}
+                    />
+                  </div>
+                </div>
+              : 
+                <div className="relative" style={{ width: 48, height: 48 }}>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      backgroundImage: `url(${baseIdleSprite})`,
+                      backgroundPosition: `0px 0px`,
+                      backgroundSize: `${9 * 48}px ${48}px`,
+                      imageRendering: 'pixelated',
+                    }}
+                  />
+                </div>
+              }
+            </div>
+            <span className="text-xs">{hairStyle.name}</span>
+          </Button>
+        ))}
       </div>
     </div>
   );

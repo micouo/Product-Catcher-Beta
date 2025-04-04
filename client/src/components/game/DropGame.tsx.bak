@@ -1,36 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Background from './Background';
+import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
+import Background from './Background';
 import { HairStyle } from '../CharacterSelector';
 
-// Import base character sprite
+// Import character sprites
 import baseIdleSprite from '@assets/base_idle_strip9.png';
-
-// Import hair styles
 import bowlHairSprite from '@assets/bowlhair_idle_strip9.png';
 import curlyHairSprite from '@assets/curlyhair_idle_strip9.png';
 import longHairSprite from '@assets/longhair_idle_strip9.png';
 import mopHairSprite from '@assets/mophair_idle_strip9.png';
 import shortHairSprite from '@assets/shorthair_idle_strip9.png';
 import spikeyHairSprite from '@assets/spikeyhair_idle_strip9.png';
-
-// Game constants
-const GAME_WIDTH = 400;
-const GAME_HEIGHT = 600;
-const PLAYER_WIDTH = 50;
-const PLAYER_HEIGHT = 50;
-const PLAYER_SPEED = 5;
-const BOOST_MULTIPLIER = 1.8;
-const OBJECT_WIDTH = 40;
-const OBJECT_HEIGHT = 40;
-const PLAYER_AREA_HEIGHT = 200;
-const BASE_OBJECT_SPEED = 3;
-const MAX_OBJECT_SPEED = 10;
-const BASE_SPAWN_RATE = 1200; // ms between new objects
-const MIN_SPAWN_RATE = 300; // Fastest possible spawn rate
-const BASE_PRODUCT_PROBABILITY = 0.7; // 70% products, 30% obstacles initially
-const SCORE_SPEED_MULTIPLIER = 0.01; // Speed increase per 10 points
-const ANIM_INTERVAL = 150; // Animation frame update speed in ms
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -62,6 +42,23 @@ interface Player {
   boosting: boolean;
 }
 
+const GAME_WIDTH = 800;
+const GAME_HEIGHT = 600;
+const PLAYER_WIDTH = 80; // Width for car sprite
+const PLAYER_HEIGHT = 50; // Height for car sprite - slightly smaller for better proportions
+const PLAYER_SPEED = 5;
+const BOOST_MULTIPLIER = 1.8;
+const OBJECT_WIDTH = 40;
+const OBJECT_HEIGHT = 40;
+const BASE_SPAWN_RATE = 1500; // Starting ms between spawns
+const MIN_SPAWN_RATE = 600; // Minimum spawn rate (fastest)
+const BASE_PRODUCT_PROBABILITY = 0.7; // Base probability for products (decreases with score)
+const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
+const BASE_OBJECT_SPEED = 2; // Starting speed
+const MAX_OBJECT_SPEED = 7; // Maximum object speed
+const SCORE_SPEED_MULTIPLIER = 0.02; // Speed increases by 2% for every 10 points
+const ANIM_INTERVAL = 150; // milliseconds between animation frames
+
 // Food emojis for products
 const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
 
@@ -83,21 +80,8 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
   const [lastAnimTime, setLastAnimTime] = useState(0);
   const [gameInitialized, setGameInitialized] = useState(false);
   
-  const [player, setPlayer] = useState<Player>({
-    x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
-    y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
-    width: PLAYER_WIDTH,
-    height: PLAYER_HEIGHT,
-    speed: PLAYER_SPEED,
-    movingLeft: false,
-    movingRight: false,
-    movingUp: false,
-    movingDown: false,
-    boosting: false,
-  });
-
-  // Start game function
-  const startGame = useCallback(() => {
+  // Start game function - declared at top level
+  const startGame = () => {
     // Initialize audio context on game start
     initializeAudio();
     
@@ -115,7 +99,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
     gameStartTimeRef.current = Date.now();
-  }, [initializeAudio, playSound]);
+  };
   
   // Auto-start the game when component is mounted
   useEffect(() => {
@@ -129,7 +113,19 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
       
       return () => clearTimeout(startTimer);
     }
-  }, [gameInitialized, onScoreUpdate, startGame]);
+  }, [gameInitialized, onScoreUpdate, initializeAudio, playSound]);
+  const [player, setPlayer] = useState<Player>({
+    x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
+    y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
+    width: PLAYER_WIDTH,
+    height: PLAYER_HEIGHT,
+    speed: PLAYER_SPEED,
+    movingLeft: false,
+    movingRight: false,
+    movingUp: false,
+    movingDown: false,
+    boosting: false,
+  });
   
   // Game loop with animation frame
   useEffect(() => {
@@ -240,7 +236,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime, score]);
+  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime]);
   
   // Handle keyboard controls
   useEffect(() => {
@@ -365,15 +361,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     };
   }, [isPlaying, playSound]);
   
-  // End game
-  const endGame = useCallback(() => {
-    setIsPlaying(false);
-    setHighScore(prev => Math.max(prev, score));
-    
-    // Play game over sound
-    playSound('gameOver');
-  }, [playSound, score]);
-  
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
     const areaY = GAME_HEIGHT - PLAYER_AREA_HEIGHT;
@@ -459,6 +446,17 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
       // Filter out objects that are out of the game area
       return updatedObjects.filter(obj => obj.y <= GAME_HEIGHT + 50);
     });
+  };
+  
+
+  
+  // End game
+  const endGame = () => {
+    setIsPlaying(false);
+    setHighScore(prev => Math.max(prev, score));
+    
+    // Play game over sound
+    playSound('gameOver');
   };
   
   // Draw player area border
@@ -715,17 +713,17 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
             onClick={startGame}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg cursor-pointer"
           >
-            {score > 0 ? 'Play Again' : 'Start Game'}
+            <i className="ri-play-fill mr-2"></i> {score > 0 ? 'Play Again' : 'Start Game'}
           </button>
           
           <div className="mt-8 text-gray-300 text-center max-w-md">
             <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
+            <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• Your character will face the direction you're moving</p>
+            <p className="mb-1">• Your car will automatically face the direction you're moving</p>
             <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
           </div>
         </div>

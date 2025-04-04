@@ -55,26 +55,26 @@ export default function GameContainer() {
             <LoadingState />
           </div>
         ) : showCharacterSelect ? (
-          <div className="h-80 sm:h-96 md:h-[450px] lg:h-[500px] w-full flex items-center justify-center p-4">
-            <div className="w-full max-w-3xl">
-              <h1 className="text-2xl md:text-3xl font-bold text-white text-center mb-6">
-                Customize Your Character
-              </h1>
-              
+          <div className="h-80 sm:h-96 md:h-[450px] lg:h-[500px] w-full flex flex-col items-center justify-center p-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
+              Customize Your Character
+            </h1>
+            
+            {/* Character selection */}
+            <div className="w-full max-w-md mb-4">
               <CharacterSelector 
                 onSelect={handleHairSelect}
                 selectedHair={selectedHair}
               />
-              
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleStartGame}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-md text-lg transition-colors duration-200"
-                >
-                  Start Game!
-                </button>
-              </div>
             </div>
+            
+            {/* Start game button - larger and more prominent */}
+            <button
+              onClick={handleStartGame}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-md text-lg transition-colors duration-200 mt-4 shadow-lg"
+            >
+              START GAME!
+            </button>
           </div>
         ) : (
           <DropGame 
