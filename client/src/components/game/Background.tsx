@@ -175,9 +175,9 @@ export default function Background({ width, height }: BackgroundProps) {
       // Apply scrolling offset for this cloud - wrap around when out of view
       const cloudXOffset = cloudOffsetsRef.current[index];
       
-      // For LEFT-TO-RIGHT scrolling, SUBTRACT the offset from x position
+      // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
       // As offset increases, cloud appears to move left-to-right
-      const xPos = (cloud.x - cloudWidth / 2) - cloudXOffset;
+      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
       
       // Draw cloud image centered at the position
       ctx.drawImage(
@@ -298,9 +298,9 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Generate a deterministic sequence of buildings spanning 3x the screen width
     for (let basePos = startPos; basePos < endPos; basePos += 100) {
-      // For RIGHT-TO-LEFT scrolling, SUBTRACT the offset from position
-      // As offset increases, buildings appear to move right-to-left
-      const xPos = basePos - offset;
+      // For LEFT-TO-RIGHT scrolling, ADD the offset to position
+      // As offset increases, buildings appear to move left-to-right
+      const xPos = basePos + offset;
       
       // Since buildings have different widths, we need to calculate each one deterministically
       const seed = Math.abs(Math.floor(basePos / 100)); // Deterministic seed based on position
