@@ -160,47 +160,55 @@ export default function Background({ width, height }: BackgroundProps) {
     // Check if cloud image is loaded
     if (!cloudImgRef.current || !cloudLoadedRef.current) return;
 
-    // Define cloud positions - set these to fixed values for a consistent background
+    // Define cloud positions with varied y-coordinates and scales
     const cloudPositions = [
-      { x: width * 0.15, y: height * 0.12, scale: 0.2 },
-      { x: width * 0.4, y: height * 0.08, scale: 0.15 },
-      { x: width * 0.85, y: height * 0.1, scale: 0.18 },
-      { x: width * 0.65, y: height * 0.15, scale: 0.2 }, // Added fourth cloud
+      { y: height * 0.12, scale: 0.2, speedFactor: 1.0 },
+      { y: height * 0.08, scale: 0.15, speedFactor: 0.8 },
+      { y: height * 0.10, scale: 0.18, speedFactor: 1.2 },
+      { y: height * 0.15, scale: 0.2, speedFactor: 0.9 },
+      { y: height * 0.05, scale: 0.17, speedFactor: 1.1 }, // Added fifth cloud
     ];
 
     const cloudImg = cloudImgRef.current;
-
-    // Draw each cloud with its own offset to create a parallax effect
-    cloudPositions.forEach((cloud, index) => {
-      // Calculate size - scale based on the original image dimensions
-      const cloudWidth = cloudImg.width * cloud.scale;
-      const cloudHeight = cloudImg.height * cloud.scale;
-
-      // Apply scrolling offset for this cloud - wrap around when out of view
-      const cloudXOffset = cloudOffsetsRef.current[index];
-      
-      // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
-      // As offset increases, cloud appears to move left-to-right
-      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
-      
-      // Draw cloud image centered at the position
-      ctx.drawImage(
-        cloudImg,
-        xPos, // Apply cloud offset for scrolling
-        cloud.y - cloudHeight / 2, // Vertical position stays the same
-        cloudWidth,
-        cloudHeight,
-      );
-      
-      // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
-      ctx.drawImage(
-        cloudImg,
-        xPos - width, // Draw a second cloud one screen-width to the left
-        cloud.y - cloudHeight / 2,
-        cloudWidth,
-        cloudHeight,
-      );
-    });
+    
+    // Get the overall cloud offset for this frame
+    const baseOffset = cloudOffsetsRef.current[0];
+    
+    // Calculate x-spacing between clouds for more natural distribution
+    const cloudSpacing = width / 3;
+    
+    // Draw multiple layers of clouds for infinite scrolling effect
+    for (let layer = -1; layer <= 1; layer++) {
+      cloudPositions.forEach((cloud, index) => {
+        // Calculate size based on the original image dimensions
+        const cloudWidth = cloudImg.width * cloud.scale;
+        const cloudHeight = cloudImg.height * cloud.scale;
+        
+        // Calculate a unique starting position for each cloud
+        // This creates a deterministic but varied pattern
+        const baseX = (index * cloudSpacing) % width;
+        
+        // Apply individual speed factor to create parallax
+        const cloudOffset = baseOffset * cloud.speedFactor;
+        
+        // Calculate final x position with offset
+        // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
+        // Include the layer offset to create multiple layers of clouds
+        const xPos = baseX + cloudOffset + (layer * width);
+        
+        // Only draw clouds that are at least partially visible
+        if (xPos + cloudWidth >= 0 && xPos <= width) {
+          // Draw cloud image
+          ctx.drawImage(
+            cloudImg,
+            xPos,
+            cloud.y - cloudHeight / 2,
+            cloudWidth,
+            cloudHeight,
+          );
+        }
+      });
+    }
   };
 
   // Draw windows on buildings
@@ -257,20 +265,34 @@ export default function Background({ width, height }: BackgroundProps) {
     buildingWidth: number,
     signY: number,
   ) => {
-    const signWidth = buildingWidth * 0.7;
-    const signHeight = 20;
+    const signWidth = buildingWidth * 0.6;
+    const signHeight = 15;
     const signX = buildingX + (buildingWidth - signWidth) / 2;
 
-    // Draw sign background
-    ctx.fillStyle = "#FFD54F";
+    // Draw sign background (using neutral colors instead of the yellow block)
+    ctx.fillStyle = "#455A64"; // Dark blue-gray
     ctx.fillRect(signX, signY, signWidth, signHeight);
 
-    // Draw colored decorative elements on sign deterministically
-    const signElements = Math.floor(signWidth / 8);
-    for (let i = 0; i < signElements; i++) {
-      if (i % 2 === 0) {
-        ctx.fillStyle = i % 4 === 0 ? "#E63946" : "#2A9D8F";
-        ctx.fillRect(signX + i * 8, signY, 6, signHeight);
+    // Add a simple white border
+    ctx.strokeStyle = "#EEEEEE";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(signX, signY, signWidth, signHeight);
+    
+    // Add simple dots to simulate text/logo without being too colorful
+    const dotCount = Math.floor(signWidth / 10);
+    const dotSize = 3;
+    const dotY = signY + signHeight/2 - dotSize/2;
+    
+    for (let i = 0; i < dotCount; i++) {
+      // Create a pattern of small dots to simulate text
+      if (i % 3 !== 0) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(
+          signX + 5 + i * 10, 
+          dotY, 
+          dotSize, 
+          dotSize
+        );
       }
     }
   };
@@ -297,71 +319,92 @@ export default function Background({ width, height }: BackgroundProps) {
     // Apply scrolling offset
     const offset = buildingOffsetRef.current;
 
-    // Generate buildings with different heights and colors
-    // Create a wider range of buildings to ensure no gaps
-    const startPos = -width * 2;  
-    const endPos = width * 3; // Draw many more buildings to ensure seamless looping
+    // Calculate base position for infinite building generation
+    // We wrap the building offset around a large value to create a continuous loop
+    // While also shifting the baseline to create new building patterns
+    const buildingCycle = 5000; // A very large cycle to prevent obvious repeating
+    const wrappedOffset = offset % buildingCycle;
     
-    // Generate a deterministic sequence of buildings spanning 3x the screen width
-    for (let basePos = startPos; basePos < endPos; basePos += 100) {
-      // For LEFT-TO-RIGHT scrolling, ADD the offset to position
-      // As offset increases, buildings appear to move left-to-right
-      const xPos = basePos + offset;
+    // We'll always generate buildings in a window around the current view
+    // By using modulo arithmetic, we create a continuous stream of buildings
+    // that appears unique over long distances
+    const viewDistance = width * 1.5; // How far to render beyond screen edges
+    const startPos = -viewDistance;
+    const endPos = width + viewDistance;
+    
+    // Generate buildings at consistent intervals
+    const buildingSpacing = 80; // Distance between building centers
+    
+    // Calculate the first visible building position
+    let currentPos = startPos - (wrappedOffset % buildingSpacing);
+    
+    // Generate buildings to fill the view
+    while (currentPos < endPos) {
+      // Calculate absolute position (for deterministic building generation)
+      // This uses the overall offset to create a "world position" that stays consistent
+      const absPos = currentPos + Math.floor(offset / buildingCycle) * buildingCycle;
       
-      // Since buildings have different widths, we need to calculate each one deterministically
-      const seed = Math.abs(Math.floor(basePos / 100)); // Deterministic seed based on position
+      // Create a deterministic seed based on the absolute position
+      // This ensures each position always generates the same building
+      const seed = Math.abs(Math.floor(absPos / buildingSpacing)); 
       
       // Use the seed to generate consistent building parameters
       const buildingWidth = ((seed % 3) + 1) * 30 + 50; // 80-140 width
       const buildingHeight = ((seed % 4) + 1) * 30 + height * 0.2; // Varied heights
       const colorIndex = Math.floor(seed % buildingColors.length);
 
-      // Skip buildings completely outside visible area
-      if (xPos + buildingWidth < 0 || xPos > width) continue;
+      // The visible position is the current position plus the fraction part of the offset
+      const xPos = currentPos + (wrappedOffset % buildingSpacing);
 
-      // Draw building - base structure with pixelated effect
-      ctx.fillStyle = buildingColors[colorIndex];
+      // Only draw if the building is at least partially visible
+      if (xPos + buildingWidth >= 0 && xPos <= width) {
+        // Draw building - base structure with pixelated effect
+        ctx.fillStyle = buildingColors[colorIndex];
 
-      // Draw with pixelated effect by creating grid of squares
-      for (
-        let y = height * 0.6 - buildingHeight;
-        y < height * 0.6;
-        y += pixelSize
-      ) {
-        for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
-          // Deterministic color variation based on position
-          if ((Math.abs(basePos) + y) % 10 === 0) {
-            ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
-          } else {
-            ctx.fillStyle = buildingColors[colorIndex];
+        // Draw with pixelated effect by creating grid of squares
+        for (
+          let y = height * 0.6 - buildingHeight;
+          y < height * 0.6;
+          y += pixelSize
+        ) {
+          for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
+            // Deterministic color variation based on position
+            if ((seed + Math.floor(y)) % 10 === 0) {
+              ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
+            } else {
+              ctx.fillStyle = buildingColors[colorIndex];
+            }
+
+            const pixelW = Math.min(pixelSize, xPos + buildingWidth - x);
+            const pixelH = Math.min(pixelSize, height * 0.6 - y);
+            ctx.fillRect(x, y, pixelW, pixelH);
           }
-
-          const pixelW = Math.min(pixelSize, xPos + buildingWidth - x);
-          const pixelH = Math.min(pixelSize, height * 0.6 - y);
-          ctx.fillRect(x, y, pixelW, pixelH);
         }
-      }
 
-      // Draw windows
-      drawWindows(
-        ctx,
-        xPos,
-        height * 0.6 - buildingHeight,
-        buildingWidth,
-        buildingHeight,
-        pixelSize,
-        seed, // Pass the seed value to keep window lights stable during animation
-      );
-
-      // Store shop signs on some buildings deterministically
-      if (seed % 2 === 0) {
-        drawStoreSign(
+        // Draw windows
+        drawWindows(
           ctx,
           xPos,
+          height * 0.6 - buildingHeight,
           buildingWidth,
-          height * 0.6 - buildingHeight * 0.3,
+          buildingHeight,
+          pixelSize,
+          seed, // Pass the seed value to keep window lights stable during animation
         );
+
+        // Store shop signs on some buildings deterministically
+        if (seed % 2 === 0) {
+          drawStoreSign(
+            ctx,
+            xPos,
+            buildingWidth,
+            height * 0.6 - buildingHeight * 0.3,
+          );
+        }
       }
+      
+      // Move to the next building position
+      currentPos += buildingSpacing;
     }
   };
 
