@@ -1,41 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Background from './Background';
+import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
-import { HairStyle } from '../CharacterSelector';
-
-// Import base character sprite
-import baseIdleSprite from '@assets/base_idle_strip9.png';
-
-// Import hair styles
-import bowlHairSprite from '@assets/bowlhair_idle_strip9.png';
-import curlyHairSprite from '@assets/curlyhair_idle_strip9.png';
-import longHairSprite from '@assets/longhair_idle_strip9.png';
-import mopHairSprite from '@assets/mophair_idle_strip9.png';
-import shortHairSprite from '@assets/shorthair_idle_strip9.png';
-import spikeyHairSprite from '@assets/spikeyhair_idle_strip9.png';
-
-// Game constants
-const GAME_WIDTH = 400;
-const GAME_HEIGHT = 600;
-const PLAYER_WIDTH = 50;
-const PLAYER_HEIGHT = 50;
-const PLAYER_SPEED = 5;
-const BOOST_MULTIPLIER = 1.8;
-const OBJECT_WIDTH = 40;
-const OBJECT_HEIGHT = 40;
-const PLAYER_AREA_HEIGHT = 200;
-const BASE_OBJECT_SPEED = 3;
-const MAX_OBJECT_SPEED = 10;
-const BASE_SPAWN_RATE = 1200; // ms between new objects
-const MIN_SPAWN_RATE = 300; // Fastest possible spawn rate
-const BASE_PRODUCT_PROBABILITY = 0.7; // 70% products, 30% obstacles initially
-const SCORE_SPEED_MULTIPLIER = 0.01; // Speed increase per 10 points
-const ANIM_INTERVAL = 150; // Animation frame update speed in ms
+import Background from './Background';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
   onGameOver?: () => void;
-  selectedHair: HairStyle;
 }
 
 interface GameObject {
@@ -62,10 +31,27 @@ interface Player {
   boosting: boolean;
 }
 
+const GAME_WIDTH = 800;
+const GAME_HEIGHT = 600;
+const PLAYER_WIDTH = 80; // Width for car sprite
+const PLAYER_HEIGHT = 50; // Height for car sprite - slightly smaller for better proportions
+const PLAYER_SPEED = 5;
+const BOOST_MULTIPLIER = 1.8;
+const OBJECT_WIDTH = 40;
+const OBJECT_HEIGHT = 40;
+const BASE_SPAWN_RATE = 1500; // Starting ms between spawns
+const MIN_SPAWN_RATE = 600; // Minimum spawn rate (fastest)
+const BASE_PRODUCT_PROBABILITY = 0.7; // Base probability for products (decreases with score)
+const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
+const BASE_OBJECT_SPEED = 2; // Starting speed
+const MAX_OBJECT_SPEED = 7; // Maximum object speed
+const SCORE_SPEED_MULTIPLIER = 0.02; // Speed increases by 2% for every 10 points
+const ANIM_INTERVAL = 150; // milliseconds between animation frames
+
 // Food emojis for products
 const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
 
-export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: GameProps) {
+export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastSpawnTimeRef = useRef<number>(Date.now());
@@ -81,8 +67,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
-  const [gameInitialized, setGameInitialized] = useState(false);
-  
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -95,41 +79,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     movingDown: false,
     boosting: false,
   });
-
-  // Start game function
-  const startGame = useCallback(() => {
-    // Initialize audio context on game start
-    initializeAudio();
-    
-    // Play start sound
-    playSound('start');
-    
-    // Reset game state
-    setIsPlaying(true);
-    setScore(0);
-    setLives(3);
-    setGameObjects([]);
-    setCurrentSpawnRate(BASE_SPAWN_RATE);
-    setSpeedMultiplier(1.0);
-    
-    // Reset timers
-    lastSpawnTimeRef.current = Date.now();
-    gameStartTimeRef.current = Date.now();
-  }, [initializeAudio, playSound]);
-  
-  // Auto-start the game when component is mounted
-  useEffect(() => {
-    if (!gameInitialized) {
-      // Short delay to allow assets to load before starting
-      const startTimer = setTimeout(() => {
-        startGame();
-        setGameInitialized(true);
-        if (onScoreUpdate) onScoreUpdate(0); // Initialize parent score
-      }, 500);
-      
-      return () => clearTimeout(startTimer);
-    }
-  }, [gameInitialized, onScoreUpdate, startGame]);
   
   // Game loop with animation frame
   useEffect(() => {
@@ -240,7 +189,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime, score]);
+  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime]);
   
   // Handle keyboard controls
   useEffect(() => {
@@ -365,15 +314,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     };
   }, [isPlaying, playSound]);
   
-  // End game
-  const endGame = useCallback(() => {
-    setIsPlaying(false);
-    setHighScore(prev => Math.max(prev, score));
-    
-    // Play game over sound
-    playSound('gameOver');
-  }, [playSound, score]);
-  
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
     const areaY = GAME_HEIGHT - PLAYER_AREA_HEIGHT;
@@ -461,6 +401,36 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     });
   };
   
+  // Start game
+  const startGame = () => {
+    // Initialize audio context on game start
+    initializeAudio();
+    
+    // Play start sound
+    playSound('start');
+    
+    // Reset game state
+    setIsPlaying(true);
+    setScore(0);
+    setLives(3);
+    setGameObjects([]);
+    setCurrentSpawnRate(BASE_SPAWN_RATE);
+    setSpeedMultiplier(1.0);
+    
+    // Reset timers
+    lastSpawnTimeRef.current = Date.now();
+    gameStartTimeRef.current = Date.now();
+  };
+  
+  // End game
+  const endGame = () => {
+    setIsPlaying(false);
+    setHighScore(prev => Math.max(prev, score));
+    
+    // Play game over sound
+    playSound('gameOver');
+  };
+  
   // Draw player area border
   const drawPlayerArea = (ctx: CanvasRenderingContext2D) => {
     const areaY = GAME_HEIGHT - PLAYER_AREA_HEIGHT;
@@ -478,47 +448,16 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     // No need for background fill as we're now using the sidewalk from the background
   };
   
-  // Draw player using character sprites
+  // Draw player as a simple shape temporarily
   const drawPlayer = (ctx: CanvasRenderingContext2D) => {
-    // Constants for sprite rendering
-    const SPRITE_SIZE = 24; // Size of each sprite in the sheet
-    const SPRITE_SCALE = 3; // Scale up the sprite for better visibility
-    const DISPLAYED_WIDTH = SPRITE_SIZE * SPRITE_SCALE;
-    const DISPLAYED_HEIGHT = SPRITE_SIZE * SPRITE_SCALE;
-    
-    // Only animate when the player is moving or every few seconds
+    // Only animate when the player is moving
     const isMoving = player.movingLeft || player.movingRight || player.movingUp || player.movingDown;
     
     // Update animation frame
     const now = Date.now();
-    if ((isMoving && now - lastAnimTime > ANIM_INTERVAL) || (now - lastAnimTime > ANIM_INTERVAL * 3)) {
-      setAnimFrame((prev) => (prev + 1) % 9); // 9 frames in the sprite sheet
+    if (isMoving && now - lastAnimTime > ANIM_INTERVAL) {
+      setAnimFrame((prev) => (prev + 1) % 4); // 4 animation frames (we'll simulate this with scaling/rotation)
       setLastAnimTime(now);
-    }
-    
-    // Calculate which hair sprite to use
-    let hairSprite = '';
-    switch(selectedHair) {
-      case 'bowl':
-        hairSprite = bowlHairSprite;
-        break;
-      case 'curly':
-        hairSprite = curlyHairSprite;
-        break;
-      case 'long':
-        hairSprite = longHairSprite;
-        break;
-      case 'mop':
-        hairSprite = mopHairSprite;
-        break;
-      case 'short':
-        hairSprite = shortHairSprite;
-        break;
-      case 'spikey':
-        hairSprite = spikeyHairSprite;
-        break;
-      default:
-        hairSprite = '';
     }
     
     // Apply shadow for better visibility
@@ -530,82 +469,65 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
     // Save context state
     ctx.save();
     
-    // Center of the player position
-    const centerX = player.x + player.width / 2;
-    const centerY = player.y + player.height / 2;
+    // Translate to the player position
+    ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
     
-    // Calculate offset to center the character sprite
-    const offsetX = centerX - DISPLAYED_WIDTH / 2;
-    const offsetY = centerY - DISPLAYED_HEIGHT / 2;
+    // Apply slight rotation based on movement direction
+    let rotation = 0;
+    if (player.movingLeft) rotation = -0.1;
+    if (player.movingRight) rotation = 0.1;
     
-    // Draw base character sprite
-    if (baseIdleSprite) {
-      // Create a temporary canvas for the sprite and apply any transformations
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = DISPLAYED_WIDTH;
-      tempCanvas.height = DISPLAYED_HEIGHT;
-      const tempCtx = tempCanvas.getContext('2d');
+    // Apply slight scaling for animation bounce effect
+    const bounceScale = 1 + Math.sin(animFrame * Math.PI / 2) * 0.05;
+    
+    // Apply rotation and scaling
+    ctx.rotate(rotation);
+    ctx.scale(bounceScale, bounceScale);
+    
+    // Draw a simple colored rectangle for the player
+    ctx.fillStyle = '#FF5555'; // Bright red color
+    ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+    
+    // Add simple car-like details with rounded corners
+    ctx.fillStyle = '#333333'; // Dark gray for windows
+    
+    // Add direction indicators
+    if (player.movingLeft || player.movingRight || player.movingUp || player.movingDown) {
+      // Direction indicator (a small triangle on top)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
       
-      if (tempCtx) {
-        // Draw the base sprite to the temp canvas
-        const baseImg = new Image();
-        baseImg.src = baseIdleSprite;
-        
-        if (baseImg.complete) {
-          // Draw the correct frame from the sprite sheet
-          tempCtx.drawImage(
-            baseImg, 
-            animFrame * SPRITE_SIZE, 0, // Source x, y (specific frame in sprite sheet)
-            SPRITE_SIZE, SPRITE_SIZE,   // Source width, height (single sprite size)
-            0, 0,                       // Destination x, y (on temp canvas)
-            DISPLAYED_WIDTH, DISPLAYED_HEIGHT  // Destination width, height (scaled up)
-          );
-        }
-        
-        // If there's a hair style selected, draw it over the base
-        if (hairSprite) {
-          const hairImg = new Image();
-          hairImg.src = hairSprite;
-          
-          if (hairImg.complete) {
-            // Draw the correct frame from the sprite sheet
-            tempCtx.drawImage(
-              hairImg, 
-              animFrame * SPRITE_SIZE, 0, // Source x, y (specific frame in sprite sheet)
-              SPRITE_SIZE, SPRITE_SIZE,   // Source width, height (single sprite size)
-              0, 0,                       // Destination x, y (on temp canvas)
-              DISPLAYED_WIDTH, DISPLAYED_HEIGHT  // Destination width, height (scaled up)
-            );
-          }
-        }
-        
-        // Apply slight scaling for animation bounce effect
-        const bounceScale = 1 + Math.sin(animFrame * Math.PI / 4) * 0.05;
-        
-        // Get the movement direction for sprite transformation
-        let rotation = 0;
-        let flipX = false;
-        
-        if (player.movingLeft) {
-          flipX = true;
-        } else if (player.movingRight) {
-          flipX = false;
-        }
-        
-        // Apply the final transform and draw to the main canvas
-        ctx.save();
-        if (flipX) {
-          // Flip horizontally if moving left
-          ctx.translate(offsetX + DISPLAYED_WIDTH, offsetY);
-          ctx.scale(-1, 1);
-          ctx.drawImage(tempCanvas, 0, 0);
-        } else {
-          // Normal orientation
-          ctx.drawImage(tempCanvas, offsetX, offsetY);
-        }
-        ctx.restore();
+      // Different triangle direction based on movement
+      if (player.movingUp) {
+        // Triangle pointing up
+        ctx.moveTo(0, -player.height / 2 - 5);
+        ctx.lineTo(-10, -player.height / 2 + 5);
+        ctx.lineTo(10, -player.height / 2 + 5);
+      } else if (player.movingDown) {
+        // Triangle pointing down
+        ctx.moveTo(0, player.height / 2 + 5);
+        ctx.lineTo(-10, player.height / 2 - 5);
+        ctx.lineTo(10, player.height / 2 - 5);
+      } else if (player.movingLeft) {
+        // Triangle pointing left
+        ctx.moveTo(-player.width / 2 - 5, 0);
+        ctx.lineTo(-player.width / 2 + 5, -10);
+        ctx.lineTo(-player.width / 2 + 5, 10);
+      } else if (player.movingRight) {
+        // Triangle pointing right
+        ctx.moveTo(player.width / 2 + 5, 0);
+        ctx.lineTo(player.width / 2 - 5, -10);
+        ctx.lineTo(player.width / 2 - 5, 10);
       }
+      
+      ctx.closePath();
+      ctx.fill();
     }
+    
+    // No tail animation as requested
+    
+    // Restore context state
+    ctx.restore();
     
     // Reset shadow
     ctx.shadowColor = 'transparent';
@@ -715,17 +637,17 @@ export default function DropGame({ onScoreUpdate, onGameOver, selectedHair }: Ga
             onClick={startGame}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg cursor-pointer"
           >
-            {score > 0 ? 'Play Again' : 'Start Game'}
+            <i className="ri-play-fill mr-2"></i> {score > 0 ? 'Play Again' : 'Start Game'}
           </button>
           
           <div className="mt-8 text-gray-300 text-center max-w-md">
             <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
+            <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• Your character will face the direction you're moving</p>
+            <p className="mb-1">• Your car will automatically face the direction you're moving</p>
             <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
           </div>
         </div>
