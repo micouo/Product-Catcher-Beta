@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import cloudImage from '@assets/cloud.png';
 
 interface BackgroundProps {
   width: number;
@@ -8,8 +9,29 @@ interface BackgroundProps {
 export default function Background({ width, height }: BackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hasDrawnRef = useRef(false);
+  const cloudImgRef = useRef<HTMLImageElement | null>(null);
+  const cloudLoadedRef = useRef(false);
 
   useEffect(() => {
+    // Load the cloud image
+    if (!cloudImgRef.current) {
+      const img = new Image();
+      img.src = cloudImage;
+      img.onload = () => {
+        cloudLoadedRef.current = true;
+        
+        // Redraw after image loads
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            drawBackground(ctx, width, height);
+          }
+        }
+      };
+      cloudImgRef.current = img;
+    }
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -88,76 +110,34 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
   
-  // Draw blocky pixelated clouds in the sky
+  // Draw clouds using the provided cloud image
   const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    // Check if cloud image is loaded
+    if (!cloudImgRef.current || !cloudLoadedRef.current) return;
+    
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
-      { x: width * 0.15, y: height * 0.15, size: 40 },
-      { x: width * 0.4, y: height * 0.25, size: 30 },
-      { x: width * 0.65, y: height * 0.1, size: 50 },
-      { x: width * 0.9, y: height * 0.3, size: 35 }
+      { x: width * 0.15, y: height * 0.15, scale: 0.8 },
+      { x: width * 0.4, y: height * 0.25, scale: 0.6 },
+      { x: width * 0.65, y: height * 0.1, scale: 1.0 },
+      { x: width * 0.9, y: height * 0.3, scale: 0.7 }
     ];
     
+    const cloudImg = cloudImgRef.current;
+    
     cloudPositions.forEach(cloud => {
-      // Use larger pixels for more blocky clouds
-      const pixelSize = 8; // Bigger pixels for blockier look
+      // Calculate size - scale based on the original image dimensions
+      const cloudWidth = cloudImg.width * cloud.scale;
+      const cloudHeight = cloudImg.height * cloud.scale;
       
-      // Clear fillStyle first
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Solid white clouds
-      
-      // Define the core cloud shape as a simple grid
-      const cloudWidth = cloud.size * 2;
-      const cloudHeight = cloud.size;
-      
-      // Cloud shape data - 1 means draw a pixel, 0 means skip
-      // This creates a blocky cloud shape that looks like classic pixel art
-      const cloudShape = [
-        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0]
-      ];
-      
-      // Calculate the starting position so cloud is centered on its x,y position
-      const startX = cloud.x - (cloudShape[0].length * pixelSize) / 2;
-      const startY = cloud.y - (cloudShape.length * pixelSize) / 2;
-      
-      // Draw the cloud pixel by pixel according to the shape data
-      for (let row = 0; row < cloudShape.length; row++) {
-        for (let col = 0; col < cloudShape[row].length; col++) {
-          if (cloudShape[row][col] === 1) {
-            // Randomize the shade a bit to add texture, but keep it subtle
-            const brightness = 0.95 + Math.random() * 0.05;
-            const shade = Math.floor(255 * brightness);
-            ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
-            
-            const x = startX + col * pixelSize;
-            const y = startY + row * pixelSize;
-            
-            // Make some blocks slightly smaller for a more interesting edge
-            const blockSize = ((row + col) % 3 === 0) ? 
-              pixelSize - 1 : 
-              pixelSize;
-              
-            ctx.fillRect(x, y, blockSize, blockSize);
-          }
-        }
-      }
-      
-      // Add a few highlight pixels at fixed positions
-      ctx.fillStyle = 'rgb(255, 255, 255)';
-      const highlightPositions = [
-        [1, 1], [2, 2], [3, 1], [2, 3], [4, 2]
-      ];
-      
-      highlightPositions.forEach(pos => {
-        const hx = startX + pos[0] * pixelSize;
-        const hy = startY + pos[1] * pixelSize;
-        ctx.fillRect(hx, hy, pixelSize, pixelSize);
-      });
+      // Draw cloud image centered at the position
+      ctx.drawImage(
+        cloudImg,
+        cloud.x - cloudWidth / 2,  // Center the cloud horizontally
+        cloud.y - cloudHeight / 2, // Center the cloud vertically
+        cloudWidth,
+        cloudHeight
+      );
     });
   };
 
