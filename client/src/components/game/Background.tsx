@@ -356,7 +356,39 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw grid pattern on sidewalk
+  // Draw decorative pixel trees on sidewalk
+  const drawTree = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number
+  ) => {
+    // Draw tree trunk
+    ctx.fillStyle = "#8B4513"; // Brown color for trunk
+    ctx.fillRect(x - size/8, y - size/2, size/4, size/2);
+    
+    // Draw tree foliage (triangular shape for a stylized look)
+    ctx.fillStyle = "#2E8B57"; // Dark green for leaves
+    
+    // Draw triangular tree top (multiple triangles for texture)
+    const triangleCount = 3; // Number of triangles stacked
+    const triangleHeight = size / 1.5;
+    
+    for (let i = 0; i < triangleCount; i++) {
+      const triangleWidth = size - (i * size/4);
+      const triangleY = y - size/2 - (i * triangleHeight/3);
+      
+      // Draw a triangle
+      ctx.beginPath();
+      ctx.moveTo(x - triangleWidth/2, triangleY);
+      ctx.lineTo(x + triangleWidth/2, triangleY);
+      ctx.lineTo(x, triangleY - triangleHeight/triangleCount);
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  // Draw grid pattern on sidewalk and add trees
   const drawSidewalkTexture = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -388,6 +420,18 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.moveTo(x, height * 0.6);
       ctx.lineTo(x, playerAreaY);
       ctx.stroke();
+    }
+    
+    // Add trees along the sidewalk at regular intervals
+    // Use sidewalk offset to make trees move with the sidewalk
+    const treeSpacing = 180; // Space between trees
+    const treeSize = 60; // Size of trees
+    const treeY = height * 0.64; // Position trees near top of sidewalk
+    
+    // Calculate positions to place trees, accounting for the scrolling offset
+    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
+      // Draw trees
+      drawTree(ctx, x, treeY, treeSize);
     }
   };
 
