@@ -88,66 +88,126 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
   
-  // Draw pixelated clouds in the sky
+  // Draw modern pixel art clouds with outlines
   const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
-      { x: width * 0.15, y: height * 0.15, size: 40 },
-      { x: width * 0.4, y: height * 0.25, size: 30 },
-      { x: width * 0.65, y: height * 0.1, size: 50 },
+      { x: width * 0.15, y: height * 0.15, size: 30 },
+      { x: width * 0.4, y: height * 0.25, size: 25 },
+      { x: width * 0.65, y: height * 0.1, size: 40 },
       { x: width * 0.9, y: height * 0.3, size: 35 }
     ];
     
-    cloudPositions.forEach(cloud => {
-      // Use larger pixel size for more pixelated clouds
-      const pixelSize = 6;
+    // Define a set of cloud shapes (in pixel grid format) for more detailed pixel art
+    const cloudShapes = [
+      // A medium cloud shape (width: 12, height: 7 grid cells)
+      [
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,1,1,1,1,1,1,1,1,0,0],
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,1,1,1,1,0,0]
+      ],
+      // A smaller cloud shape (width: 10, height: 6 grid cells)
+      [
+        [0,0,1,1,1,1,0,0,0,0],
+        [0,1,1,1,1,1,1,1,0,0],
+        [1,1,1,1,1,1,1,1,1,0],
+        [1,1,1,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1,1,0],
+        [0,0,0,1,1,1,1,0,0,0]
+      ],
+      // A larger cloud shape (width: 14, height: 8 grid cells)
+      [
+        [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+        [0,0,1,1,1,1,1,1,1,1,1,1,0,0],
+        [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,1,1,1,1,1,0,0,0]
+      ]
+    ];
+    
+    cloudPositions.forEach((cloud, index) => {
+      // Use a consistent pixel size to match the car sprite's style
+      const pixelSize = 5;
       
-      // Define the cloud shape as a collection of points
-      const cloudPoints = [
-        { x: cloud.x, y: cloud.y, radius: cloud.size },
-        { x: cloud.x - cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.7 },
-        { x: cloud.x + cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.8 },
-        { x: cloud.x - cloud.size * 0.3, y: cloud.y - cloud.size * 0.4, radius: cloud.size * 0.6 },
-        { x: cloud.x + cloud.size * 0.3, y: cloud.y - cloud.size * 0.3, radius: cloud.size * 0.5 }
-      ];
+      // Select a cloud shape based on the cloud index (mod by number of shapes)
+      const cloudShape = cloudShapes[index % cloudShapes.length];
+      const shapeHeight = cloudShape.length;
+      const shapeWidth = cloudShape[0].length;
       
-      // Draw the cloud using a pixel grid
-      // Define the bounding box for the cloud
-      const boundLeft = cloud.x - cloud.size * 1.5;
-      const boundRight = cloud.x + cloud.size * 1.5;
-      const boundTop = cloud.y - cloud.size * 1.2;
-      const boundBottom = cloud.y + cloud.size;
+      // Calculate top-left position to center the cloud shape at the cloud position
+      const startX = Math.round(cloud.x - (shapeWidth * pixelSize / 2));
+      const startY = Math.round(cloud.y - (shapeHeight * pixelSize / 2));
       
-      // Loop through the bounding box with pixel-sized steps
-      for (let px = boundLeft; px < boundRight; px += pixelSize) {
-        for (let py = boundTop; py < boundBottom; py += pixelSize) {
+      // Scale factor based on the cloud size to make varieties
+      const scale = cloud.size / 30;
+      
+      // Draw the cloud pixels
+      for (let y = 0; y < shapeHeight; y++) {
+        for (let x = 0; x < shapeWidth; x++) {
+          // Skip empty pixels in the cloud shape
+          if (cloudShape[y][x] === 0) continue;
           
-          // Check if this pixel is inside any of the cloud circles
-          let insideCloud = false;
+          // Scaled pixel positions
+          const px = startX + x * pixelSize * scale;
+          const py = startY + y * pixelSize * scale;
+          const pSize = pixelSize * scale;
           
-          // Deterministic variation for edges
-          const edgeNoise = ((px * 7) + (py * 13)) % 10 < 3;
+          // Determine if this is an edge pixel by checking its neighbors
+          let isEdge = false;
           
-          for (const point of cloudPoints) {
-            const distance = Math.sqrt(Math.pow(px - point.x, 2) + Math.pow(py - point.y, 2));
-            if (distance < point.radius) {
-              insideCloud = true;
-              break;
-            } else if (distance < point.radius + pixelSize * 2 && edgeNoise) {
-              // Add some edge pixels with noise for a more natural pixelated look
-              insideCloud = true;
-              break;
+          // Check if on the edge of the shape
+          if (x === 0 || y === 0 || x === shapeWidth-1 || y === shapeHeight-1) {
+            isEdge = true;
+          } else {
+            // Check surrounding pixels - if any neighbor is 0, this is an edge
+            if (cloudShape[y-1][x] === 0 || 
+                cloudShape[y+1][x] === 0 ||
+                cloudShape[y][x-1] === 0 || 
+                cloudShape[y][x+1] === 0) {
+              isEdge = true;
             }
           }
           
-          if (insideCloud) {
-            // Add subtle shading variation to make clouds more interesting
-            const shade = ((px + py) % 2 === 0) ? 
-              'rgba(255, 255, 255, 0.9)' : 
-              'rgba(240, 240, 255, 0.9)';
-              
-            ctx.fillStyle = shade;
-            ctx.fillRect(px, py, pixelSize, pixelSize);
+          // First draw the pixel fill - slight variation for visual interest
+          // Pick a shade based on position for subtle detail
+          const lightVariation = ((x + y) % 3) * 5;
+          ctx.fillStyle = `rgb(${248 - lightVariation}, ${248 - lightVariation}, ${255 - lightVariation})`;
+          ctx.fillRect(px, py, pSize, pSize);
+          
+          // Then draw a dark border if it's an edge pixel
+          if (isEdge) {
+            ctx.fillStyle = 'rgba(50, 80, 130, 0.6)'; // Semi-transparent blue-gray outline
+            
+            // Draw thinner border lines on edges
+            const borderWidth = Math.max(1, Math.floor(pSize / 4));
+            
+            // Check which sides need borders (by checking neighbor cells)
+            // Top border
+            if (y === 0 || (y > 0 && cloudShape[y-1][x] === 0)) {
+              ctx.fillRect(px, py, pSize, borderWidth);
+            }
+            
+            // Bottom border
+            if (y === shapeHeight-1 || (y < shapeHeight-1 && cloudShape[y+1][x] === 0)) {
+              ctx.fillRect(px, py + pSize - borderWidth, pSize, borderWidth);
+            }
+            
+            // Left border
+            if (x === 0 || (x > 0 && cloudShape[y][x-1] === 0)) {
+              ctx.fillRect(px, py, borderWidth, pSize);
+            }
+            
+            // Right border
+            if (x === shapeWidth-1 || (x < shapeWidth-1 && cloudShape[y][x+1] === 0)) {
+              ctx.fillRect(px + pSize - borderWidth, py, borderWidth, pSize);
+            }
           }
         }
       }
@@ -215,84 +275,183 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw pixelated buildings for the city skyline
+  // Draw modern pixel art buildings for the city skyline
   const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const buildingColors = [
-      '#FF6B6B', // Red
-      '#4ECDC4', // Teal
-      '#F8B500', // Yellow
-      '#8675A9', // Purple
-      '#35A7FF', // Blue
-      '#FFD166', // Light yellow
-      '#E63946', // Dark red
-      '#457B9D', // Dark blue
+      { main: '#FF6B6B', shadow: '#D14848', highlight: '#FF9494', outline: '#333333' }, // Red
+      { main: '#4ECDC4', shadow: '#36A39B', highlight: '#7EEAE4', outline: '#333333' }, // Teal
+      { main: '#F8B500', shadow: '#D19A00', highlight: '#FFCF57', outline: '#333333' }, // Yellow
+      { main: '#8675A9', shadow: '#6E5E8C', highlight: '#A696C1', outline: '#333333' }, // Purple
+      { main: '#35A7FF', shadow: '#1E85D1', highlight: '#75C5FF', outline: '#333333' }, // Blue
+      { main: '#FFD166', shadow: '#D1A842', highlight: '#FFE19C', outline: '#333333' }, // Light yellow
+      { main: '#E63946', shadow: '#BC2F3A', highlight: '#F16E79', outline: '#333333' }, // Dark red
+      { main: '#457B9D', shadow: '#355F7A', highlight: '#709DC0', outline: '#333333' }  // Dark blue
     ];
 
-    const pixelSize = 4; // Size of each "pixel" to create pixelated effect
+    const pixelSize = 5; // Match the cloud pixel size for consistency
     
     // Generate buildings with different heights and colors
     let xPos = 0;
     while (xPos < width) {
       // Use fixed values for a consistent background
-      const buildingWidth = ((xPos % 3) + 1) * 30 + 50; // 80-140 width
+      const buildingWidth = ((xPos % 3) + 1) * 35 + 45; // 80-150 width
       const buildingHeight = ((xPos % 4) + 1) * 30 + (height * 0.2); // Varied heights
       const colorIndex = Math.floor(xPos % buildingColors.length);
+      const colors = buildingColors[colorIndex];
       
-      // Draw building - base structure with pixelated effect
-      ctx.fillStyle = buildingColors[colorIndex];
+      // Starting y-position for the building (top)
+      const buildingTop = height * 0.6 - buildingHeight;
       
-      // Draw with pixelated effect by creating grid of squares
-      for (let y = height * 0.6 - buildingHeight; y < height * 0.6; y += pixelSize) {
+      // Draw building main body using slightly larger pixel blocks
+      for (let y = buildingTop; y < height * 0.6; y += pixelSize) {
         for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
-          // Deterministic color variation based on position
-          if ((x + y) % 10 === 0) {
-            ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
-          } else {
-            ctx.fillStyle = buildingColors[colorIndex];
-          }
+          const isRightEdge = x + pixelSize >= xPos + buildingWidth;
+          const isLeftEdge = x <= xPos + pixelSize;
+          const isTopEdge = y <= buildingTop + pixelSize;
+          const isBottomEdge = y + pixelSize >= height * 0.6;
           
-          const pixelW = Math.min(pixelSize, xPos + buildingWidth - x);
-          const pixelH = Math.min(pixelSize, height * 0.6 - y);
-          ctx.fillRect(x, y, pixelW, pixelH);
+          // Check if we're at a window position - draw windows differently
+          const windowSpacing = pixelSize * 5;
+          const relX = x - xPos;
+          const relY = y - buildingTop;
+          
+          const isWindowX = (relX % (pixelSize * 6)) < (pixelSize * 3); 
+          const isWindowY = (relY % (pixelSize * 8)) < (pixelSize * 4);
+          const isWindow = isWindowX && isWindowY && relY > pixelSize * 8; // No windows at the very top
+          
+          // Outline pixels - dark border around the edges
+          if (isLeftEdge || isRightEdge || isTopEdge) {
+            ctx.fillStyle = colors.outline;
+            ctx.fillRect(x, y, pixelSize, pixelSize);
+          } 
+          // Window pixels
+          else if (isWindow) {
+            // Randomly determine if window is lit or dark based on position
+            const isLit = ((x + y) * 7) % 13 > 5;
+            
+            if (isLit) {
+              // Lit window with its own outline
+              ctx.fillStyle = '#FFEB99'; // Warm yellow light
+              ctx.fillRect(x, y, pixelSize, pixelSize);
+              
+              // Add thin dark border around the window
+              ctx.fillStyle = '#333333';
+              ctx.fillRect(x, y, pixelSize, 1); // Top border
+              ctx.fillRect(x, y, 1, pixelSize); // Left border
+              ctx.fillRect(x + pixelSize - 1, y, 1, pixelSize); // Right border
+              ctx.fillRect(x, y + pixelSize - 1, pixelSize, 1); // Bottom border
+            } else {
+              // Dark window with its own outline
+              ctx.fillStyle = '#2A324B'; // Dark blue-gray
+              ctx.fillRect(x, y, pixelSize, pixelSize);
+              
+              // Add thin dark border around the window
+              ctx.fillStyle = '#111111';
+              ctx.fillRect(x, y, pixelSize, 1);
+              ctx.fillRect(x, y, 1, pixelSize);
+              ctx.fillRect(x + pixelSize - 1, y, 1, pixelSize);
+              ctx.fillRect(x, y + pixelSize - 1, pixelSize, 1);
+            }
+          }
+          // Building wall pixels - main color with some variation for depth
+          else {
+            // Deterministic color variation for visual interest
+            // Left side of building gets shadows, right side gets highlights
+            if (x < xPos + buildingWidth * 0.3) {
+              ctx.fillStyle = colors.shadow;
+            } else if (x > xPos + buildingWidth * 0.7) {
+              ctx.fillStyle = colors.highlight;
+            } else {
+              ctx.fillStyle = colors.main;
+            }
+            
+            ctx.fillRect(x, y, pixelSize, pixelSize);
+          }
         }
       }
       
-      // Draw windows
-      drawWindows(ctx, xPos, height * 0.6 - buildingHeight, buildingWidth, buildingHeight, pixelSize);
-      
-      // Store shop signs on some buildings deterministically
+      // Draw a shop sign on some buildings
       if (xPos % 2 === 0) {
-        drawStoreSign(ctx, xPos, buildingWidth, height * 0.6 - buildingHeight * 0.3);
+        // Position sign
+        const signY = buildingTop + buildingHeight * 0.25;
+        const signWidth = buildingWidth * 0.6;
+        const signHeight = pixelSize * 5;
+        const signX = xPos + (buildingWidth - signWidth) / 2;
+        
+        // Outline the sign
+        ctx.fillStyle = '#222222';
+        ctx.fillRect(signX - 1, signY - 1, signWidth + 2, signHeight + 2);
+        
+        // Fill the sign
+        ctx.fillStyle = '#FFDD1F'; // Bright yellow for signs
+        ctx.fillRect(signX, signY, signWidth, signHeight);
+        
+        // Add decorative stripes to the sign
+        const stripeColors = ['#E63946', '#2A9D8F', '#E63946']; // Alternate colors
+        const stripeWidth = pixelSize * 2;
+        const stripeCount = Math.floor(signWidth / stripeWidth / 2);
+        
+        for (let i = 0; i < stripeCount; i++) {
+          ctx.fillStyle = stripeColors[i % stripeColors.length];
+          ctx.fillRect(
+            signX + i * stripeWidth * 2, 
+            signY + pixelSize,
+            stripeWidth, 
+            signHeight - pixelSize * 2
+          );
+        }
       }
       
-      xPos += buildingWidth;
+      xPos += buildingWidth + pixelSize * 2; // Add spacing between buildings
     }
   };
 
-  // Draw grid pattern on sidewalk
+  // Draw pixelated sidewalk
   const drawSidewalkTexture = (
     ctx: CanvasRenderingContext2D, 
     width: number, 
     height: number, 
     playerAreaY: number = height * 0.8
   ) => {
-    ctx.strokeStyle = '#888888';
-    ctx.lineWidth = 1;
+    const pixelSize = 5; // Consistent with other pixel sizes
     
-    // Draw horizontal lines - stop at the player area
-    for (let y = height * 0.65; y < playerAreaY; y += 20) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+    // Base sidewalk color
+    ctx.fillStyle = '#A9A9A9'; // Concrete gray
+    ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
+    
+    // Draw pixel grid pattern on the sidewalk
+    for (let y = height * 0.6; y < playerAreaY; y += pixelSize) {
+      for (let x = 0; x < width; x += pixelSize) {
+        // Create a checker pattern with slight color variation
+        if ((Math.floor(x / (pixelSize * 2)) + Math.floor(y / (pixelSize * 2))) % 2 === 0) {
+          ctx.fillStyle = '#989898'; // Slightly darker square
+          ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+        
+        // Add sidewalk tile borders (darker lines) every few pixels
+        if (x % (pixelSize * 6) === 0 || y % (pixelSize * 6) === 0) {
+          ctx.fillStyle = '#777777'; // Darker line for tile border
+          ctx.fillRect(x, y, pixelSize, 1); // Horizontal line
+          ctx.fillRect(x, y, 1, pixelSize); // Vertical line
+        }
+      }
     }
     
-    // Draw vertical lines - stop at the player area
-    for (let x = 0; x < width; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, height * 0.6);
-      ctx.lineTo(x, playerAreaY);
-      ctx.stroke();
+    // Draw curb/edge line at the top of the sidewalk
+    ctx.fillStyle = '#555555';
+    ctx.fillRect(0, height * 0.6, width, pixelSize);
+    
+    // Draw occasional details on the sidewalk - drain covers, etc.
+    for (let x = pixelSize * 15; x < width; x += pixelSize * 40) {
+      // Draw drain cover
+      ctx.fillStyle = '#555555'; // Dark gray for drain
+      ctx.fillRect(x, height * 0.6 + pixelSize * 5, pixelSize * 4, pixelSize * 2);
+      
+      // Draw drain grate lines
+      ctx.fillStyle = '#333333'; // Near black for grate lines
+      for (let lineX = 0; lineX < 4; lineX++) {
+        ctx.fillRect(x + lineX * pixelSize, height * 0.6 + pixelSize * 5, 1, pixelSize * 2);
+      }
     }
   };
 
@@ -303,19 +462,40 @@ export default function Background({ width, height }: BackgroundProps) {
     height: number, 
     playerAreaY: number
   ) => {
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 6;
-    ctx.setLineDash([20, 15]); // Dashed line pattern
+    const pixelSize = 5; // Consistent pixel size
     
-    // Draw center line in middle of street area (playerAreaY to bottom)
+    // Draw the road base color
+    ctx.fillStyle = '#333333'; // Asphalt dark gray
+    ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
+    
+    // Add road texture with subtle pixel pattern
+    for (let y = playerAreaY; y < height; y += pixelSize) {
+      for (let x = 0; x < width; x += pixelSize) {
+        // Create very subtle variation in road color
+        if ((x + y) % 11 === 0) {
+          ctx.fillStyle = '#3A3A3A'; // Slightly lighter asphalt
+          ctx.fillRect(x, y, pixelSize, pixelSize);
+        } else if ((x + y) % 17 === 0) {
+          ctx.fillStyle = '#2A2A2A'; // Slightly darker asphalt
+          ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+      }
+    }
+    
+    // Draw center line in the middle of street area - pixelated dashed line
     const centerY = playerAreaY + (height - playerAreaY) / 2;
-    ctx.beginPath();
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(width, centerY);
-    ctx.stroke();
+    const lineHeight = pixelSize;
     
-    // Reset line style
-    ctx.setLineDash([]);
+    ctx.fillStyle = '#FFFFFF'; // White line
+    
+    // Draw dashed lines as individual pixel blocks
+    const dashLength = pixelSize * 4;
+    const gapLength = pixelSize * 3;
+    const totalPattern = dashLength + gapLength;
+    
+    for (let x = 0; x < width; x += totalPattern) {
+      ctx.fillRect(x, centerY - Math.floor(lineHeight/2), dashLength, lineHeight);
+    }
   };
 
   // Draw the entire background scene
@@ -339,18 +519,10 @@ export default function Background({ width, height }: BackgroundProps) {
     // Calculate the position of the player area (where the white border is)
     const playerAreaY = height - 202; // 2px for the border
     
-    // Draw sidewalk - end at the white border line
-    ctx.fillStyle = '#A9A9A9'; // Concrete gray
-    ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
-    
-    // Draw sidewalk texture - grid lines
+    // Draw sidewalk with texture
     drawSidewalkTexture(ctx, width, height, playerAreaY);
     
-    // The street should start where the sidewalk ends
-    ctx.fillStyle = '#333333'; // Asphalt dark gray
-    ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
-    
-    // Draw street markings
+    // Draw street with markings
     drawStreetMarkings(ctx, width, height, playerAreaY);
   };
 
