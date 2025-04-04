@@ -42,17 +42,17 @@ export default function Background({ width, height }: BackgroundProps) {
 
     // Animation loop function
     const animate = () => {
-      // Update scrolling offsets for sidewalk and road (moving right)
+      // Road and sidewalk scroll LEFT-TO-RIGHT (increase offset)
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // Update building and cloud positions in OPPOSITE direction (moving right to left)
-      // For clouds and buildings we SUBTRACT instead of add to make them move right
-      buildingOffsetRef.current = (buildingOffsetRef.current - SCROLL_SPEED + width * 2) % (width * 2);
+      // Clouds and buildings scroll RIGHT-TO-LEFT (increase offset)
+      // We use the same direction for the offset but the drawing code will apply it differently
+      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % (width * 2);
       
-      // Update cloud positions (slower speed but in opposite direction)
+      // Update cloud positions (slower speed)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
-        (offset - CLOUD_SPEED + width) % width
+        (offset + CLOUD_SPEED) % width
       );
       
       // Redraw the background with updated offsets
@@ -175,8 +175,9 @@ export default function Background({ width, height }: BackgroundProps) {
       // Apply scrolling offset for this cloud - wrap around when out of view
       const cloudXOffset = cloudOffsetsRef.current[index];
       
-      // Draw main cloud with offset (positive offset since we're moving right)
-      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
+      // For RIGHT-TO-LEFT scrolling, SUBTRACT the offset from x position
+      // As offset increases, cloud appears to move right-to-left
+      const xPos = (cloud.x - cloudWidth / 2) - cloudXOffset;
       
       // Draw cloud image centered at the position
       ctx.drawImage(
@@ -190,7 +191,7 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
       ctx.drawImage(
         cloudImg,
-        xPos - width, // Draw a second cloud one screen-width away
+        xPos + width, // Draw a second cloud one screen-width away
         cloud.y - cloudHeight / 2,
         cloudWidth,
         cloudHeight,
