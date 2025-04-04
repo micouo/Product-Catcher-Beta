@@ -9,7 +9,7 @@ export default function Background({ width, height }: BackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const scrollOffsetRef = useRef(0);
-  const scrollSpeedRef = useRef(1.5); // Pixels per frame - adjust for desired speed
+  const scrollSpeedRef = useRef(0.5); // Pixels per frame - much slower for a subtle effect
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,8 +55,8 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, width, height * 0.6);
     
-    // Draw buildings - pixelated style (moves slower to create parallax effect)
-    drawBuildings(ctx, width, height, scrollOffset * 0.5);
+    // Draw buildings - pixelated style (all elements move at the same speed)
+    drawBuildings(ctx, width, height, scrollOffset);
     
     // Calculate the position of the player area (where the white border is)
     const playerAreaY = height - 202; // 2px for the border
@@ -66,14 +66,14 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
     
     // Draw sidewalk texture - grid lines with scrolling offset
-    drawSidewalkTexture(ctx, width, height, playerAreaY, scrollOffset * 0.8);
+    drawSidewalkTexture(ctx, width, height, playerAreaY, scrollOffset);
     
     // The street should start where the sidewalk ends
     ctx.fillStyle = '#333333'; // Asphalt dark gray
     ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
     
-    // Draw street markings with scrolling offset (moves faster as it's in the foreground)
-    drawStreetMarkings(ctx, width, height, playerAreaY, scrollOffset * 1.2);
+    // Draw street markings with same scrolling offset for uniform movement
+    drawStreetMarkings(ctx, width, height, playerAreaY, scrollOffset);
   };
 
   const drawBuildings = (ctx: CanvasRenderingContext2D, width: number, height: number, scrollOffset: number = 0) => {
