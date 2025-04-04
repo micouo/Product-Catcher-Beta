@@ -117,10 +117,10 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
-      { x: width * 0.15, y: height * 0.15, scale: 0.8 },
-      { x: width * 0.4, y: height * 0.25, scale: 0.6 },
-      { x: width * 0.65, y: height * 0.1, scale: 1.0 },
-      { x: width * 0.9, y: height * 0.3, scale: 0.7 }
+      { x: width * 0.15, y: height * 0.12, scale: 0.2 },
+      { x: width * 0.4, y: height * 0.08, scale: 0.15 },
+      { x: width * 0.7, y: height * 0.15, scale: 0.25 },
+      { x: width * 0.85, y: height * 0.1, scale: 0.18 }
     ];
     
     const cloudImg = cloudImgRef.current;
