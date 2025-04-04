@@ -67,8 +67,9 @@ export default function Background({ width, height }: BackgroundProps) {
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // For buildings, use same direction (moving right) but with a much larger cycle
-      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % BUILDING_CYCLE;
+      // Building animation disabled since buildings have been removed
+      // Uncomment this when building assets are added
+      // buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % BUILDING_CYCLE;
       
       // For clouds, move to the right (same direction as everything else)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
@@ -219,51 +220,9 @@ export default function Background({ width, height }: BackgroundProps) {
     });
   };
 
-  // Draw windows on buildings
-  const drawWindows = (
-    ctx: CanvasRenderingContext2D,
-    buildingX: number,
-    buildingY: number,
-    buildingWidth: number,
-    buildingHeight: number,
-    pixelSize: number,
-    seedValue: number, // Add seed value parameter to keep windows stable during animation
-  ) => {
-    const windowSize = pixelSize * 3; // Window size in pixels
-    const windowSpacing = pixelSize * 5; // Space between windows
-
-    // Calculate number of windows that fit horizontally and vertically
-    const windowsPerRow = Math.floor(
-      (buildingWidth - windowSpacing) / (windowSize + windowSpacing),
-    );
-    const windowRows = Math.floor(
-      (buildingHeight - windowSpacing) / (windowSize + windowSpacing),
-    );
-
-    // Horizontal margin to center windows
-    const marginX =
-      (buildingWidth -
-        (windowsPerRow * windowSize + (windowsPerRow - 1) * windowSpacing)) /
-      2;
-
-    for (let row = 0; row < windowRows; row++) {
-      for (let col = 0; col < windowsPerRow; col++) {
-        const windowX =
-          buildingX + marginX + col * (windowSize + windowSpacing);
-        const windowY =
-          buildingY + windowSpacing + row * (windowSize + windowSpacing);
-
-        // Use the provided seed value to determine window lighting
-        // This prevents window lights from flickering during animation
-        if ((row + col + (seedValue || 0) + Math.floor(row/2)) % 3 !== 0) {
-          ctx.fillStyle = "rgba(255, 255, 190, 0.8)"; // Lit window
-        } else {
-          ctx.fillStyle = "rgba(50, 50, 80, 0.8)"; // Dark window
-        }
-
-        ctx.fillRect(windowX, windowY, windowSize, windowSize);
-      }
-    }
+  // Placeholder for future window implementation if needed
+  const drawWindows = () => {
+    // Windows function has been removed as buildings were removed
   };
 
   // Placeholder function for potential future store signs
@@ -272,106 +231,14 @@ export default function Background({ width, height }: BackgroundProps) {
     // Empty function - store signs have been removed
   };
 
-  // Draw pixelated buildings for the city skyline
+  // Placeholder for future building implementation with image assets
   const drawBuildings = (
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
   ) => {
-    const buildingColors = [
-      "#FF6B6B", // Red
-      "#4ECDC4", // Teal
-      "#F8B500", // Yellow
-      "#8675A9", // Purple
-      "#35A7FF", // Blue
-      "#FFD166", // Light yellow
-      "#E63946", // Dark red
-      "#457B9D", // Dark blue
-    ];
-
-    const pixelSize = 4; // Size of each "pixel" to create pixelated effect
-    
-    // Apply scrolling offset
-    const offset = buildingOffsetRef.current;
-
-    // Calculate base position for infinite building generation
-    // We wrap the building offset around a large value to create a continuous loop
-    // While also shifting the baseline to create new building patterns
-    const wrappedOffset = offset % BUILDING_CYCLE;
-    
-    // We'll always generate buildings in a window around the current view
-    // By using modulo arithmetic, we create a continuous stream of buildings
-    // that appears unique over long distances
-    const viewDistance = width * 1.5; // How far to render beyond screen edges
-    const startPos = -viewDistance;
-    const endPos = width + viewDistance;
-    
-    // Generate buildings at consistent intervals
-    const buildingSpacing = 80; // Distance between building centers
-    
-    // Calculate the first visible building position
-    let currentPos = startPos - (wrappedOffset % buildingSpacing);
-    
-    // Generate buildings to fill the view
-    while (currentPos < endPos) {
-      // Calculate absolute position (for deterministic building generation)
-      // This uses the overall offset to create a "world position" that stays consistent
-      const absPos = currentPos + Math.floor(offset / BUILDING_CYCLE) * BUILDING_CYCLE;
-      
-      // Create a deterministic seed based on the absolute position
-      // This ensures each position always generates the same building
-      const seed = Math.abs(Math.floor(absPos / buildingSpacing)); 
-      
-      // Use the seed to generate consistent building parameters
-      const buildingWidth = ((seed % 3) + 1) * 30 + 50; // 80-140 width
-      const buildingHeight = ((seed % 4) + 1) * 30 + height * 0.2; // Varied heights
-      const colorIndex = Math.floor(seed % buildingColors.length);
-
-      // The visible position is the current position plus the fraction part of the offset
-      const xPos = currentPos + (wrappedOffset % buildingSpacing);
-
-      // Only draw if the building is at least partially visible
-      if (xPos + buildingWidth >= 0 && xPos <= width) {
-        // Draw building - base structure with pixelated effect
-        ctx.fillStyle = buildingColors[colorIndex];
-
-        // Draw with pixelated effect by creating grid of squares
-        for (
-          let y = height * 0.6 - buildingHeight;
-          y < height * 0.6;
-          y += pixelSize
-        ) {
-          for (let x = xPos; x < xPos + buildingWidth; x += pixelSize) {
-            // Deterministic color variation based on position
-            if ((seed + Math.floor(y)) % 10 === 0) {
-              ctx.fillStyle = adjustBrightness(buildingColors[colorIndex], 0.9);
-            } else {
-              ctx.fillStyle = buildingColors[colorIndex];
-            }
-
-            const pixelW = Math.min(pixelSize, xPos + buildingWidth - x);
-            const pixelH = Math.min(pixelSize, height * 0.6 - y);
-            ctx.fillRect(x, y, pixelW, pixelH);
-          }
-        }
-
-        // Draw windows
-        drawWindows(
-          ctx,
-          xPos,
-          height * 0.6 - buildingHeight,
-          buildingWidth,
-          buildingHeight,
-          pixelSize,
-          seed, // Pass the seed value to keep window lights stable during animation
-        );
-
-        // Store signs have been removed as requested
-      }
-      
-      // Move to the next building position
-      currentPos += buildingSpacing;
-    }
+    // Buildings have been removed as requested
+    // Will be replaced with image assets
   };
 
 
