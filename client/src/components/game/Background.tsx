@@ -42,15 +42,15 @@ export default function Background({ width, height }: BackgroundProps) {
 
     // Animation loop function
     const animate = () => {
-      // Road and sidewalk scroll LEFT-TO-RIGHT (increase offset)
+      // ALL ELEMENTS move to the RIGHT (using same direction for consistency)
+      // For road and sidewalk (keep as is)
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // Clouds and buildings scroll RIGHT-TO-LEFT (increase offset)
-      // We use the same direction for the offset but the drawing code will apply it differently
+      // For buildings, use same direction (moving right)
       buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % (width * 2);
       
-      // Update cloud positions (slower speed)
+      // For clouds, move to the right (same direction as everything else)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
         (offset + CLOUD_SPEED) % width
       );
@@ -175,8 +175,8 @@ export default function Background({ width, height }: BackgroundProps) {
       // Apply scrolling offset for this cloud - wrap around when out of view
       const cloudXOffset = cloudOffsetsRef.current[index];
       
-      // For RIGHT-TO-LEFT scrolling, SUBTRACT the offset from x position
-      // As offset increases, cloud appears to move right-to-left
+      // For LEFT-TO-RIGHT scrolling, SUBTRACT the offset from x position
+      // As offset increases, cloud appears to move left-to-right
       const xPos = (cloud.x - cloudWidth / 2) - cloudXOffset;
       
       // Draw cloud image centered at the position
@@ -191,7 +191,7 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
       ctx.drawImage(
         cloudImg,
-        xPos + width, // Draw a second cloud one screen-width away
+        xPos - width, // Draw a second cloud one screen-width to the left
         cloud.y - cloudHeight / 2,
         cloudWidth,
         cloudHeight,
