@@ -51,6 +51,20 @@ const ANIM_INTERVAL = 150; // milliseconds between animation frames
 // Food emojis for products
 const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
 
+// Helper function to draw rounded rectangles since roundRect may not be available in all browsers
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.arcTo(x + width, y, x + width, y + radius, radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+  ctx.lineTo(x + radius, y + height);
+  ctx.arcTo(x, y + height, x, y + height - radius, radius);
+  ctx.lineTo(x, y + radius);
+  ctx.arcTo(x, y, x + radius, y, radius);
+  ctx.closePath();
+}
+
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
@@ -484,45 +498,103 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.rotate(rotation);
     ctx.scale(bounceScale, bounceScale);
     
-    // Draw a simple colored rectangle for the player
-    ctx.fillStyle = '#FF5555'; // Bright red color
-    ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+    // Draw car body
+    const carWidth = player.width;
+    const carHeight = player.height;
+    const wheelSize = carHeight / 4;
     
-    // Add simple car-like details with rounded corners
-    ctx.fillStyle = '#333333'; // Dark gray for windows
+    // Car body (rounded rectangle)
+    ctx.fillStyle = '#FF3333'; // Sporty red color
+    ctx.beginPath();
+    drawRoundedRect(ctx, -carWidth / 2, -carHeight / 2, carWidth, carHeight, 10);
+    ctx.fill();
     
-    // Add direction indicators
-    if (player.movingLeft || player.movingRight || player.movingUp || player.movingDown) {
-      // Direction indicator (a small triangle on top)
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      
-      // Different triangle direction based on movement
-      if (player.movingUp) {
-        // Triangle pointing up
-        ctx.moveTo(0, -player.height / 2 - 5);
-        ctx.lineTo(-10, -player.height / 2 + 5);
-        ctx.lineTo(10, -player.height / 2 + 5);
-      } else if (player.movingDown) {
-        // Triangle pointing down
-        ctx.moveTo(0, player.height / 2 + 5);
-        ctx.lineTo(-10, player.height / 2 - 5);
-        ctx.lineTo(10, player.height / 2 - 5);
-      } else if (player.movingLeft) {
-        // Triangle pointing left
-        ctx.moveTo(-player.width / 2 - 5, 0);
-        ctx.lineTo(-player.width / 2 + 5, -10);
-        ctx.lineTo(-player.width / 2 + 5, 10);
-      } else if (player.movingRight) {
-        // Triangle pointing right
-        ctx.moveTo(player.width / 2 + 5, 0);
-        ctx.lineTo(player.width / 2 - 5, -10);
-        ctx.lineTo(player.width / 2 - 5, 10);
-      }
-      
-      ctx.closePath();
-      ctx.fill();
+    // Car roof/top (smaller rounded rectangle)
+    ctx.fillStyle = '#CC2222'; // Slightly darker red for shadow
+    ctx.beginPath();
+    drawRoundedRect(ctx, -carWidth / 2.5, -carHeight / 2.5, carWidth / 1.5, carHeight / 1.8, 8);
+    ctx.fill();
+    
+    // Add windows (windshield and side windows)
+    ctx.fillStyle = '#333333'; // Dark gray/black for windows
+    
+    // Windshield - adjust position based on direction
+    let windshieldX = 0;
+    let windshieldY = 0;
+    let windshieldWidth = carWidth / 2.2;
+    let windshieldHeight = carHeight / 3;
+    
+    // Adjust windshield position based on movement direction
+    if (player.movingLeft) {
+      windshieldX = -carWidth / 8;
+    } else if (player.movingRight) {
+      windshieldX = carWidth / 8;
     }
+    
+    if (player.movingUp) {
+      windshieldY = -carHeight / 10;
+    } else if (player.movingDown) {
+      windshieldY = carHeight / 10;
+    }
+    
+    ctx.beginPath();
+    drawRoundedRect(
+      ctx,
+      windshieldX - windshieldWidth / 2, 
+      windshieldY - windshieldHeight / 2,
+      windshieldWidth,
+      windshieldHeight,
+      5
+    );
+    ctx.fill();
+    
+    // Add headlights or taillights based on direction
+    ctx.fillStyle = player.movingLeft ? '#FF5555' : '#FFFF66'; // Red for taillights, yellow for headlights
+    
+    // Left light
+    ctx.beginPath();
+    ctx.arc(-carWidth / 2 + 5, -carHeight / 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Right light
+    ctx.beginPath();
+    ctx.arc(-carWidth / 2 + 5, carHeight / 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = player.movingRight ? '#FF5555' : '#FFFF66'; // Red for taillights, yellow for headlights
+    
+    // Left light
+    ctx.beginPath();
+    ctx.arc(carWidth / 2 - 5, -carHeight / 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Right light
+    ctx.beginPath();
+    ctx.arc(carWidth / 2 - 5, carHeight / 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Add wheels (black circles)
+    ctx.fillStyle = '#111111';
+    
+    // Front-left wheel
+    ctx.beginPath();
+    ctx.arc(-carWidth / 3, -carHeight / 2 + wheelSize/2, wheelSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Front-right wheel
+    ctx.beginPath();
+    ctx.arc(carWidth / 3, -carHeight / 2 + wheelSize/2, wheelSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Back-left wheel
+    ctx.beginPath();
+    ctx.arc(-carWidth / 3, carHeight / 2 - wheelSize/2, wheelSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Back-right wheel
+    ctx.beginPath();
+    ctx.arc(carWidth / 3, carHeight / 2 - wheelSize/2, wheelSize/2, 0, Math.PI * 2);
+    ctx.fill();
     
     // No tail animation as requested
     
