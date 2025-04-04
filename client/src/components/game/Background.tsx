@@ -207,6 +207,7 @@ export default function Background({ width, height }: BackgroundProps) {
     buildingWidth: number,
     buildingHeight: number,
     pixelSize: number,
+    seedValue: number, // Add seed value parameter to keep windows stable during animation
   ) => {
     const windowSize = pixelSize * 3; // Window size in pixels
     const windowSpacing = pixelSize * 5; // Space between windows
@@ -232,8 +233,9 @@ export default function Background({ width, height }: BackgroundProps) {
         const windowY =
           buildingY + windowSpacing + row * (windowSize + windowSpacing);
 
-        // Deterministically decide if window is lit (yellow) or dark
-        if ((row + col + Math.floor(buildingX)) % 3 !== 0) {
+        // Use the provided seed value to determine window lighting
+        // This prevents window lights from flickering during animation
+        if ((row + col + (seedValue || 0) + Math.floor(row/2)) % 3 !== 0) {
           ctx.fillStyle = "rgba(255, 255, 190, 0.8)"; // Lit window
         } else {
           ctx.fillStyle = "rgba(50, 50, 80, 0.8)"; // Dark window
@@ -344,6 +346,7 @@ export default function Background({ width, height }: BackgroundProps) {
         buildingWidth,
         buildingHeight,
         pixelSize,
+        seed, // Pass the seed value to keep window lights stable during animation
       );
 
       // Store shop signs on some buildings deterministically
