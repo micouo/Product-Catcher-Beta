@@ -26,6 +26,9 @@ export default function Background({ width, height, playerX = width / 2, playerY
   const cloudLoadedRef = useRef(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // Track the last player position for smoother movement
+  const lastPositionRef = useRef({ x: playerX, y: playerY });
+  
   // Define the background layers with parallax factors
   const layersRef = useRef<BackgroundLayer[]>([]);
   
@@ -69,8 +72,9 @@ export default function Background({ width, height, playerX = width / 2, playerY
     setIsInitialized(true);
   };
 
+  // Effect for cloud image loading
   useEffect(() => {
-    // Load the cloud image
+    // Load the cloud image only once
     if (!cloudImgRef.current) {
       const img = new Image();
       img.src = cloudImage;
@@ -94,16 +98,24 @@ export default function Background({ width, height, playerX = width / 2, playerY
       // Initialize layers if image is already loaded
       initializeLayers();
     }
+  }, []);
+  
+  // Effect for smoothly handling player position changes for parallax
+  useEffect(() => {
+    // Update the last position
+    lastPositionRef.current = { x: playerX, y: playerY };
     
-    // Draw background when component mounts or when dimensions or player position change
+    // Draw background when position changes
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    drawBackground(ctx, width, height, playerX, playerY);
-    
+    // Only redraw if layers are initialized
+    if (isInitialized) {
+      drawBackground(ctx, width, height, playerX, playerY);
+    }
   }, [width, height, playerX, playerY, isInitialized]);
 
   // Helper function to adjust color brightness
@@ -315,23 +327,32 @@ export default function Background({ width, height, playerX = width / 2, playerY
     height: number, 
     playerAreaY: number = height * 0.8
   ) => {
-    ctx.strokeStyle = '#888888';
+    ctx.strokeStyle = '#777777';
     ctx.lineWidth = 1;
     
-    // Draw horizontal lines - stop at the player area
-    for (let y = height * 0.65; y < playerAreaY; y += 20) {
+    // Draw horizontal grid lines
+    for (let y = height * 0.6; y < playerAreaY; y += 15) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(width, y);
       ctx.stroke();
     }
     
-    // Draw vertical lines - stop at the player area
-    for (let x = 0; x < width; x += 40) {
+    // Draw vertical grid lines
+    for (let x = 0; x < width; x += 30) {
       ctx.beginPath();
       ctx.moveTo(x, height * 0.6);
       ctx.lineTo(x, playerAreaY);
       ctx.stroke();
+    }
+    
+    // Add some decorative elements to the sidewalk
+    // Small squares as decorative tiles
+    ctx.fillStyle = '#999999';
+    for (let x = 15; x < width; x += 60) {
+      for (let y = height * 0.6 + 7.5; y < playerAreaY; y += 30) {
+        ctx.fillRect(x, y, 6, 6);
+      }
     }
   };
 
@@ -346,11 +367,18 @@ export default function Background({ width, height, playerX = width / 2, playerY
     ctx.lineWidth = 6;
     ctx.setLineDash([20, 15]); // Dashed line pattern
     
-    // Draw center line in middle of street area (playerAreaY to bottom)
-    const centerY = playerAreaY + (height - playerAreaY) / 2;
+    // Draw center dashed line at the halfway point of the street
+    const centerY = playerAreaY + (height * 0.8 - playerAreaY) / 2;
     ctx.beginPath();
     ctx.moveTo(0, centerY);
     ctx.lineTo(width, centerY);
+    ctx.stroke();
+    
+    // Draw upper solid line just below sidewalk
+    ctx.setLineDash([]); // Solid line
+    ctx.beginPath();
+    ctx.moveTo(0, playerAreaY + 10); // Slightly below playerAreaY
+    ctx.lineTo(width, playerAreaY + 10);
     ctx.stroke();
     
     // Reset line style
@@ -359,10 +387,10 @@ export default function Background({ width, height, playerX = width / 2, playerY
 
   // Standalone Sidewalk drawing function for parallax
   const drawSidewalk = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
-    // Calculate the position of the player area (where the white border is)
-    const playerAreaY = height - 202; // 2px for the border
+    // Draw sidewalk covering upper half of the game area
+    const playerAreaY = height * 0.65; // Moves the sidewalk boundary up to 65% of height
     
-    // Draw sidewalk - end at the white border line
+    // Draw sidewalk from below buildings to player area border
     ctx.fillStyle = '#A9A9A9'; // Concrete gray
     ctx.fillRect(0, height * 0.6, width, playerAreaY - (height * 0.6));
     
@@ -372,15 +400,26 @@ export default function Background({ width, height, playerX = width / 2, playerY
   
   // Standalone Street drawing function for parallax
   const drawStreetLayer = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
-    // Calculate the position of the player area (where the white border is)
-    const playerAreaY = height - 202; // 2px for the border
+    // Street fills the entire lower part of the game area
+    const playerAreaY = height * 0.65; // Match with sidewalk
     
-    // The street should start where the sidewalk ends
+    // Fill the rest of the canvas with street
     ctx.fillStyle = '#333333'; // Asphalt dark gray
     ctx.fillRect(0, playerAreaY, width, height - playerAreaY);
     
-    // Draw street markings
+    // Draw center white dashed line
     drawStreetMarkings(ctx, width, height, playerAreaY);
+    
+    // Add bottom white line (solid)
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 6;
+    ctx.setLineDash([]); // Solid line
+    
+    const bottomLineY = height - 75; // Position near bottom
+    ctx.beginPath();
+    ctx.moveTo(0, bottomLineY);
+    ctx.lineTo(width, bottomLineY);
+    ctx.stroke();
   };
   
   // Draw the entire background scene with parallax effect
