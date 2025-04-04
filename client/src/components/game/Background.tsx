@@ -42,58 +42,53 @@ export default function Background({ width, height }: BackgroundProps) {
 
   // Draw a pixelated sun with rays
   const drawSun = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) => {
-    // Draw sun glow
-    const gradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 1.5);
-    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+    const pixelSize = 6; // Larger pixels for more pixelated look
     
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
-    ctx.fill();
+    // Draw base pixelated sun circle (no gradients - more pixel art style)
+    ctx.fillStyle = '#FFD700'; // Gold color for the sun
     
-    // Draw sun
-    ctx.fillStyle = '#FFD700'; // Gold color
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw pixelated core
-    ctx.fillStyle = '#FFF9C4'; // Light yellow
-    const pixelSize = 5;
-    for (let px = x - radius + pixelSize; px < x + radius - pixelSize; px += pixelSize) {
-      for (let py = y - radius + pixelSize; py < y + radius - pixelSize; py += pixelSize) {
-        // Check if the point is inside the circle
+    // Draw sun using a grid of squares
+    for (let px = x - radius; px < x + radius; px += pixelSize) {
+      for (let py = y - radius; py < y + radius; py += pixelSize) {
+        // Check if pixel is inside the circle
         const distance = Math.sqrt(Math.pow(px - x, 2) + Math.pow(py - y, 2));
-        if (distance < radius * 0.7) {
+        
+        if (distance < radius) {
+          // Outer part of sun
+          if (distance > radius * 0.7) {
+            ctx.fillStyle = '#FFC107'; // Darker gold for outer edge
+          } 
+          // Inner part of sun
+          else {
+            ctx.fillStyle = '#FFEB3B'; // Brighter yellow for inner part
+          }
+          
           ctx.fillRect(px, py, pixelSize, pixelSize);
         }
       }
     }
     
-    // Draw sun rays
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
+    // Draw pixelated sun rays
+    ctx.fillStyle = '#FFD700';
     
     const rayCount = 8;
-    const innerRadius = radius * 1.2;
-    const outerRadius = radius * 1.8;
-    
     for (let i = 0; i < rayCount; i++) {
       const angle = (i / rayCount) * Math.PI * 2;
-      const x1 = x + Math.cos(angle) * innerRadius;
-      const y1 = y + Math.sin(angle) * innerRadius;
-      const x2 = x + Math.cos(angle) * outerRadius;
-      const y2 = y + Math.sin(angle) * outerRadius;
       
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
+      // Draw each ray as a series of small rectangles
+      const rayLength = radius * 1.8;
+      const rayStart = radius * 1.1;
+      
+      for (let r = rayStart; r < rayLength; r += pixelSize) {
+        const rx = x + Math.cos(angle) * r;
+        const ry = y + Math.sin(angle) * r;
+        
+        ctx.fillRect(rx - pixelSize/2, ry - pixelSize/2, pixelSize, pixelSize);
+      }
     }
   };
   
-  // Draw fluffy clouds in the sky
+  // Draw pixelated clouds in the sky
   const drawClouds = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
@@ -104,42 +99,54 @@ export default function Background({ width, height }: BackgroundProps) {
     ];
     
     cloudPositions.forEach(cloud => {
-      // Draw a fluffy cloud made of multiple circles
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      // Use larger pixel size for more pixelated clouds
+      const pixelSize = 6;
       
-      // Main cloud body
-      ctx.beginPath();
-      ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Additional cloud parts
-      const parts = [
-        { x: cloud.x - cloud.size * 0.5, y: cloud.y, size: cloud.size * 0.7 },
-        { x: cloud.x + cloud.size * 0.5, y: cloud.y, size: cloud.size * 0.8 },
-        { x: cloud.x - cloud.size * 0.3, y: cloud.y - cloud.size * 0.4, size: cloud.size * 0.6 },
-        { x: cloud.x + cloud.size * 0.3, y: cloud.y - cloud.size * 0.3, size: cloud.size * 0.5 }
+      // Define the cloud shape as a collection of points
+      const cloudPoints = [
+        { x: cloud.x, y: cloud.y, radius: cloud.size },
+        { x: cloud.x - cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.7 },
+        { x: cloud.x + cloud.size * 0.5, y: cloud.y, radius: cloud.size * 0.8 },
+        { x: cloud.x - cloud.size * 0.3, y: cloud.y - cloud.size * 0.4, radius: cloud.size * 0.6 },
+        { x: cloud.x + cloud.size * 0.3, y: cloud.y - cloud.size * 0.3, radius: cloud.size * 0.5 }
       ];
       
-      parts.forEach(part => {
-        ctx.beginPath();
-        ctx.arc(part.x, part.y, part.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      // Draw the cloud using a pixel grid
+      // Define the bounding box for the cloud
+      const boundLeft = cloud.x - cloud.size * 1.5;
+      const boundRight = cloud.x + cloud.size * 1.5;
+      const boundTop = cloud.y - cloud.size * 1.2;
+      const boundBottom = cloud.y + cloud.size;
       
-      // Add slight pixelation effect to clouds
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      const pixelSize = 3;
-      
-      // Create a square around the cloud and fill with pixels
-      const cloudLeft = cloud.x - cloud.size * 1.5;
-      const cloudRight = cloud.x + cloud.size * 1.5;
-      const cloudTop = cloud.y - cloud.size * 1.5;
-      const cloudBottom = cloud.y + cloud.size * 1.5;
-      
-      for (let px = cloudLeft; px < cloudRight; px += pixelSize * 2) {
-        for (let py = cloudTop; py < cloudBottom; py += pixelSize * 2) {
-          // Add some randomized pixels for texture
-          if (Math.random() > 0.7) {
+      // Loop through the bounding box with pixel-sized steps
+      for (let px = boundLeft; px < boundRight; px += pixelSize) {
+        for (let py = boundTop; py < boundBottom; py += pixelSize) {
+          
+          // Check if this pixel is inside any of the cloud circles
+          let insideCloud = false;
+          
+          // Deterministic variation for edges
+          const edgeNoise = ((px * 7) + (py * 13)) % 10 < 3;
+          
+          for (const point of cloudPoints) {
+            const distance = Math.sqrt(Math.pow(px - point.x, 2) + Math.pow(py - point.y, 2));
+            if (distance < point.radius) {
+              insideCloud = true;
+              break;
+            } else if (distance < point.radius + pixelSize * 2 && edgeNoise) {
+              // Add some edge pixels with noise for a more natural pixelated look
+              insideCloud = true;
+              break;
+            }
+          }
+          
+          if (insideCloud) {
+            // Add subtle shading variation to make clouds more interesting
+            const shade = ((px + py) % 2 === 0) ? 
+              'rgba(255, 255, 255, 0.9)' : 
+              'rgba(240, 240, 255, 0.9)';
+              
+            ctx.fillStyle = shade;
             ctx.fillRect(px, py, pixelSize, pixelSize);
           }
         }
