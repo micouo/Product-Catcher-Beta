@@ -6,15 +6,6 @@ const SCROLL_SPEED = 1;
 const CLOUD_SPEED = 0.3;
 const BUILDING_CYCLE = 5000; // Very large cycle to prevent obvious repeating
 
-// Flower colors for variety
-const FLOWER_COLORS = [
-  "#FF5252", // Red
-  "#FFEB3B", // Yellow
-  "#E040FB", // Purple
-  "#FF9800", // Orange
-  "#FFCDD2", // Light pink
-];
-
 interface BackgroundProps {
   width: number;
   height: number;
@@ -370,66 +361,47 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw a simple flower
-  const drawFlower = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number
-  ) => {
-    // Randomize flower color based on position to keep it consistent
-    const colorIndex = Math.floor(Math.abs(x * 0.7) % FLOWER_COLORS.length);
-    const flowerColor = FLOWER_COLORS[colorIndex];
-    
-    // Draw flower petals
-    const petalCount = 5;
-    const petalSize = size * 0.5;
-    
-    for (let i = 0; i < petalCount; i++) {
-      const angle = (i / petalCount) * Math.PI * 2;
-      const petalX = x + Math.cos(angle) * size * 0.4;
-      const petalY = y + Math.sin(angle) * size * 0.4;
-      
-      // Draw petal
-      ctx.fillStyle = flowerColor;
-      ctx.beginPath();
-      ctx.arc(petalX, petalY, petalSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Draw flower center
-    ctx.fillStyle = "#FFEB3B"; // Yellow center
-    ctx.beginPath();
-    ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-  };
 
-  // Draw decorative round bushes on sidewalk
-  const drawBush = (
+
+  // Draw trees with round foliage on sidewalk
+  const drawTree = (
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     size: number
   ) => {
-    // Base bush color
-    ctx.fillStyle = "#228B22"; // Forest green for bushes
+    // Draw the tree trunk first
+    ctx.fillStyle = "#8B4513"; // Saddle brown for trunk
+    const trunkWidth = size * 0.2;
+    const trunkHeight = size * 0.4;
     
-    // Draw a more circular bush shape
-    const bushSize = size * 0.8;
+    // Draw trunk below the foliage
+    ctx.fillRect(
+      x - trunkWidth/2,
+      y + size * 0.1, // Start below the center of the foliage
+      trunkWidth,
+      trunkHeight
+    );
     
-    // Draw main circular bush body
+    // Base foliage color (using the same style as the previous bushes)
+    ctx.fillStyle = "#228B22"; // Forest green for foliage
+    
+    // Draw a circular foliage shape (same as the bush shape)
+    const foliageSize = size * 0.8;
+    
+    // Draw main circular foliage body
     ctx.beginPath();
-    ctx.arc(x, y, bushSize/2, 0, Math.PI * 2);
+    ctx.arc(x, y, foliageSize/2, 0, Math.PI * 2);
     ctx.fill();
     
-    // Add some details to the bush (smaller circles for texture)
+    // Add some details to the foliage (smaller circles for texture)
     // Slightly darker shade for the texture circles
     ctx.fillStyle = "#1E8449"; // Darker green for texture
     
     // Draw smaller circles around the main circle for a fluffy look
     const detailCount = 6;
     const detailSize = size * 0.25;
-    const detailDistance = bushSize * 0.3; // Distance from center
+    const detailDistance = foliageSize * 0.3; // Distance from center
     
     for (let i = 0; i < detailCount; i++) {
       const angle = (i / detailCount) * Math.PI * 2;
@@ -444,7 +416,7 @@ export default function Background({ width, height }: BackgroundProps) {
     // Add a slightly lighter shade on top for highlight
     ctx.fillStyle = "#2E8B57"; // Medium sea green
     ctx.beginPath();
-    ctx.arc(x, y - bushSize/8, bushSize/4, 0, Math.PI * 2);
+    ctx.arc(x, y - foliageSize/8, foliageSize/4, 0, Math.PI * 2);
     ctx.fill();
   };
 
@@ -482,31 +454,16 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Add bushes along the sidewalk at regular intervals
-    // Use sidewalk offset to make bushes move with the sidewalk
-    const bushSpacing = 200; // Increased space between bushes
-    const bushSize = 40; // Size of bushes
-    const bushY = height * 0.615; // Position bushes even higher up on the sidewalk
+    // Add trees along the sidewalk at regular intervals
+    // Use sidewalk offset to make trees move with the sidewalk
+    const treeSpacing = 200; // Increased space between trees
+    const treeSize = 40; // Size of trees
+    const treeY = height * 0.615; // Position trees higher up on the sidewalk
     
-    // Calculate positions to place bushes, accounting for the scrolling offset
-    for (let x = -bushSpacing + (offset % bushSpacing); x < width + bushSpacing; x += bushSpacing) {
-      // Draw bushes
-      drawBush(ctx, x, bushY, bushSize);
-      
-      // Draw flowers beside each bush
-      const flowerCount = 3; // Number of flowers around each bush
-      const flowerSize = 10; // Size of flowers
-      
-      // Add small flowers near the bush with some variation
-      for (let i = 0; i < flowerCount; i++) {
-        // Calculate flower position - offset from bush
-        const flowerDistance = bushSize * 0.8 + flowerSize;
-        const angle = Math.PI * 0.5 + (i - 1) * Math.PI / 4; // Flowers in a slight arc in front of bush
-        const flowerX = x + Math.cos(angle) * flowerDistance;
-        
-        // Draw the flower - place slightly below the bush
-        drawFlower(ctx, flowerX, bushY + bushSize * 0.6, flowerSize);
-      }
+    // Calculate positions to place trees, accounting for the scrolling offset
+    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
+      // Draw trees
+      drawTree(ctx, x, treeY, treeSize);
     }
   };
 
