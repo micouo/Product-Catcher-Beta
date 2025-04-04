@@ -356,39 +356,50 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw decorative pixel trees on sidewalk
-  const drawTree = (
+  // Draw decorative pixel bushes on sidewalk
+  const drawBush = (
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     size: number
   ) => {
-    // Draw tree trunk
-    ctx.fillStyle = "#8B4513"; // Brown color for trunk
-    ctx.fillRect(x - size/8, y - size/2, size/4, size/2);
+    // Base bush color
+    ctx.fillStyle = "#228B22"; // Forest green for bushes
     
-    // Draw tree foliage (triangular shape for a stylized look)
-    ctx.fillStyle = "#2E8B57"; // Dark green for leaves
+    // Draw the main bush body (rounded rectangle)
+    const bushWidth = size * 0.8;
+    const bushHeight = size * 0.4;
     
-    // Draw triangular tree top (multiple triangles for texture)
-    const triangleCount = 3; // Number of triangles stacked
-    const triangleHeight = size / 1.5;
+    // Draw a rounded rectangle using arcs
+    const radius = bushHeight / 2;
+    ctx.beginPath();
+    ctx.moveTo(x - bushWidth/2 + radius, y - bushHeight/2);
+    ctx.lineTo(x + bushWidth/2 - radius, y - bushHeight/2);
+    ctx.arc(x + bushWidth/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+    ctx.lineTo(x - bushWidth/2 + radius, y + bushHeight/2);
+    ctx.arc(x - bushWidth/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+    ctx.closePath();
+    ctx.fill();
     
-    for (let i = 0; i < triangleCount; i++) {
-      const triangleWidth = size - (i * size/4);
-      const triangleY = y - size/2 - (i * triangleHeight/3);
+    // Add some details to the bush (little bumps on top for texture)
+    const bumpCount = 5;
+    const bumpSize = size * 0.2;
+    
+    // Slightly darker shade for the bumps
+    ctx.fillStyle = "#1E8449"; // Darker green for texture
+    
+    for (let i = 0; i < bumpCount; i++) {
+      const bumpX = x - bushWidth/2 + (bushWidth / (bumpCount-1)) * i;
+      const bumpY = y - bushHeight/2;
       
-      // Draw a triangle
+      // Draw circular bumps on top of the bush
       ctx.beginPath();
-      ctx.moveTo(x - triangleWidth/2, triangleY);
-      ctx.lineTo(x + triangleWidth/2, triangleY);
-      ctx.lineTo(x, triangleY - triangleHeight/triangleCount);
-      ctx.closePath();
+      ctx.arc(bumpX, bumpY, bumpSize, 0, Math.PI * 2);
       ctx.fill();
     }
   };
 
-  // Draw grid pattern on sidewalk and add trees
+  // Draw grid pattern on sidewalk and add bushes
   const drawSidewalkTexture = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -422,16 +433,16 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Add trees along the sidewalk at regular intervals
-    // Use sidewalk offset to make trees move with the sidewalk
-    const treeSpacing = 180; // Space between trees
-    const treeSize = 60; // Size of trees
-    const treeY = height * 0.64; // Position trees near top of sidewalk
+    // Add bushes along the sidewalk at regular intervals
+    // Use sidewalk offset to make bushes move with the sidewalk
+    const bushSpacing = 120; // Space between bushes
+    const bushSize = 40; // Size of bushes
+    const bushY = height * 0.67; // Position bushes near middle of sidewalk
     
-    // Calculate positions to place trees, accounting for the scrolling offset
-    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
-      // Draw trees
-      drawTree(ctx, x, treeY, treeSize);
+    // Calculate positions to place bushes, accounting for the scrolling offset
+    for (let x = -bushSpacing + (offset % bushSpacing); x < width + bushSpacing; x += bushSpacing) {
+      // Draw bushes
+      drawBush(ctx, x, bushY, bushSize);
     }
   };
 
