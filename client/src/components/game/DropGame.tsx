@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
 import Background from './Background';
+import pixelCarImage from '../../assets/pixelcar.png';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -103,7 +104,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Only load the image once
     if (!playerImage) {
       const img = new Image();
-      img.src = '/images/pixelcar.png';
+      img.src = pixelCarImage; // Use the imported image path
       img.onload = () => {
         playerImage = img;
         setPlayerImageLoaded(true);
@@ -523,14 +524,15 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Draw the sprite if image is loaded
     if (playerImage) {
-      // Draw slightly larger than the collision box to make the sprite properly visible
-      const drawWidth = player.width * 1.5;  
-      const drawHeight = player.height * 1.5;
+      // Draw at a size that works well for this specific pixel art sprite
+      const drawWidth = player.width * 1.8;  
+      const drawHeight = player.height * 2.0; // Make slightly taller to show the full car with basket on top
       
+      // Draw with slight vertical offset to center the car properly
       ctx.drawImage(
         playerImage, 
         -drawWidth / 2, 
-        -drawHeight / 2, 
+        -drawHeight / 2 - 10, // Offset upward slightly to center the visible car part
         drawWidth, 
         drawHeight
       );
