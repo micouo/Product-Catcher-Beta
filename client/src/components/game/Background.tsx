@@ -437,23 +437,18 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Add trees along the sidewalk at fixed positions
-    // Instead of having trees move with scrolling offset, we'll place them at fixed screen positions
+    // Add trees along the sidewalk at regular intervals
+    // Trees should scroll with the sidewalk but maintain fixed size
     const treeSpacing = 300; // Space between trees for better visibility
     const treeSize = 45; // Fixed size for all trees
     const treeY = height * 0.62; // Position trees higher up on the sidewalk
     
-    // Fixed tree positions - these will never change regardless of scrolling
-    const treePositions = [
-      { x: width * 0.2, y: treeY },
-      { x: width * 0.5, y: treeY },
-      { x: width * 0.8, y: treeY },
-    ];
-    
-    // Draw trees at these fixed positions
-    treePositions.forEach(tree => {
-      drawTree(ctx, tree.x, tree.y, treeSize);
-    });
+    // Apply sidewalk scrolling offset
+    // Calculate positions to place trees, accounting for the scrolling offset
+    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
+      // Draw trees with fixed size (no variation)
+      drawTree(ctx, x, treeY, treeSize);
+    }
   };
 
   // Draw road markings on street
