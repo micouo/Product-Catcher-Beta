@@ -499,24 +499,38 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     let spriteIndex = 4; // Default to center (no movement) - index 4 in a 3x3 grid (zero-based)
     
     // Determine movement direction and select appropriate sprite
-    // The car sprite sheet is organized in a 3x3 grid:
-    // NW  N  NE
-    // W   C  E
-    // SW  S  SE
+    // Based on examining the actual sprite sheet:
+    // 0: NW view
+    // 1: W view
+    // 2: SW view
+    // 3: N view
+    // 4: Center/still view
+    // 5: S view
+    // 6: NE view
+    // 7: E view
+    // 8: SE view
+    
     if (player.movingUp && player.movingLeft) spriteIndex = 0; // NW
-    else if (player.movingUp && !player.movingLeft && !player.movingRight) spriteIndex = 1; // N
-    else if (player.movingUp && player.movingRight) spriteIndex = 2; // NE
-    else if (!player.movingUp && !player.movingDown && player.movingLeft) spriteIndex = 3; // W
-    else if (!player.movingUp && !player.movingDown && player.movingRight) spriteIndex = 5; // E
-    else if (player.movingDown && player.movingLeft) spriteIndex = 6; // SW
-    else if (player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 7; // S
+    else if (!player.movingUp && !player.movingDown && player.movingLeft) spriteIndex = 1; // W
+    else if (player.movingDown && player.movingLeft) spriteIndex = 2; // SW
+    else if (player.movingUp && !player.movingLeft && !player.movingRight) spriteIndex = 3; // N
+    else if (!player.movingUp && !player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 4; // Center
+    else if (player.movingDown && !player.movingLeft && !player.movingRight) spriteIndex = 5; // S
+    else if (player.movingUp && player.movingRight) spriteIndex = 6; // NE
+    else if (!player.movingUp && !player.movingDown && player.movingRight) spriteIndex = 7; // E
     else if (player.movingDown && player.movingRight) spriteIndex = 8; // SE
 
     // Calculate sprite position in the sheet
     const spriteX = (spriteIndex % CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
     const spriteY = Math.floor(spriteIndex / CAR_SPRITE_GRID) * CAR_SPRITE_SIZE;
     
-    // Draw the car sprite from the sheet
+    // Based on examining the sprite sheet, the car sprites are naturally oriented in the correct directions
+    // No need to flip horizontally, as the sprite sheet already has proper facing for each direction
+    
+    // Save current transform state just in case we need to modify it in the future
+    ctx.save();
+    
+    // Draw the car sprite from the sheet with proper orientation
     ctx.drawImage(
       carImage,
       spriteX, spriteY, // Source position in sprite sheet
@@ -524,6 +538,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       -player.width / 2, -player.height / 2, // Destination position
       player.width, player.height // Destination dimensions
     );
+    
+    // Restore the saved transform state
+    ctx.restore();
     
     // No tail animation as requested
     
