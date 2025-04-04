@@ -43,12 +43,16 @@ export default function Background({ width, height }: BackgroundProps) {
     // Animation loop function
     const animate = () => {
       // ALL ELEMENTS move to the RIGHT (using same direction for consistency)
-      // For road and sidewalk (keep as is)
+      
+      // We'll use a larger cycle width for building offset to prevent visual gaps
+      const buildingCycleWidth = width * 5;
+      
+      // For road and sidewalk
       sidewalkOffsetRef.current = (sidewalkOffsetRef.current + SCROLL_SPEED) % width;
       roadOffsetRef.current = (roadOffsetRef.current + SCROLL_SPEED) % 100; // Road markings repeat more frequently
       
-      // For buildings, use same direction (moving right)
-      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % (width * 2);
+      // For buildings, use same direction (moving right) but with a larger cycle
+      buildingOffsetRef.current = (buildingOffsetRef.current + SCROLL_SPEED) % buildingCycleWidth;
       
       // For clouds, move to the right (same direction as everything else)
       cloudOffsetsRef.current = cloudOffsetsRef.current.map(offset => 
@@ -294,9 +298,9 @@ export default function Background({ width, height }: BackgroundProps) {
     const offset = buildingOffsetRef.current;
 
     // Generate buildings with different heights and colors
-    // Start one width before the visible area to ensure smooth scrolling
-    const startPos = -width;  
-    const endPos = width * 2; // Draw extra buildings beyond screen to ensure seamless scrolling
+    // Create a wider range of buildings to ensure no gaps
+    const startPos = -width * 2;  
+    const endPos = width * 3; // Draw many more buildings to ensure seamless looping
     
     // Generate a deterministic sequence of buildings spanning 3x the screen width
     for (let basePos = startPos; basePos < endPos; basePos += 100) {
