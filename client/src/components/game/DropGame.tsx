@@ -524,15 +524,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Draw the sprite if image is loaded
     if (playerImage) {
-      // Draw at a size that works well for this specific pixel art sprite
-      const drawWidth = player.width * 1.8;  
-      const drawHeight = player.height * 2.0; // Make slightly taller to show the full car with basket on top
+      // Make the car a good size while maintaining the right proportions
+      // The pixel art is a square image but we want to display it at the proper aspect ratio
+      
+      // Set a fixed size that's good for this pixel car sprite
+      const drawWidth = player.width * 1.8;
+      const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
       
       // Draw with slight vertical offset to center the car properly
       ctx.drawImage(
         playerImage, 
-        -drawWidth / 2, 
-        -drawHeight / 2 - 10, // Offset upward slightly to center the visible car part
+        -drawWidth / 2,
+        -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
         drawWidth, 
         drawHeight
       );
