@@ -160,55 +160,47 @@ export default function Background({ width, height }: BackgroundProps) {
     // Check if cloud image is loaded
     if (!cloudImgRef.current || !cloudLoadedRef.current) return;
 
-    // Define cloud positions with varied y-coordinates and scales
+    // Define cloud positions - set these to fixed values for a consistent background
     const cloudPositions = [
-      { y: height * 0.12, scale: 0.2, speedFactor: 1.0 },
-      { y: height * 0.08, scale: 0.15, speedFactor: 0.8 },
-      { y: height * 0.10, scale: 0.18, speedFactor: 1.2 },
-      { y: height * 0.15, scale: 0.2, speedFactor: 0.9 },
-      { y: height * 0.05, scale: 0.17, speedFactor: 1.1 }, // Added fifth cloud
+      { x: width * 0.15, y: height * 0.12, scale: 0.2 },
+      { x: width * 0.4, y: height * 0.08, scale: 0.15 },
+      { x: width * 0.85, y: height * 0.1, scale: 0.18 },
+      { x: width * 0.65, y: height * 0.15, scale: 0.2 }, // Added fourth cloud
     ];
 
     const cloudImg = cloudImgRef.current;
-    
-    // Get the overall cloud offset for this frame
-    const baseOffset = cloudOffsetsRef.current[0];
-    
-    // Calculate x-spacing between clouds for more natural distribution
-    const cloudSpacing = width / 3;
-    
-    // Draw multiple layers of clouds for infinite scrolling effect
-    for (let layer = -1; layer <= 1; layer++) {
-      cloudPositions.forEach((cloud, index) => {
-        // Calculate size based on the original image dimensions
-        const cloudWidth = cloudImg.width * cloud.scale;
-        const cloudHeight = cloudImg.height * cloud.scale;
-        
-        // Calculate a unique starting position for each cloud
-        // This creates a deterministic but varied pattern
-        const baseX = (index * cloudSpacing) % width;
-        
-        // Apply individual speed factor to create parallax
-        const cloudOffset = baseOffset * cloud.speedFactor;
-        
-        // Calculate final x position with offset
-        // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
-        // Include the layer offset to create multiple layers of clouds
-        const xPos = baseX + cloudOffset + (layer * width);
-        
-        // Only draw clouds that are at least partially visible
-        if (xPos + cloudWidth >= 0 && xPos <= width) {
-          // Draw cloud image
-          ctx.drawImage(
-            cloudImg,
-            xPos,
-            cloud.y - cloudHeight / 2,
-            cloudWidth,
-            cloudHeight,
-          );
-        }
-      });
-    }
+
+    // Draw each cloud with its own offset to create a parallax effect
+    cloudPositions.forEach((cloud, index) => {
+      // Calculate size - scale based on the original image dimensions
+      const cloudWidth = cloudImg.width * cloud.scale;
+      const cloudHeight = cloudImg.height * cloud.scale;
+
+      // Apply scrolling offset for this cloud - wrap around when out of view
+      const cloudXOffset = cloudOffsetsRef.current[index];
+      
+      // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
+      // As offset increases, cloud appears to move left-to-right
+      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
+      
+      // Draw cloud image centered at the position
+      ctx.drawImage(
+        cloudImg,
+        xPos, // Apply cloud offset for scrolling
+        cloud.y - cloudHeight / 2, // Vertical position stays the same
+        cloudWidth,
+        cloudHeight,
+      );
+      
+      // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
+      ctx.drawImage(
+        cloudImg,
+        xPos - width, // Draw a second cloud one screen-width to the left
+        cloud.y - cloudHeight / 2,
+        cloudWidth,
+        cloudHeight,
+      );
+    });
   };
 
   // Draw windows on buildings
