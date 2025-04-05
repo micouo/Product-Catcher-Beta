@@ -18,7 +18,7 @@ export function useSound() {
   // Initialize sound elements on mount
   useEffect(() => {
     try {
-      // Create the sound elements
+      // Create the sound elements with correct paths
       hitSoundRef.current = new Audio('/sounds/hit.wav');
       collectSoundRef.current = new Audio('/sounds/pickup.wav');
       
@@ -85,10 +85,27 @@ export function useSound() {
   };
   
   // For backwards compatibility 
-  const startMusic = () => {};
-  const stopMusic = () => {};
-  const setMusicVolume = () => {};
-  const initializeAudio = () => {};
+  const startMusic = () => {
+    console.log('Music start called (not implemented in simple sound system)');
+  };
+  const stopMusic = () => {
+    console.log('Music stop called (not implemented in simple sound system)');
+  };
+  const setMusicVolume = () => {
+    console.log('Music volume change called (not implemented in simple sound system)');
+  };
+  // This is important as it is called by components to initialize audio
+  const initializeAudio = () => {
+    // Create a short silent sound and play it to initialize Web Audio on user interaction
+    try {
+      const silentSound = new Audio('data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+      silentSound.play().catch(e => console.log('Silent sound play error (expected):', e));
+      return true;
+    } catch (e) {
+      console.error('Error initializing audio:', e);
+      return false;
+    }
+  };
   
   return {
     playSound,
