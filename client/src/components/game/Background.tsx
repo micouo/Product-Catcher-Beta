@@ -530,70 +530,37 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // Position the Calgary Tower in the background
     const sidewalkY = height * 0.6;
     
-    // ===== EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER =====
-    // You can adjust these values to change appearance and placement
+    // EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER
+    const towerScale = 2; // Scale factor for the tower (adjust as needed)
+    const towerWidth = width * 0.2 * towerScale; // 10% of screen width by default
+    const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
+    const towerYOffset = 40; // Vertical position: smaller = higher, larger = lower
+    const towerXOffset = -300; // Horizontal position: positive = right, negative = left
+    const towerY = sidewalkY - towerHeight + towerYOffset;
     
-    // APPEARANCE
-    const TOWER_SCALE = 2.0;                   // Scale factor for the tower size
-    const TOWER_WIDTH = width * 0.2 * TOWER_SCALE;  // Width of the tower
-    const TOWER_HEIGHT = height * 0.35 * TOWER_SCALE; // Height of the tower
+    // Use a much larger spacing to ensure the tower appears less frequently
+    // Making it slower to regenerate as requested
+    const towerSpacing = width * 2; // 4x screen width spacing between towers
     
-    // POSITIONING
-    const TOWER_Y_OFFSET = 40;                 // Vertical position: smaller = higher, larger = lower
-    const TOWER_X_OFFSET = -100;               // Fine-tune horizontal position adjustment
-    
-    // GENERATION FREQUENCY
-    const TOWER_SPACING_MULTIPLIER = 3.0;      // Higher number = towers appear less frequently
-                                              // Value is multiplied by cluster spacing to ensure towers appear between building clusters
-    
-    // PARALLAX EFFECT
-    const PARALLAX_FACTOR = 0.8;              // Controls how much slower the tower moves compared to buildings
-                                              // Lower = appears more distant, Higher = moves more with buildings
-    
-    // END OF CONFIGURATION SECTION
-    // ============================================
-    
-    const towerY = sidewalkY - TOWER_HEIGHT + TOWER_Y_OFFSET;
-    
-    // Get the building cluster information to place towers between clusters
-    // These should match the values in drawBuildings function
-    
-    // From building function
-    const buildingScale = width * 0.25;
-    const betweenBuildingGap = -85;
-    const betweenClusterGap = -50;
-    
-    // Calculate average building cluster width - use similar calculation as in drawBuildings
-    const avgBuildingWidth = buildingScale * 0.8 * 2.2; // Average of the three building widths
-    const clusterWidth = avgBuildingWidth * 3 + betweenBuildingGap * 2; // 3 buildings with 2 gaps
-    const clusterSpacing = clusterWidth + betweenClusterGap; // Full cluster pattern width
-    
-    // Make tower spacing a multiple of the cluster spacing
-    const towerSpacing = clusterSpacing * TOWER_SPACING_MULTIPLIER;
-    
-    // Create a wider pattern for the towers
+    // Create a much wider pattern to ensure towers are spaced far apart
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
     
-    // Apply the parallax effect for a distant background feel
-    // This makes the tower scroll slower than buildings for a parallax effect
-    let x1 = (calgaryTowerPositionX.current * PARALLAX_FACTOR) % patternWidth;
+    // Use the calgary tower's own position tracker for a slower, distant effect
+    // The tower scrolls slower than buildings to appear farther away in the background
+    let x1 = (calgaryTowerPositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw towers at positions that ensure they're between building clusters
+    // Draw towers with very large spacing to avoid having multiple on screen at once
     const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
     
     for (let i = 0; i < numTowers; i++) {
-      // Calculate the base position using the tower spacing
-      const basePos = x1 + i * towerSpacing;
-      
-      // Position the tower exactly halfway between building clusters
-      // clusterSpacing/2 puts it halfway between clusters, then add offset for fine-tuning
-      const x = basePos + (clusterSpacing / 2) + TOWER_X_OFFSET;
+      // Apply the X offset to tower positioning
+      const x = x1 + i * towerSpacing + towerXOffset;
       
       // Only draw if within our visible area with buffer
-      if (x > -TOWER_WIDTH && x < width + TOWER_WIDTH) {
-        ctx.drawImage(calgaryTowerImg, x, towerY, TOWER_WIDTH, TOWER_HEIGHT);
+      if (x > -towerWidth && x < width + towerWidth) {
+        ctx.drawImage(calgaryTowerImg, x, towerY, towerWidth, towerHeight);
       }
     }
   };
@@ -674,55 +641,74 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     const grassImg = grassImgRef.current;
     const sidewalkY = height * 0.6;
     
-    // Size the grass appropriately - increased height for better coverage
-    const grassHeight = height * 0.08; // 8% of canvas height
-    const grassWidth = width * 0.2; // 20% of canvas width
+    // ===== EASILY CONFIGURABLE PROPERTIES FOR GRASS =====
+    // You can adjust these values to change appearance and placement
     
-    // Position the grass so it overlaps the sidewalk substantially
-    const grassY = sidewalkY - grassHeight + 20; // Move grass down to eliminate any gap
+    // APPEARANCE
+    const GRASS_WIDTH = width * 0.2;        // Width of each grass patch
+    const GRASS_HEIGHT = height * 0.08;     // Height of each grass patch
     
-    // Add much larger buffer to ensure continuous appearance
-    const visibleWidth = width + 2000; // Even larger buffer to prevent gaps
-    const grassSpacing = grassWidth * 0.5; // More aggressive overlap (50% instead of 60%) for seamless appearance
+    // POSITIONING
+    const GRASS_Y_OFFSET = 20;              // Vertical position: smaller = higher, larger = lower
+                                           // Adjust this value to move all grass rows up or down together
+    
+    // GENERATION SETTINGS
+    const GRASS_OVERLAP = 0.75;            // How much each grass patch overlaps (0.5 = 50% overlap)
+                                           // Higher values create more dense coverage with no gaps
+    
+    const BUFFER_MULTIPLIER = 6;           // Increase this to prevent gaps at the edges
+                                           // Higher values ensure consistent grass appearance
+    
+    // ROWS CONFIGURATION
+    // Each row has same width but can be configured with different heights and offsets  
+    const GRASS_ROWS = [
+      { yOffset: 0,   heightScale: 1.0 },  // Bottom row (no offset)
+      { yOffset: -4,  heightScale: 1.0 },  // Middle row (slightly higher)
+      { yOffset: -8,  heightScale: 1.0 }   // Top row (highest)
+    ];
+    
+    // END OF CONFIGURATION SECTION
+    // ============================================
+    
+    // Base Y position for all grass (sidewalk with offset adjustment)
+    const baseGrassY = sidewalkY - GRASS_HEIGHT + GRASS_Y_OFFSET;
+    
+    // Create extremely dense grass coverage with minimal spacing
+    // Using aggressive overlap to ensure no gaps appear
+    const grassSpacing = GRASS_WIDTH * (1 - GRASS_OVERLAP); // e.g., 75% overlap = 25% spacing
+    
+    // Extra-wide visible width with substantial buffer to prevent any gaps
+    const visibleWidth = width * BUFFER_MULTIPLIER; 
     const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
     
-    // Use the same exact synchronization as trees for grass movement
-    // Exact 1:1 matching speed with tree/sidewalk without multiplier for perfect sync
+    // Use the same exact synchronization as trees for grass movement (perfect sync)
     let x1 = (treePositionX.current) % patternWidth; 
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw grass patches along the sidewalk - greatly increased patch count
-    const numPatches = Math.ceil(patternWidth / grassSpacing) + 5; // Added even more patches
+    // Calculate a very large number of patches to ensure complete coverage
+    const numPatches = Math.ceil(patternWidth / grassSpacing) + 10; // Extra patches for safety
     
-    // First row of grass (bottom row)
-    for (let i = 0; i < numPatches; i++) {
-      const x = x1 + (i * grassSpacing);
-      
-      // Only draw if within our much larger extended visible area (with wider buffer)
-      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
-        ctx.drawImage(grassImg, x, grassY, grassWidth, grassHeight);
-      }
-    }
+    // Extended buffer for off-screen drawing to prevent any possible gaps
+    const bufferWidth = GRASS_WIDTH * BUFFER_MULTIPLIER;
     
-    // Second row of grass (slightly higher and offset)
-    for (let i = 0; i < numPatches; i++) {
-      const x = x1 + (i * grassSpacing) + grassWidth * 0.25; // Offset by 25% width for staggered effect
+    // Draw multiple rows of grass with consistent positioning
+    GRASS_ROWS.forEach((row) => {
+      // Calculate this row's Y position based on base position and row-specific offset
+      const rowY = baseGrassY + row.yOffset;
       
-      // Only draw if within our much larger extended visible area (with wider buffer)
-      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
-        ctx.drawImage(grassImg, x, grassY - 5, grassWidth, grassHeight);
-      }
-    }
-    
-    // Third row of grass (even higher and offset differently)
-    for (let i = 0; i < numPatches; i++) {
-      const x = x1 + (i * grassSpacing) - grassWidth * 0.15; // Different offset for variety
+      // Calculate this row's height with any scaling
+      const rowHeight = GRASS_HEIGHT * row.heightScale;
       
-      // Only draw if within our much larger extended visible area (with wider buffer)
-      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
-        ctx.drawImage(grassImg, x, grassY - 10, grassWidth, grassHeight);
+      // Draw all patches for this row
+      for (let i = 0; i < numPatches; i++) {
+        const x = x1 + (i * grassSpacing);
+        
+        // Only draw if within our extended visible area (with large buffer)
+        if (x > -bufferWidth && x < width + bufferWidth) {
+          ctx.drawImage(grassImg, x, rowY, GRASS_WIDTH, rowHeight);
+        }
       }
-    }
+    });
   };
 
   /**
