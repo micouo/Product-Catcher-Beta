@@ -413,8 +413,9 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   };
   
   /**
-   * Draw buildings using the tree technique for smooth scrolling while maintaining all 3 building types
-   * Buildings are positioned with a consistent pattern to avoid snapping
+   * Draw buildings with the two-image infinite scrolling technique
+   * Buildings are between clouds and sidewalk in the background
+   * Buildings are organized in fixed patterns to eliminate any snapping effect
    */
   const drawBuildings = (ctx: CanvasRenderingContext2D) => {
     // Check if all building images are loaded
@@ -430,19 +431,19 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // ===== EASILY CONFIGURABLE PROPERTIES FOR BUILDINGS =====
     // You can adjust these values to change appearance and placement
     
+    // APPEARANCE & SIZING
+    const BUILDING_SCALE = width * 0.25;     // Base scale factor for buildings
+    
     // POSITIONING
     const SIDEWALK_Y = height * 0.6;         // Sidewalk position
-    const BUILDING_Y_OFFSET = 42;            // Vertical adjustment (positive = lower)
-    
-    // APPEARANCE & SIZING
-    const BUILDING_SCALE = width * 0.25;     // Scale factor for buildings
+    const BUILDING_Y_OFFSET = 42;            // Baseline vertical adjustment (positive = lower)
     
     // SPACING
-    const BUILDING_SPACING = 300;            // Distance between buildings
+    const BETWEEN_BUILDING_GAP = -85;        // Space between buildings within a cluster (negative = overlap)
+    const BETWEEN_CLUSTER_GAP = -50;         // Space between building clusters
     
     // PARALLAX EFFECT
-    const PARALLAX_FACTOR = 0.9;             // How buildings move relative to sidewalk
-                                            // Value closer to 1.0 means buildings move with sidewalk
+    const PARALLAX_FACTOR = 0.8;             // How buildings move relative to sidewalk (lower = more distant feel)
     
     // RENDERING DISTANCE
     const RENDER_BUFFER = 800;               // How far offscreen to render buildings
@@ -450,77 +451,94 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // END OF CONFIGURATION SECTION
     // ============================================
     
-    // Define each building type with its properties
-    const buildingTypes = [
-      {
-        img: building1Img,
-        width: BUILDING_SCALE * 0.6 * 2.4,
+    // Calculate the base Y position for buildings
+    const buildingY = SIDEWALK_Y + BUILDING_Y_OFFSET;
+    
+    // Define the building patterns used throughout the scene
+    // Each building has a consistent size and vertical position
+    const buildingSizes = [
+      { 
+        img: building1Img, 
+        width: BUILDING_SCALE * 0.6 * 2.4, 
         height: height * 0.6,
-        yOffset: 24
+        yOffset: 24 // Building 1 vertical offset
       },
-      {
-        img: building2Img,
-        width: BUILDING_SCALE * 1.02 * 1.2 * 1.7,
+      { 
+        img: building2Img, 
+        width: BUILDING_SCALE * 1.02 * 1.2 * 1.7, 
         height: height * 0.6 * 1.4,
-        yOffset: 80
+        yOffset: 80 // Building 2 vertical offset
       },
-      {
-        img: building3Img,
-        width: BUILDING_SCALE * 0.6 * 2.7,
+      { 
+        img: building3Img, 
+        width: BUILDING_SCALE * 0.6 * 2.7, 
         height: height * 0.7,
-        yOffset: 34
+        yOffset: 34 // Building 3 vertical offset
       }
     ];
     
-    // Create a pattern wide enough to fill the screen plus buffer
+    // Define fixed building patterns to ensure consistency
+    // Each pattern defines the order of buildings in a cluster
+    // We'll cycle through these patterns to create variation without randomness
+    const buildingPatterns = [
+      [0, 1, 2], // Pattern 1: Building 1, 2, 3
+      [2, 0, 1], // Pattern 2: Building 3, 1, 2
+      [1, 2, 0]  // Pattern 3: Building 2, 3, 1
+    ];
+    
+    // Calculate the width of a single cluster (3 buildings + gaps between them)
+    // All clusters will have the same total width regardless of building order
+    const clusterWidth = buildingSizes.reduce((sum, building) => sum + building.width, 0) + 
+                         BETWEEN_BUILDING_GAP * 2; // 2 gaps between 3 buildings
+    
+    // Calculate the width of a complete pattern (cluster + gap)
+    const patternWidth = clusterWidth + BETWEEN_CLUSTER_GAP;
+    
+    // Add buffer to prevent pop-in and ensure smooth scrolling
     const visibleWidth = width + RENDER_BUFFER;
-    // Each full pattern is 3 buildings (we cycle through all 3 building types)
-    const patternUnit = BUILDING_SPACING * 3;
-    const patternWidth = Math.ceil(visibleWidth / patternUnit + 2) * patternUnit;
+    const numClusters = Math.ceil(visibleWidth / patternWidth) + 1;
     
-    // Calculate the scroll position with parallax factor
-    let x1 = (buildingPositionX.current * PARALLAX_FACTOR) % patternWidth;
-    if (x1 > 0) x1 -= patternWidth;
-    const x2 = x1 + patternWidth;  // Second pattern for seamless wrapping
+    // Use building position with parallax factor to match trees and sidewalk
+    // This ensures the buildings appear fixed relative to the sidewalk
+    let baseX = (buildingPositionX.current * PARALLAX_FACTOR) % patternWidth;
+    if (baseX > 0) baseX -= patternWidth;
     
-    // Draw both sets of buildings to ensure seamless scrolling
-    const drawBuildingSet = (baseX: number) => {
-      // Calculate how many complete 3-building patterns we need 
-      const numPatterns = Math.ceil(patternWidth / patternUnit) + 1;
+    // Draw multiple building clusters to ensure continuous scene
+    for (let clusterIndex = 0; clusterIndex < numClusters; clusterIndex++) {
+      const clusterStartX = baseX + (clusterIndex * patternWidth);
       
-      for (let i = 0; i < numPatterns; i++) {
-        const patternStartX = baseX + (i * patternUnit);
+      // Skip if cluster is completely off-screen (optimization)
+      if (clusterStartX > width || clusterStartX + clusterWidth < 0) continue;
+      
+      // Use a completely deterministic pattern based on cluster index
+      // This ensures each position in the world always has the same buildings
+      // The modulo ensures we cycle through the patterns
+      const patternIndex = clusterIndex % buildingPatterns.length;
+      const buildingOrder = buildingPatterns[patternIndex];
+      
+      // Current x position within the cluster
+      let currentX = clusterStartX;
+      
+      // Draw each building in the cluster using the selected pattern
+      buildingOrder.forEach((buildingIndex) => {
+        const building = buildingSizes[buildingIndex];
         
-        // Skip if pattern is completely off-screen (optimization)
-        if (patternStartX > width + 200 || patternStartX + patternUnit < -200) continue;
+        // Calculate the exact Y position for this building
+        const yPosition = buildingY - building.height + building.yOffset;
+            
+        // Draw the building
+        ctx.drawImage(
+          building.img,
+          currentX,
+          yPosition,
+          building.width,
+          building.height
+        );
         
-        // Draw each of the 3 building types in sequence
-        for (let b = 0; b < 3; b++) {
-          const building = buildingTypes[b];
-          const buildingX = patternStartX + (b * BUILDING_SPACING);
-          
-          // Calculate the exact Y position for this building
-          const buildingY = SIDEWALK_Y - building.height + building.yOffset;
-          
-          // Only draw if within our visible area (with buffer)
-          if (buildingX > -building.width && buildingX < width + RENDER_BUFFER) {
-            ctx.drawImage(
-              building.img,
-              buildingX,
-              buildingY,
-              building.width,
-              building.height
-            );
-          }
-        }
-      }
-    };
-    
-    // Draw first set of buildings (starting set)
-    drawBuildingSet(x1);
-    
-    // Draw second set of buildings (for wrapping)
-    drawBuildingSet(x2);
+        // Move to the next building position
+        currentX += building.width + BETWEEN_BUILDING_GAP;
+      });
+    }
   };
 
   /**
