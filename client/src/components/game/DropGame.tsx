@@ -625,10 +625,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     });
   };
   
-  // Track car selection canvas changes
+  // Track selected car changes
   useEffect(() => {
-    // This effect runs when selectedCar changes to update the preview canvas
-    // The canvas ref in the JSX will handle the actual drawing
+    // This effect runs when selectedCar changes
+    // Update the player image based on the selected car
+    if (carImages[selectedCar]) {
+      playerImage = carImages[selectedCar];
+    }
   }, [selectedCar, carImagesLoaded]);
 
   // Start game
@@ -882,19 +885,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
                 {/* Current selected car display */}
                 <div className="w-40 h-32 relative flex justify-center items-center">
-                  <canvas 
-                    width={160}
-                    height={128}
-                    className="object-contain"
-                    ref={(canvas) => {
-                      if (canvas && carImages[selectedCar]) {
-                        const ctx = canvas.getContext('2d');
-                        if (ctx) {
-                          ctx.clearRect(0, 0, 160, 128);
-                          ctx.drawImage(carImages[selectedCar], 0, 0, 160, 128);
-                        }
-                      }
-                    }}
+                  <img 
+                    src={carImages[selectedCar]?.src} 
+                    alt={selectedCar}
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 
