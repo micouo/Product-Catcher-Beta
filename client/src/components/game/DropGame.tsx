@@ -520,6 +520,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.rotate(rotation);
     ctx.scale(bounceScale, bounceScale);
     
+    // Flip the sprite horizontally to make it face right
+    ctx.scale(-1, 1);
+    
     // Image is loaded in the useEffect hook on component mount
     
     // Draw the sprite if image is loaded
@@ -541,6 +544,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       );
     } else {
       // Fallback simple colored rectangle if image hasn't loaded yet
+      // The -1 scale from above is already applied, so we don't need to do anything
+      // special here for the horizontal flip
       ctx.fillStyle = '#3B82F6'; // Blue color matching the sprite
       ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
     }

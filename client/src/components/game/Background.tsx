@@ -164,7 +164,9 @@ export default function Background({ width, height }: BackgroundProps) {
     
     const treeImg = treeImgRef.current;
     const treeSize = 38.5;
-    const treeY = height * 0.48;
+    // Position trees properly on the sidewalk - tree trunks should be on the sidewalk
+    const sidewalkY = height * 0.6;
+    const treeY = sidewalkY + 45; // Position tree trunk base on the sidewalk
     const treeSpacing = 300;
     
     // Create a pattern wide enough to fill the screen plus extra buffer
