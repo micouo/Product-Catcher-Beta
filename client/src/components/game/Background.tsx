@@ -5,6 +5,8 @@ import building1Image from "../../assets/building 1.png";
 import building2Image from "../../assets/building 2.png";
 import building3Image from "../../assets/building 3.png";
 import grassImage from "../../assets/grass.png";
+import calgaryTowerImage from "../../assets/calgary-tower.png";
+import blueRingImage from "../../assets/blue-ring.png";
 
 interface BackgroundProps {
   width: number;
@@ -27,6 +29,8 @@ export default function Background({ width, height }: BackgroundProps) {
   const buildingPositionX = useRef(0);
   const treePositionX = useRef(0);
   const roadPositionX = useRef(0);
+  const calgaryTowerPositionX = useRef(0);
+  const blueRingPositionX = useRef(0);
   
   // Last timestamp for frame-rate independent animation
   const lastTimeRef = useRef(0);
@@ -38,18 +42,24 @@ export default function Background({ width, height }: BackgroundProps) {
   const building1ImgRef = useRef(new Image());
   const building2ImgRef = useRef(new Image());
   const building3ImgRef = useRef(new Image());
+  const calgaryTowerImgRef = useRef(new Image());
+  const blueRingImgRef = useRef(new Image());
   const cloudLoaded = useRef(false);
   const treeLoaded = useRef(false);
   const grassLoaded = useRef(false);
   const building1Loaded = useRef(false);
   const building2Loaded = useRef(false);
   const building3Loaded = useRef(false);
+  const calgaryTowerLoaded = useRef(false);
+  const blueRingLoaded = useRef(false);
   
   // Layer speeds
   const CLOUD_SPEED = 0.3;  // Slowest (clouds in background)
   const BUILDING_SPEED = 0.6; // Medium-slow (buildings in background)
   const TREE_SPEED = 1.5;   // Medium (trees on sidewalk)
   const ROAD_SPEED = 2.0;   // Fastest (road markings)
+  const CALGARY_TOWER_SPEED = 0.5; // Slower than buildings to appear in distant background
+  const BLUE_RING_SPEED = 1.4;     // Slightly slower than trees but faster than buildings
   
   useEffect(() => {
     // Load cloud image
@@ -92,6 +102,20 @@ export default function Background({ width, height }: BackgroundProps) {
       building3Loaded.current = true;
     };
     
+    // Load Calgary Tower image
+    const calgaryTowerImg = calgaryTowerImgRef.current;
+    calgaryTowerImg.src = calgaryTowerImage;
+    calgaryTowerImg.onload = () => {
+      calgaryTowerLoaded.current = true;
+    };
+    
+    // Load Blue Ring image
+    const blueRingImg = blueRingImgRef.current;
+    blueRingImg.src = blueRingImage;
+    blueRingImg.onload = () => {
+      blueRingLoaded.current = true;
+    };
+    
     // Get canvas context
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -121,6 +145,8 @@ export default function Background({ width, height }: BackgroundProps) {
       buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
       treePositionX.current -= TREE_SPEED * timeMultiplier;
       roadPositionX.current -= ROAD_SPEED * timeMultiplier;
+      calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
+      blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
       
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -406,31 +432,31 @@ export default function Background({ width, height }: BackgroundProps) {
     const buildingSizes = [
       { 
         img: building1Img, 
-        width: buildingScale * 0.92 * 1.2, 
-        height: height * 0.42,
-        yOffset: 0 // Building 1 vertical offset (0 = default position)
+        width: buildingScale * 0.6 * 2.4, 
+        height: height * 0.6,
+        yOffset: 24 // Building 1 vertical offset (0 = default position)
       },
       { 
         img: building2Img, 
-        width: buildingScale * 1.02 * 1.2 * 1.5, 
-        height: height * 0.5 * 1.2,
-        yOffset: 60 // Building 2 vertical offset - lower number = higher position
+        width: buildingScale * 1.02 * 1.2 * 1.7, 
+        height: height * 0.6 * 1.4,
+        yOffset: 80 // Building 2 vertical offset - lower number = higher position
       },
       { 
         img: building3Img, 
-        width: buildingScale * 0.96 * 1.2, 
-        height: height * 0.43,
-        yOffset: 0 // Building 3 vertical offset (0 = default position)
+        width: buildingScale * 0.6 * 2.7, 
+        height: height * 0.7,
+        yOffset: 34 // Building 3 vertical offset (0 = default position)
       }
     ];
     
     // Create building clusters with specific spacing
-    const betweenBuildingGap = 0.1; // 2px between buildings in a cluster
-    const betweenClusterGap = 30; // 30px between clusters
+    const betweenBuildingGap = -85; // 2px between buildings in a cluster
+    const betweenClusterGap = -150; // 30px between clusters
     
     // Calculate the width of a single cluster (3 buildings + gaps between them)
     const clusterWidth = buildingSizes.reduce((sum, building) => sum + building.width, 0) + 
-                         betweenBuildingGap * 2; // 2 gaps between 3 buildings
+                         betweenBuildingGap * 1; // 2 gaps between 3 buildings
     
     // Calculate the width of a complete pattern (cluster + gap)
     const patternWidth = clusterWidth + betweenClusterGap;
@@ -488,6 +514,99 @@ export default function Background({ width, height }: BackgroundProps) {
   };
 
   /**
+   * Draw the Calgary Tower in the background between building clusters
+   * Calgary Tower is positioned behind buildings but in front of clouds
+   */
+  const drawCalgaryTower = (ctx: CanvasRenderingContext2D) => {
+    if (!calgaryTowerLoaded.current || !calgaryTowerImgRef.current) return;
+    
+    const calgaryTowerImg = calgaryTowerImgRef.current;
+    
+    // Position the Calgary Tower in the background
+    const sidewalkY = height * 0.6;
+    
+    // Configurable size for the tower (easily adjustable)
+    const towerScale = 0.8; // Scale factor for the tower (adjust as needed)
+    const towerWidth = width * 0.1 * towerScale; // 10% of screen width by default
+    const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
+    
+    // Configurable vertical position (easily adjustable)
+    const towerYOffset = 40; // Adjust this to move the tower up (smaller value) or down (larger value)
+    const towerY = sidewalkY - towerHeight + towerYOffset;
+    
+    // Use a much larger spacing to ensure the tower appears less frequently
+    // Making it slower to regenerate as requested
+    const towerSpacing = width * 4; // 4x screen width spacing between towers
+    
+    // Create a much wider pattern to ensure towers are spaced far apart
+    const visibleWidth = width * 3;
+    const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
+    
+    // Use the Calgary Tower position tracker with a slow speed multiplier
+    let x1 = (calgaryTowerPositionX.current * 0.7) % patternWidth;
+    if (x1 > 0) x1 -= patternWidth;
+    
+    // Draw towers with very large spacing to avoid having multiple on screen at once
+    const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
+    
+    for (let i = 0; i < numTowers; i++) {
+      const x = x1 + i * towerSpacing;
+      
+      // Only draw if within our visible area with buffer
+      if (x > -towerWidth && x < width + towerWidth) {
+        ctx.drawImage(calgaryTowerImg, x, towerY, towerWidth, towerHeight);
+      }
+    }
+  };
+  
+  /**
+   * Draw the Blue Ring between trees
+   * Blue Ring is layered in front of the grass and sidewalk but behind the trees
+   */
+  const drawBlueRing = (ctx: CanvasRenderingContext2D) => {
+    if (!blueRingLoaded.current || !blueRingImgRef.current) return;
+    
+    const blueRingImg = blueRingImgRef.current;
+    
+    // Position the Blue Ring on the sidewalk between trees
+    const sidewalkY = height * 0.6;
+    
+    // Configurable size for the Blue Ring (easily adjustable)
+    const ringScale = 0.9; // Scale factor for the ring (adjust as needed)
+    const ringWidth = width * 0.15 * ringScale; // 15% of screen width by default
+    const ringHeight = height * 0.2 * ringScale; // 20% of screen height by default
+    
+    // Configurable vertical position (easily adjustable)
+    const ringYOffset = 30; // Adjust this to move the ring up (smaller value) or down (larger value)
+    const ringY = sidewalkY - ringHeight + ringYOffset;
+    
+    // Use a much larger spacing to ensure the ring appears less frequently
+    // Making it slower to regenerate as requested
+    const ringSpacing = width * 3.5; // 3.5x screen width spacing between rings
+    
+    // Create a much wider pattern to ensure rings are spaced far apart
+    const visibleWidth = width * 3;
+    const patternWidth = Math.ceil(visibleWidth / ringSpacing) * ringSpacing;
+    
+    // Use the Blue Ring position tracker with a speed multiplier
+    // that's between tree speed and building speed
+    let x1 = (blueRingPositionX.current * 0.8) % patternWidth;
+    if (x1 > 0) x1 -= patternWidth;
+    
+    // Draw rings with very large spacing to avoid having multiple on screen at once
+    const numRings = Math.ceil(patternWidth / ringSpacing) + 1;
+    
+    for (let i = 0; i < numRings; i++) {
+      const x = x1 + i * ringSpacing;
+      
+      // Only draw if within our visible area with buffer
+      if (x > -ringWidth && x < width + ringWidth) {
+        ctx.drawImage(blueRingImg, x, ringY, ringWidth, ringHeight);
+      }
+    }
+  };
+  
+  /**
    * Draw grass on the sidewalk with the two-image infinite scrolling technique
    * Grass is drawn on top of the sidewalk but behind the trees
    */
@@ -536,6 +655,9 @@ export default function Background({ width, height }: BackgroundProps) {
     // Draw clouds (in sky)
     drawClouds(ctx);
     
+    // Draw Calgary Tower (between clouds and buildings)
+    drawCalgaryTower(ctx);
+    
     // Draw buildings (behind sidewalk)
     drawBuildings(ctx);
     
@@ -545,7 +667,10 @@ export default function Background({ width, height }: BackgroundProps) {
     // Draw grass on the sidewalk (but behind trees)
     drawGrass(ctx);
     
-    // Draw trees on sidewalk (in front of grass)
+    // Draw Blue Ring (in front of grass/sidewalk but behind trees)
+    drawBlueRing(ctx);
+    
+    // Draw trees on sidewalk (in front of grass and Blue Ring)
     drawTrees(ctx);
     
     // Draw road (closest to viewer)
