@@ -123,25 +123,36 @@ export default function Background({ width, height }: BackgroundProps) {
     if (!cloudLoaded.current || !cloudImgRef.current) return;
     
     const cloudImg = cloudImgRef.current;
-    const cloudWidth = width;
-    const cloudHeight = height * 0.3;
-    const cloudY = 30;
     
-    // Calculate positions for the two images
-    let x1 = cloudPositionX.current % cloudWidth;
-    if (x1 > 0) x1 -= cloudWidth; // Ensure the first image starts at or left of origin
-    const x2 = x1 + cloudWidth; // Second image immediately follows the first
+    // Clouds using multi-layer approach with different sizes and speeds
+    const cloudLayers = [
+      { y: 30, width: width, height: height * 0.3, speed: 1.0, offsetMultiplier: 1.0 },
+      { y: 70, width: width * 0.7, height: height * 0.2, speed: 1.2, offsetMultiplier: 1.2 },
+      { y: 50, width: width * 0.8, height: height * 0.25, speed: 0.8, offsetMultiplier: 0.8 }
+    ];
     
-    // Draw first copy
-    ctx.drawImage(cloudImg, x1, cloudY, cloudWidth, cloudHeight);
-    
-    // Draw second copy
-    ctx.drawImage(cloudImg, x2, cloudY, cloudWidth, cloudHeight);
-    
-    // If needed due to speed, draw a third copy
-    if (x2 < width) {
-      ctx.drawImage(cloudImg, x2 + cloudWidth, cloudY, cloudWidth, cloudHeight);
-    }
+    // Draw each cloud layer with its own parameters
+    cloudLayers.forEach(layer => {
+      // Calculate positions for the current layer with independent speed
+      // Using layer-specific speed multiplier for varied parallax effect
+      let layerPositionX = cloudPositionX.current * layer.offsetMultiplier;
+      
+      // Calculate positions for the two images
+      let x1 = layerPositionX % layer.width;
+      if (x1 > 0) x1 -= layer.width; // Ensure the first image starts at or left of origin
+      const x2 = x1 + layer.width; // Second image immediately follows the first
+      
+      // Draw first copy of cloud layer
+      ctx.drawImage(cloudImg, x1, layer.y, layer.width, layer.height);
+      
+      // Draw second copy of cloud layer
+      ctx.drawImage(cloudImg, x2, layer.y, layer.width, layer.height);
+      
+      // If needed due to speed, draw a third copy
+      if (x2 < width) {
+        ctx.drawImage(cloudImg, x2 + layer.width, layer.y, layer.width, layer.height);
+      }
+    });
   };
   
   /**
@@ -155,27 +166,33 @@ export default function Background({ width, height }: BackgroundProps) {
     const treeY = height * 0.48;
     const treeSpacing = 300;
     
-    // Create a pattern wide enough to fill the screen
-    const patternWidth = Math.ceil(width / treeSpacing + 2) * treeSpacing;
+    // Create a pattern wide enough to fill the screen plus extra buffer
+    // Adding extra width to ensure trees are created well before they enter the viewport
+    const visibleWidth = width + 600; // Add 600px buffer to the right
+    const patternWidth = Math.ceil(visibleWidth / treeSpacing + 2) * treeSpacing;
     
     // Calculate tree pattern positions
     let x1 = treePositionX.current % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     const x2 = x1 + patternWidth;
     
-    // Draw trees at regular intervals
+    // Draw trees at regular intervals with extended range
     const numTrees = Math.ceil(patternWidth / treeSpacing);
     
     // Draw first set of trees
     for (let i = 0; i < numTrees; i++) {
       const x = x1 + i * treeSpacing;
-      drawSingleTree(ctx, x, treeY, treeSize);
+      // Only draw if within our extended visible area (including off-screen buffer)
+      if (x > -100 && x < width + 600) {
+        drawSingleTree(ctx, x, treeY, treeSize);
+      }
     }
     
-    // Draw second set of trees
+    // Draw second set of trees if needed
     for (let i = 0; i < numTrees; i++) {
       const x = x2 + i * treeSpacing;
-      if (x < width) {
+      // Only draw if within our extended visible area (including off-screen buffer)
+      if (x > -100 && x < width + 600) {
         drawSingleTree(ctx, x, treeY, treeSize);
       }
     }
@@ -231,16 +248,19 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Draw vertical grid lines with two-image technique
     const lineSpacing = 40;
-    const patternWidth = Math.ceil(width / lineSpacing + 2) * lineSpacing;
+    // Add extra buffer width to ensure lines are created well before they enter viewport
+    const visibleWidth = width + 600;
+    const patternWidth = Math.ceil(visibleWidth / lineSpacing + 2) * lineSpacing;
     
-    // Calculate vertical line pattern positions
+    // Calculate vertical line pattern positions (align with tree movement)
     let x1 = (treePositionX.current * 0.8) % patternWidth; // Grid moves a bit slower than trees
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw vertical lines
+    // Draw vertical lines with extended range
     for (let i = 0; i < patternWidth / lineSpacing * 2; i++) {
       const x = x1 + i * lineSpacing;
-      if (x >= -lineSpacing && x <= width) {
+      // Only draw if within extended visible area (with buffer)
+      if (x > -100 && x < width + 600) {
         ctx.beginPath();
         ctx.moveTo(x, sidewalkY);
         ctx.lineTo(x, playerAreaY);
@@ -263,7 +283,10 @@ export default function Background({ width, height }: BackgroundProps) {
     const dashLength = 30;
     const gapLength = 40;
     const patternLength = dashLength + gapLength;
-    const patternWidth = Math.ceil(width / patternLength + 4) * patternLength;
+    
+    // Add extra buffer width to ensure road markings are created well before they enter viewport
+    const visibleWidth = width + 600;
+    const patternWidth = Math.ceil(visibleWidth / patternLength + 4) * patternLength;
     
     // Calculate road marking positions
     let x1 = roadPositionX.current % patternWidth;
@@ -276,11 +299,12 @@ export default function Background({ width, height }: BackgroundProps) {
     // Draw center line dashes
     const centerY = playerAreaY + (height - playerAreaY) / 2;
     
-    // Draw all visible dashes
+    // Draw all dashes with extended range
     for (let i = 0; i < patternWidth / patternLength * 2; i++) {
       const dashStart = x1 + i * patternLength;
       
-      if (dashStart >= -patternLength && dashStart <= width) {
+      // Only draw if within our extended visible area (with buffer)
+      if (dashStart > -100 && dashStart < width + 600) {
         ctx.beginPath();
         ctx.moveTo(dashStart, centerY);
         ctx.lineTo(dashStart + dashLength, centerY);
