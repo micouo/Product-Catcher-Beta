@@ -322,6 +322,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Keep high score
   };
   
+  // Background music is handled automatically by the useSound hook
+  // when initializeAudio is called on first interaction
+  useEffect(() => {
+    // Initialize audio as soon as component mounts,
+    // which will start playing background music automatically
+    initializeAudio();
+    
+    // Clean up will be handled by the useSound hook when component unmounts
+    // Per requirements, music continues during pause and game over screens
+  }, []);
+
+
   // Game loop - Inside useEffect where it belongs
   useEffect(() => {
     if (!isPlaying) return;

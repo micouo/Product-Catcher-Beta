@@ -1,4 +1,4 @@
-import { useSound } from '../hooks/use-sound-new';
+import { useSound } from '../hooks/use-sound';
 import { useEffect } from 'react';
 import { VolumeX, Volume2, Music, Music3 } from 'lucide-react';
 
@@ -62,7 +62,6 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
         className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors focus:outline-none mx-1 flex items-center"
         aria-label={musicEnabled ? 'Mute music' : 'Unmute music'}
         title={musicEnabled ? 'Mute music' : 'Unmute music'}
-        disabled={true} // Disabled for now
       >
         {musicEnabled ? (
           <>
