@@ -395,17 +395,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       }
       
       // Always draw everything
-      // Draw player
-      drawPlayer(ctx);
+      
+      // Draw player area border BEFORE drawing player and objects
+      // so the car will be layered on top of it
+      drawPlayerArea(ctx);
       
       // Draw objects
       gameObjects.forEach(obj => {
         drawObject(ctx, obj);
       });
       
-      // Draw player area border after drawing player and objects
-      // so it won't be affected by red flash
-      drawPlayerArea(ctx);
+      // Draw player last so it's always on top
+      drawPlayer(ctx);
       
       // Draw UI elements
       drawUI(ctx);
