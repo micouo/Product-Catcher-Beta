@@ -135,6 +135,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     blazer: false,
     boss: false
   });
+  const [isPlayerDamaged, setIsPlayerDamaged] = useState(false); // Track damage state for red flash effect
+  const [damageFlashTime, setDamageFlashTime] = useState(0); // Track time for the flash effect
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -268,6 +270,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setGameObjects([]);
     setCurrentSpawnRate(BASE_SPAWN_RATE);
     setSpeedMultiplier(1.0);
+    setIsPlayerDamaged(false); // Reset damage effect
     
     // Keep high score
   };
@@ -356,7 +359,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player]);
+  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player, isPlayerDamaged, damageFlashTime]);
   
   // Function to create game objects - defined outside the useEffect for access by gameLoop
   const createGameObject = (): GameObject => {
@@ -673,6 +676,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             // Play hit sound
             playSound('hit');
             
+            // Activate the damage flash effect
+            setIsPlayerDamaged(true);
+            setDamageFlashTime(Date.now());
+            
             // If obstacle hits player, reduce lives
             setLives(prevLives => {
               if (prevLives <= 1) {
@@ -729,6 +736,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setGameObjects([]);
     setCurrentSpawnRate(BASE_SPAWN_RATE);
     setSpeedMultiplier(1.0);
+    setIsPlayerDamaged(false); // Reset damage effect
     
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
@@ -810,14 +818,47 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       const drawWidth = player.width * 1.8;
       const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
       
-      // Draw with slight vertical offset to center the car properly
-      ctx.drawImage(
-        currentCarImage, 
-        -drawWidth / 2,
-        -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
-        drawWidth, 
-        drawHeight
-      );
+      // Check if player is in damaged state (flashing red)
+      const now = Date.now();
+      if (isPlayerDamaged && now - damageFlashTime < 500) { // Flash for 500ms
+        // Apply red tint effect by using globalCompositeOperation
+        ctx.save();
+        
+        // Draw the car normally first
+        ctx.drawImage(
+          currentCarImage, 
+          -drawWidth / 2,
+          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          drawWidth, 
+          drawHeight
+        );
+        
+        // Apply red overlay with alpha compositing
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
+        ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
+        
+        ctx.restore();
+        
+        // Turn off damage effect after 500ms
+        if (now - damageFlashTime >= 500) {
+          setIsPlayerDamaged(false);
+        }
+      } else {
+        // Draw normally without red tint
+        ctx.drawImage(
+          currentCarImage, 
+          -drawWidth / 2,
+          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          drawWidth, 
+          drawHeight
+        );
+        
+        // Reset damage state after flash time expires
+        if (isPlayerDamaged && now - damageFlashTime >= 500) {
+          setIsPlayerDamaged(false);
+        }
+      }
     } else {
       // Fallback simple colored rectangle if image hasn't loaded yet
       ctx.fillStyle = '#3B82F6'; // Blue color matching the sprite
