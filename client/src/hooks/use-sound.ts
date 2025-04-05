@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import hitSound from '../assets/sounds/hit.wav';
 import pickupSound from '../assets/sounds/pickup.wav';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'music';
 
 // Audio elements for real sound files
 const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {
   hit: new Audio(hitSound),
   collect: new Audio(pickupSound),
+  music: new Audio('/background-music.wav'),
 };
 
 // Sound generation parameters (for sounds without files)
@@ -46,7 +47,9 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
 export function useSound() {
   // State hooks must come first
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [musicEnabled, setMusicEnabled] = useState<boolean>(false); // Set default to false
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(true); // Default music to enabled
+  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false);
+  const [isFading, setIsFading] = useState<boolean>(false);
   
   // Ref hooks must be in consistent order on every render
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -54,6 +57,7 @@ export function useSound() {
   const musicGainRef = useRef<GainNode | null>(null);
   const interactionRef = useRef<boolean>(false);
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
@@ -134,49 +138,130 @@ export function useSound() {
     });
   };
   
-  // Start background music using oscillators
-  const startBackgroundMusic = () => {
-    if (!audioContextRef.current || !musicEnabled) return;
+  // Play background music with looping
+  const playBackgroundMusic = (fadeIn = false) => {
+    if (!musicEnabled) return;
     
-    const context = audioContextRef.current;
-    
-    // Stop existing music if playing
-    if (musicOscillatorRef.current) {
-      musicOscillatorRef.current.stop();
-      musicOscillatorRef.current = null;
+    // Initialize the music if not already done
+    if (!backgroundMusicRef.current) {
+      backgroundMusicRef.current = audioElements.music || null;
+      
+      if (backgroundMusicRef.current) {
+        // Set up looping
+        backgroundMusicRef.current.loop = true;
+        
+        // Set initial volume (will be faded in if requested)
+        backgroundMusicRef.current.volume = fadeIn ? 0 : 0.6; // 60% volume as requested
+        
+        // Set up ended event to replay (as a backup for loop)
+        backgroundMusicRef.current.addEventListener('ended', () => {
+          if (backgroundMusicRef.current) {
+            backgroundMusicRef.current.currentTime = 0;
+            backgroundMusicRef.current.play().catch(err => console.error('Error restarting background music:', err));
+          }
+        });
+      }
     }
     
-    // Create gain node for volume control
-    const gainNode = context.createGain();
-    gainNode.gain.value = 0.2; // Lower volume for background music
-    gainNode.connect(context.destination);
-    musicGainRef.current = gainNode;
-    
-    // Pattern of notes for a simple melody
-    const notes = [330, 370, 392, 440, 494, 440, 392, 370];
-    const noteDuration = 0.5;
-    const now = context.currentTime;
-    
-    // Play each note in sequence
-    notes.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, now + index * noteDuration);
-      
-      oscillator.connect(gainNode);
-      
-      const startTime = now + index * noteDuration;
-      const stopTime = now + (index + 0.9) * noteDuration;
-      
-      oscillator.start(startTime);
-      oscillator.stop(stopTime);
-      
-      // For the last note, set up the next pattern
-      if (index === notes.length - 1) {
-        setTimeout(() => {
-          if (musicEnabled) startBackgroundMusic();
-        }, (stopTime - now) * 1000);
+    // Play the music
+    if (backgroundMusicRef.current && !isMusicPlaying) {
+      backgroundMusicRef.current.play()
+        .then(() => {
+          setIsMusicPlaying(true);
+          
+          // Fade in if requested
+          if (fadeIn) {
+            setIsFading(true);
+            fadeAudioIn(backgroundMusicRef.current!, 0.6, 1000);
+          }
+        })
+        .catch(err => console.error('Error playing background music:', err));
+    }
+  };
+  
+  // Stop background music
+  const stopBackgroundMusic = (fadeOut = false) => {
+    if (backgroundMusicRef.current && isMusicPlaying) {
+      if (fadeOut) {
+        setIsFading(true);
+        fadeAudioOut(backgroundMusicRef.current, 1000)
+          .then(() => {
+            if (backgroundMusicRef.current) {
+              backgroundMusicRef.current.pause();
+              backgroundMusicRef.current.currentTime = 0;
+            }
+            setIsMusicPlaying(false);
+            setIsFading(false);
+          });
+      } else {
+        backgroundMusicRef.current.pause();
+        backgroundMusicRef.current.currentTime = 0;
+        setIsMusicPlaying(false);
       }
+    }
+  };
+  
+  // Pause background music (without resetting)
+  const pauseBackgroundMusic = () => {
+    if (backgroundMusicRef.current && isMusicPlaying) {
+      backgroundMusicRef.current.pause();
+      setIsMusicPlaying(false);
+    }
+  };
+  
+  // Resume background music
+  const resumeBackgroundMusic = () => {
+    if (backgroundMusicRef.current && !isMusicPlaying && musicEnabled) {
+      backgroundMusicRef.current.play()
+        .then(() => setIsMusicPlaying(true))
+        .catch(err => console.error('Error resuming background music:', err));
+    }
+  };
+  
+  // Helper function to fade audio in
+  const fadeAudioIn = (audio: HTMLAudioElement, targetVolume: number, duration: number) => {
+    const startVolume = audio.volume;
+    const volumeChange = targetVolume - startVolume;
+    const startTime = performance.now();
+    
+    const fadeStep = () => {
+      const currentTime = performance.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      audio.volume = startVolume + volumeChange * progress;
+      
+      if (progress < 1) {
+        requestAnimationFrame(fadeStep);
+      } else {
+        setIsFading(false);
+      }
+    };
+    
+    requestAnimationFrame(fadeStep);
+  };
+  
+  // Helper function to fade audio out
+  const fadeAudioOut = (audio: HTMLAudioElement, duration: number): Promise<void> => {
+    return new Promise((resolve) => {
+      const startVolume = audio.volume;
+      const startTime = performance.now();
+      
+      const fadeStep = () => {
+        const currentTime = performance.now();
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        audio.volume = startVolume * (1 - progress);
+        
+        if (progress < 1) {
+          requestAnimationFrame(fadeStep);
+        } else {
+          resolve();
+        }
+      };
+      
+      requestAnimationFrame(fadeStep);
     });
   };
 
@@ -185,29 +270,25 @@ export function useSound() {
     setSoundEnabled(prev => !prev);
   };
 
-  // Toggle background music on/off - currently disabled
+  // Toggle background music on/off
   const toggleMusic = () => {
-    // Since we've disabled music, just toggle the state but don't play music
     setMusicEnabled(prev => {
       const newState = !prev;
-      // Comment out music playback for now
-      /*
+      
       if (newState) {
-        initializeAudio();
-        startBackgroundMusic();
-      } else if (musicOscillatorRef.current) {
-        musicOscillatorRef.current.stop();
-        musicOscillatorRef.current = null;
+        playBackgroundMusic();
+      } else if (backgroundMusicRef.current) {
+        stopBackgroundMusic();
       }
-      */
+      
       return newState;
     });
   };
 
   // Set volume for music
   const setMusicVolume = (volume: number) => {
-    if (musicGainRef.current) {
-      musicGainRef.current.gain.value = volume;
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.volume = volume;
     }
   };
 
@@ -231,7 +312,13 @@ export function useSound() {
     toggleMusic,
     soundEnabled,
     musicEnabled,
+    isMusicPlaying,
+    isFading,
     setMusicVolume,
     initializeAudio,
+    playBackgroundMusic,
+    stopBackgroundMusic,
+    pauseBackgroundMusic,
+    resumeBackgroundMusic,
   };
 }
