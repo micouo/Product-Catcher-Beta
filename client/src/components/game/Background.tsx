@@ -127,10 +127,11 @@ export default function Background({ width, height }: BackgroundProps) {
     // Clouds using multi-layer approach with different sizes and speeds
     // Reduced cloud sizes significantly based on user feedback
     // Further reduced cloud widths to make them narrower (additional 30% reduction)
+    // Added horizontal offsets to distribute clouds more evenly across the screen
     const cloudLayers = [
-      { y: 40, width: width * 0.17, height: height * 0.15, speed: 1.0, offsetMultiplier: 1.0 },
-      { y: 80, width: width * 0.11, height: height * 0.1, speed: 1.2, offsetMultiplier: 1.2 },
-      { y: 20, width: width * 0.14, height: height * 0.12, speed: 0.8, offsetMultiplier: 0.8 }
+      { y: 40, width: width * 0.17, height: height * 0.15, speed: 1.0, offsetMultiplier: 1.0, xOffset: width * 0.1 },
+      { y: 80, width: width * 0.11, height: height * 0.1, speed: 1.2, offsetMultiplier: 1.2, xOffset: width * 0.4 },
+      { y: 20, width: width * 0.14, height: height * 0.12, speed: 0.8, offsetMultiplier: 0.8, xOffset: width * 0.7 }
     ];
     
     // Draw each cloud layer with its own parameters
@@ -139,20 +140,26 @@ export default function Background({ width, height }: BackgroundProps) {
       // Using layer-specific speed multiplier for varied parallax effect
       let layerPositionX = cloudPositionX.current * layer.offsetMultiplier;
       
-      // Calculate positions for the two images
-      let x1 = layerPositionX % layer.width;
-      if (x1 > 0) x1 -= layer.width; // Ensure the first image starts at or left of origin
-      const x2 = x1 + layer.width; // Second image immediately follows the first
+      // Increase spacing for better cloud distribution
+      // Use larger sections to distribute clouds more evenly across the canvas
+      const sectionWidth = width * 2.5; // Make sections much wider than the screen for better spacing
       
-      // Draw first copy of cloud layer
-      ctx.drawImage(cloudImg, x1, layer.y, layer.width, layer.height);
+      // Calculate positions with wider sections to space clouds out more evenly
+      // Apply layer-specific offset to distribute clouds across the width
+      let x1 = (layerPositionX + layer.xOffset) % sectionWidth;
+      if (x1 > 0) x1 -= sectionWidth; // Ensure the first image starts at or left of origin
       
-      // Draw second copy of cloud layer
-      ctx.drawImage(cloudImg, x2, layer.y, layer.width, layer.height);
-      
-      // If needed due to speed, draw a third copy
-      if (x2 < width) {
-        ctx.drawImage(cloudImg, x2 + layer.width, layer.y, layer.width, layer.height);
+      // Draw multiple copies to ensure full coverage with proper spacing
+      // Add a larger buffer for off-screen rendering to prevent "popping" effect
+      const buffer = width * 1.5; // Even larger buffer to prevent visible cloud generation
+      for (let i = 0; i < 5; i++) { // Draw more copies with wider spacing to ensure coverage
+        // Apply the layer's xOffset to position clouds at different horizontal positions
+        const xPos = x1 + (i * sectionWidth);
+        
+        // Only draw if within our extended visible area (including significant off-screen buffer)
+        if (xPos < width + buffer && xPos > -buffer) {
+          ctx.drawImage(cloudImg, xPos, layer.y, layer.width, layer.height);
+        }
       }
     });
   };
