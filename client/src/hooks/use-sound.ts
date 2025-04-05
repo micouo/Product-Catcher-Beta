@@ -19,6 +19,17 @@ type SoundConfig = {
   notes: number[];
 };
 
+// Music generation - 8-bit funky patterns
+// F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
+const FUNKY_BASS_PATTERN = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
+const FUNKY_MELODY_PATTERN = [
+  0, 523.25, 587.33, 659.25, 
+  523.25, 0, 0, 0, 
+  466.16, 523.25, 466.16, 0, 
+  440.00, 0, 392.00, 0
+];
+const FUNKY_DRUM_PATTERN = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
+
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
     type: 'triangle',
@@ -55,6 +66,8 @@ export function useSound() {
   const musicGainRef = useRef<GainNode | null>(null);
   const interactionRef = useRef<boolean>(false);
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
+  const activeOscillators = useRef<OscillatorNode[]>([]);
+  const audioNodesTimers = useRef<any[]>([]);
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
@@ -168,29 +181,125 @@ export function useSound() {
     });
   };
   
-  // Start background music using the real audio file
+  // Generate 8-bit music using Web Audio API
   const startBackgroundMusic = () => {
     if (!musicEnabled) return;
     
     try {
-      // Create background music element if it doesn't exist
-      if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.mp3');
-        backgroundMusicElement.loop = true;
-        backgroundMusicElement.preload = 'auto';
+      // Clean up any previous music first
+      stopMusic();
+      
+      // Use Web Audio API instead of an audio file
+      console.log('Starting 8-bit funky background music');
+      
+      // Make sure we have an audio context
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       
-      // Set volume before playing
-      if (backgroundMusicElement) {
-        backgroundMusicElement.volume = 0.3;
+      const context = audioContextRef.current;
+      
+      // Setup parameters for our 8-bit music
+      const bpm = 120; // Beats per minute
+      const noteDuration = 60 / bpm / 2; // Duration of a single 8th note in seconds
+      const now = context.currentTime;
+      
+      // Create master volume
+      const masterGain = context.createGain();
+      masterGain.gain.value = 0.2; // Master volume
+      masterGain.connect(context.destination);
+      
+      // Schedule the bass pattern
+      FUNKY_BASS_PATTERN.forEach((frequency, index) => {
+        if (frequency === 0) return; // Skip rests
         
-        // Play the music file (it's set to loop automatically)
-        backgroundMusicElement.play().catch(err => {
-          console.error('Error playing background music:', err);
-        });
-      }
+        const noteTime = now + index * noteDuration;
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
+        
+        gainNode.gain.setValueAtTime(0.25, noteTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        // Track the oscillator for clean shutdown
+        activeOscillators.current.push(oscillator);
+        
+        oscillator.start(noteTime);
+        oscillator.stop(noteTime + noteDuration);
+      });
+      
+      // Schedule the melody pattern
+      FUNKY_MELODY_PATTERN.forEach((frequency, index) => {
+        if (frequency === 0) return; // Skip rests
+        
+        const noteTime = now + index * noteDuration;
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(frequency, noteTime);
+        
+        gainNode.gain.setValueAtTime(0.15, noteTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        // Track the oscillator for clean shutdown
+        activeOscillators.current.push(oscillator);
+        
+        oscillator.start(noteTime);
+        oscillator.stop(noteTime + noteDuration);
+      });
+      
+      // Schedule drum sounds (kick drum)
+      FUNKY_DRUM_PATTERN.forEach((hit, index) => {
+        if (hit === 0) return; // Skip rests
+        
+        const noteTime = now + index * noteDuration;
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(120, noteTime);
+        oscillator.frequency.exponentialRampToValueAtTime(40, noteTime + 0.05);
+        
+        gainNode.gain.setValueAtTime(0.5, noteTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        // Track the oscillator for clean shutdown
+        activeOscillators.current.push(oscillator);
+        
+        oscillator.start(noteTime);
+        oscillator.stop(noteTime + 0.1);
+      });
+      
+      // Schedule the next pattern after this one finishes
+      // This creates an infinite loop of music
+      const timerId = setTimeout(() => {
+        if (musicEnabled) {
+          startBackgroundMusic();
+        }
+      }, noteDuration * FUNKY_BASS_PATTERN.length * 1000);
+      
+      // Track the timer ID for clean shutdown
+      audioNodesTimers.current.push(timerId);
+      
+      // Store this for volume control
+      musicGainRef.current = masterGain;
+      
+      setMusicInitialized(true);
+      
     } catch (error) {
-      console.error('Error starting background music:', error);
+      console.error('Error starting 8-bit background music:', error);
     }
   };
 
@@ -208,14 +317,8 @@ export function useSound() {
         // Turn music on
         startBackgroundMusic();
       } else {
-        // Turn music off
-        try {
-          if (backgroundMusicElement) {
-            backgroundMusicElement.pause();
-          }
-        } catch (error) {
-          console.error('Error pausing background music:', error);
-        }
+        // Turn music off - use stopMusic to clean up all audio resources
+        stopMusic();
       }
       
       return newState;
@@ -238,7 +341,7 @@ export function useSound() {
       musicGainRef.current.gain.value = volume;
     }
   };
-
+  
   // Clean up when the component unmounts
   useEffect(() => {
     return () => {
@@ -251,6 +354,20 @@ export function useSound() {
       } catch (error) {
         console.error('Error stopping background music:', error);
       }
+      
+      // Clean up active oscillators
+      activeOscillators.current.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Ignore already stopped oscillators
+        }
+      });
+      
+      // Clear any pending timers
+      audioNodesTimers.current.forEach(timer => {
+        clearTimeout(timer);
+      });
       
       // Clean up Web Audio API resources
       if (musicOscillatorRef.current) {
@@ -274,10 +391,33 @@ export function useSound() {
   // Explicitly stop the background music
   const stopMusic = () => {
     try {
+      // Stop HTML audio element if it exists
       if (backgroundMusicElement) {
         backgroundMusicElement.pause();
         backgroundMusicElement.currentTime = 0;
       }
+      
+      // Clean up Web Audio API oscillators
+      activeOscillators.current.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Ignore already stopped oscillators
+        }
+      });
+      
+      // Clear oscillator array
+      activeOscillators.current = [];
+      
+      // Clean up any pending timers
+      audioNodesTimers.current.forEach(timer => {
+        clearTimeout(timer);
+      });
+      
+      // Clear timer array
+      audioNodesTimers.current = [];
+      
+      console.log('Stopped all audio');
     } catch (error) {
       console.error('Error stopping background music:', error);
     }
