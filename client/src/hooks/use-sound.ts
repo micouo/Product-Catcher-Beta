@@ -2,22 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 
 type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
 
-// Sound generation parameters
-const SOUND_CONFIG = {
-  collect: {
-    type: 'sine',
-    frequency: 880,
-    duration: 0.1,
-    ramp: 'up',
-    notes: [440, 660, 880]
-  },
-  hit: {
-    type: 'sawtooth',
-    frequency: 150,
-    duration: 0.3,
-    ramp: 'down',
-    notes: [200, 150, 100]
-  },
+// Sound file paths - using real sound files when available
+const SOUND_FILES: Record<SoundType, string> = {
+  // Use the actual sound files provided
+  collect: '/sounds/pickup.wav', // Use pickup.wav for collect sound
+  hit: '/sounds/hit.wav',        // Use hit.wav for hit sound
+  
+  // We don't have files for these, so they'll use generated sounds
+  gameOver: '',
+  start: '',
+  lose: ''
+};
+
+// Sound generation parameters (for sounds without files)
+type SoundConfig = {
+  type: string;
+  frequency: number;
+  duration: number;
+  ramp: string;
+  notes: number[];
+};
+
+const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
     type: 'triangle',
     frequency: 220,
@@ -42,12 +48,16 @@ const SOUND_CONFIG = {
 };
 
 export function useSound() {
+  // State hooks must come first
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [musicEnabled, setMusicEnabled] = useState<boolean>(false); // Set default to false
+  
+  // Ref hooks must be in consistent order on every render
   const audioContextRef = useRef<AudioContext | null>(null);
   const musicOscillatorRef = useRef<OscillatorNode | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const interactionRef = useRef<boolean>(false);
+  const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
@@ -65,22 +75,77 @@ export function useSound() {
       }
     }
   };
-
+  
   // Create and play a sound
   const playSound = (type: SoundType) => {
-    if (!soundEnabled || !audioContextRef.current) {
-      if (!audioContextRef.current) initializeAudio();
-      if (!soundEnabled) return;
-    }
+    if (!soundEnabled) return;
     
+    // Initialize audio context if needed
+    if (!audioContextRef.current) initializeAudio();
     const context = audioContextRef.current;
     if (!context) return;
+    
+    // If we have a sound file for this type, play it
+    if (SOUND_FILES[type] && SOUND_FILES[type] !== '') {
+      playAudioFile(type);
+    } else {
+      // Otherwise, use the generated sound
+      playGeneratedSound(type);
+    }
+  };
+  
+  // Play a sound from a file
+  const playAudioFile = (type: SoundType) => {
+    const context = audioContextRef.current;
+    if (!context) return;
+
+    const soundFile = SOUND_FILES[type];
+    if (!soundFile) return;
+    
+    // Check if we've already loaded this sound
+    if (soundBuffers.current[type]) {
+      // Play from cache
+      const source = context.createBufferSource();
+      source.buffer = soundBuffers.current[type];
+      source.connect(context.destination);
+      source.start();
+      return;
+    }
+    
+    // Need to load the sound
+    fetch(soundFile)
+      .then(response => response.arrayBuffer())
+      .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
+      .then(audioBuffer => {
+        // Cache the decoded audio
+        soundBuffers.current[type] = audioBuffer;
+        
+        // Play it
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        source.start();
+      })
+      .catch(error => {
+        console.error('Error loading sound file:', error);
+        // Fallback to generated sound if file loading fails
+        playGeneratedSound(type);
+      });
+  };
+  
+  // Play a generated sound (for sounds without files)
+  const playGeneratedSound = (type: SoundType) => {
+    const context = audioContextRef.current;
+    if (!context) return;
+    
+    // Check if we have a config for this sound type
+    if (!SOUND_CONFIG[type]) return;
     
     const config = SOUND_CONFIG[type];
     const now = context.currentTime;
     
     // Play a sequence of notes for more interesting sounds
-    config.notes.forEach((note, index) => {
+    config.notes.forEach((note: number, index: number) => {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
       

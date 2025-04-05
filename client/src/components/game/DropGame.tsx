@@ -97,7 +97,7 @@ let replayButtonImage: HTMLImageElement | null = null;
 
 // Define button constants - these can be easily adjusted
 const BUTTON_SIZE = 50; // Size of the pause button (width and height)
-const REPLAY_BUTTON_SIZE = 65; // Size of the replay button - 30% larger than pause button
+const REPLAY_BUTTON_SIZE = 78; // Size of the replay button - 50% larger than pause button (30% + 20% more)
 const BUTTON_MARGIN_RIGHT = 20; // Margin from the right edge of the screen
 const BUTTON_MARGIN_TOP = 70; // Margin from the top edge of the screen (increased from 20 to 70)
 const BUTTON_OPACITY = 0.9; // Opacity of the button
