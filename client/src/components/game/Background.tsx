@@ -4,6 +4,7 @@ import treeImage from "../../assets/tree 1.png";
 import building1Image from "../../assets/building 1.png";
 import building2Image from "../../assets/building 2.png";
 import building3Image from "../../assets/building 3.png";
+import grassImage from "../../assets/grass.png";
 
 interface BackgroundProps {
   width: number;
@@ -33,11 +34,13 @@ export default function Background({ width, height }: BackgroundProps) {
   // Image references
   const cloudImgRef = useRef(new Image());
   const treeImgRef = useRef(new Image());
+  const grassImgRef = useRef(new Image());
   const building1ImgRef = useRef(new Image());
   const building2ImgRef = useRef(new Image());
   const building3ImgRef = useRef(new Image());
   const cloudLoaded = useRef(false);
   const treeLoaded = useRef(false);
+  const grassLoaded = useRef(false);
   const building1Loaded = useRef(false);
   const building2Loaded = useRef(false);
   const building3Loaded = useRef(false);
@@ -61,6 +64,13 @@ export default function Background({ width, height }: BackgroundProps) {
     treeImg.src = treeImage;
     treeImg.onload = () => {
       treeLoaded.current = true;
+    };
+    
+    // Load grass image
+    const grassImg = grassImgRef.current;
+    grassImg.src = grassImage;
+    grassImg.onload = () => {
+      grassLoaded.current = true;
     };
     
     // Load building images
@@ -389,14 +399,14 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY - 5; // Position buildings just above sidewalk
+    const buildingY = sidewalkY - 2; // Position buildings very close to sidewalk
     
-    // Define building sizes - appropriate scale to work with scene
-    const buildingScale = width * 0.085; // Base scale for buildings
+    // Define building sizes - larger scale for closer appearance
+    const buildingScale = width * 0.11; // Increased base scale for buildings
     const buildingSizes = [
-      { img: building1Img, width: buildingScale * 0.92, height: height * 0.21 },
-      { img: building2Img, width: buildingScale * 1.02, height: height * 0.22 },
-      { img: building3Img, width: buildingScale * 0.96, height: height * 0.23 }
+      { img: building1Img, width: buildingScale * 0.92, height: height * 0.26 },
+      { img: building2Img, width: buildingScale * 1.02, height: height * 0.28 },
+      { img: building3Img, width: buildingScale * 0.96, height: height * 0.27 }
     ];
     
     // Create building clusters with specific spacing
@@ -460,6 +470,45 @@ export default function Background({ width, height }: BackgroundProps) {
   };
 
   /**
+   * Draw grass on the sidewalk with the two-image infinite scrolling technique
+   * Grass is drawn on top of the sidewalk but behind the trees
+   */
+  const drawGrass = (ctx: CanvasRenderingContext2D) => {
+    if (!grassLoaded.current || !grassImgRef.current) return;
+    
+    const grassImg = grassImgRef.current;
+    const sidewalkY = height * 0.6;
+    
+    // Size the grass appropriately
+    const grassHeight = height * 0.06; // 6% of canvas height
+    const grassWidth = width * 0.2; // 20% of canvas width
+    
+    // Position the grass so it sits on the sidewalk
+    const grassY = sidewalkY - grassHeight * 0.7; // Position so most of grass is above sidewalk
+    
+    // Add extra buffer to ensure continuous appearance
+    const visibleWidth = width + 800;
+    const grassSpacing = grassWidth * 0.7; // More overlap for seamless appearance
+    const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
+    
+    // Use the same synchronization as trees for grass movement
+    let x1 = (treePositionX.current * 0.8) % patternWidth; 
+    if (x1 > 0) x1 -= patternWidth;
+    
+    // Draw grass patches along the sidewalk
+    const numPatches = Math.ceil(patternWidth / grassSpacing) + 1;
+    
+    for (let i = 0; i < numPatches; i++) {
+      const x = x1 + (i * grassSpacing);
+      
+      // Only draw if within our extended visible area (with buffer)
+      if (x > -grassWidth && x < width + grassWidth) {
+        ctx.drawImage(grassImg, x, grassY, grassWidth, grassHeight);
+      }
+    }
+  };
+
+  /**
    * Draw the complete background with all elements
    */
   const drawBackground = (ctx: CanvasRenderingContext2D) => {
@@ -475,7 +524,10 @@ export default function Background({ width, height }: BackgroundProps) {
     // Draw sidewalk
     drawSidewalk(ctx);
     
-    // Draw trees on sidewalk
+    // Draw grass on the sidewalk (but behind trees)
+    drawGrass(ctx);
+    
+    // Draw trees on sidewalk (in front of grass)
     drawTrees(ctx);
     
     // Draw road (closest to viewer)
