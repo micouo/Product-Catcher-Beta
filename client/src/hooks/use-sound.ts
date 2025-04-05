@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'music';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
@@ -75,6 +75,8 @@ export function useSound() {
         backgroundMusicElement.volume = 0.3;
         // Preload the audio
         backgroundMusicElement.preload = 'auto';
+        // Add to audio elements map so we can use the same play method
+        audioElements.music = backgroundMusicElement;
       }
       
       if (!hitSoundElement) {
@@ -90,16 +92,11 @@ export function useSound() {
       }
       
       // Start background music in response to user interaction
-      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
-        // Play the music (must be in response to a user action)
-        backgroundMusicElement.play()
-          .then(() => {
-            console.log('Background music started successfully');
-            setMusicInitialized(true);
-          })
-          .catch(err => {
-            console.error('Error playing background music:', err);
-          });
+      if (musicEnabled && !musicInitialized) {
+        // Use our improved playSound method to play music
+        // This must be in response to a user action
+        playSound('music');
+        setMusicInitialized(true);
       }
     } catch (error) {
       console.error('Error initializing audio:', error);
@@ -108,7 +105,11 @@ export function useSound() {
   
   // Create and play a sound
   const playSound = (type: SoundType) => {
-    if (!soundEnabled) return;
+    // Skip this check for music - music has its own enabled state
+    if (type !== 'music' && !soundEnabled) return;
+    
+    // Skip this check for sound effects when music is disabled
+    if (type === 'music' && !musicEnabled) return;
     
     // If we have a real audio element for this sound, play it
     if (audioElements[type]) {
@@ -116,11 +117,18 @@ export function useSound() {
         // Stop and reset the audio to allow replaying the sound immediately
         const audio = audioElements[type];
         if (audio) {
-          audio.currentTime = 0;
+          // Only reset the time for non-music sounds (to avoid restarting music from beginning)
+          if (type !== 'music') {
+            audio.currentTime = 0;
+          }
+          
+          // Play the sound or music
           audio.play().catch(err => {
-            console.error('Error playing audio:', err);
-            // Fall back to generated sound on error
-            playGeneratedSound(type);
+            console.error(`Error playing ${type}:`, err);
+            // Fall back to generated sound on error, but only for non-music
+            if (type !== 'music') {
+              playGeneratedSound(type);
+            }
           });
         }
         return;
@@ -129,8 +137,10 @@ export function useSound() {
       }
     }
     
-    // If no audio element or error, use the generated sound
-    playGeneratedSound(type);
+    // If no audio element or error, use the generated sound (only for non-music)
+    if (type !== 'music') {
+      playGeneratedSound(type);
+    }
   };
   
   // Play a generated sound (for sounds without files)
@@ -205,8 +215,8 @@ export function useSound() {
       const newState = !prev;
       
       if (newState) {
-        // Turn music on
-        startBackgroundMusic();
+        // Turn music on using our playSound method
+        playSound('music');
       } else {
         // Turn music off
         try {
@@ -267,7 +277,8 @@ export function useSound() {
   // Explicitly start the background music
   const startMusic = () => {
     if (musicEnabled) {
-      startBackgroundMusic();
+      // Use our playSound function which now also handles music
+      playSound('music');
     }
   };
   
