@@ -413,12 +413,19 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   };
   
   /**
-   * Draw buildings using the same technique as trees for smooth scrolling
-   * Buildings are positioned with a regular, consistent pattern
+   * Draw buildings using the tree technique for smooth scrolling while maintaining all 3 building types
+   * Buildings are positioned with a consistent pattern to avoid snapping
    */
   const drawBuildings = (ctx: CanvasRenderingContext2D) => {
-    // Check if building images are loaded
-    if (!building1Loaded.current || !building1ImgRef.current) return;
+    // Check if all building images are loaded
+    if (!building1Loaded.current || !building1ImgRef.current ||
+        !building2Loaded.current || !building2ImgRef.current ||
+        !building3Loaded.current || !building3ImgRef.current) return;
+    
+    // Get building images
+    const building1Img = building1ImgRef.current;
+    const building2Img = building2ImgRef.current;
+    const building3Img = building3ImgRef.current;
     
     // ===== EASILY CONFIGURABLE PROPERTIES FOR BUILDINGS =====
     // You can adjust these values to change appearance and placement
@@ -428,71 +435,92 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     const BUILDING_Y_OFFSET = 42;            // Vertical adjustment (positive = lower)
     
     // APPEARANCE & SIZING
-    const BUILDING_WIDTH = width * 0.35;     // Width of each building
-    const BUILDING_HEIGHT = height * 0.45;   // Height of each building
+    const BUILDING_SCALE = width * 0.25;     // Scale factor for buildings
     
     // SPACING
-    const BUILDING_SPACING = 280;            // Regular interval between buildings
+    const BUILDING_SPACING = 300;            // Distance between buildings
     
     // PARALLAX EFFECT
     const PARALLAX_FACTOR = 0.9;             // How buildings move relative to sidewalk
                                             // Value closer to 1.0 means buildings move with sidewalk
     
     // RENDERING DISTANCE
-    const RENDER_BUFFER = 600;               // How far offscreen to render buildings
+    const RENDER_BUFFER = 800;               // How far offscreen to render buildings
     
     // END OF CONFIGURATION SECTION
     // ============================================
     
-    // Use building 1 as our consistent building type
-    const buildingImg = building1ImgRef.current;
-    
-    // Calculate the building Y position
-    const buildingY = SIDEWALK_Y - BUILDING_HEIGHT + BUILDING_Y_OFFSET;
+    // Define each building type with its properties
+    const buildingTypes = [
+      {
+        img: building1Img,
+        width: BUILDING_SCALE * 0.6 * 2.4,
+        height: height * 0.6,
+        yOffset: 24
+      },
+      {
+        img: building2Img,
+        width: BUILDING_SCALE * 1.02 * 1.2 * 1.7,
+        height: height * 0.6 * 1.4,
+        yOffset: 80
+      },
+      {
+        img: building3Img,
+        width: BUILDING_SCALE * 0.6 * 2.7,
+        height: height * 0.7,
+        yOffset: 34
+      }
+    ];
     
     // Create a pattern wide enough to fill the screen plus buffer
     const visibleWidth = width + RENDER_BUFFER;
-    const patternWidth = Math.ceil(visibleWidth / BUILDING_SPACING + 2) * BUILDING_SPACING;
+    // Each full pattern is 3 buildings (we cycle through all 3 building types)
+    const patternUnit = BUILDING_SPACING * 3;
+    const patternWidth = Math.ceil(visibleWidth / patternUnit + 2) * patternUnit;
     
     // Calculate the scroll position with parallax factor
     let x1 = (buildingPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     const x2 = x1 + patternWidth;  // Second pattern for seamless wrapping
     
-    // Calculate how many buildings we need to draw
-    const numBuildings = Math.ceil(patternWidth / BUILDING_SPACING);
-    
-    // Draw first set of buildings
-    for (let i = 0; i < numBuildings; i++) {
-      const x = x1 + i * BUILDING_SPACING;
+    // Draw both sets of buildings to ensure seamless scrolling
+    const drawBuildingSet = (baseX: number) => {
+      // Calculate how many complete 3-building patterns we need 
+      const numPatterns = Math.ceil(patternWidth / patternUnit) + 1;
       
-      // Only draw if within our visible area (with buffer)
-      if (x > -BUILDING_WIDTH && x < width + RENDER_BUFFER) {
-        ctx.drawImage(
-          buildingImg,
-          x,
-          buildingY,
-          BUILDING_WIDTH,
-          BUILDING_HEIGHT
-        );
+      for (let i = 0; i < numPatterns; i++) {
+        const patternStartX = baseX + (i * patternUnit);
+        
+        // Skip if pattern is completely off-screen (optimization)
+        if (patternStartX > width + 200 || patternStartX + patternUnit < -200) continue;
+        
+        // Draw each of the 3 building types in sequence
+        for (let b = 0; b < 3; b++) {
+          const building = buildingTypes[b];
+          const buildingX = patternStartX + (b * BUILDING_SPACING);
+          
+          // Calculate the exact Y position for this building
+          const buildingY = SIDEWALK_Y - building.height + building.yOffset;
+          
+          // Only draw if within our visible area (with buffer)
+          if (buildingX > -building.width && buildingX < width + RENDER_BUFFER) {
+            ctx.drawImage(
+              building.img,
+              buildingX,
+              buildingY,
+              building.width,
+              building.height
+            );
+          }
+        }
       }
-    }
+    };
     
-    // Draw second set of buildings to ensure seamless wrapping
-    for (let i = 0; i < numBuildings; i++) {
-      const x = x2 + i * BUILDING_SPACING;
-      
-      // Only draw if within our visible area (with buffer)
-      if (x > -BUILDING_WIDTH && x < width + RENDER_BUFFER) {
-        ctx.drawImage(
-          buildingImg,
-          x,
-          buildingY,
-          BUILDING_WIDTH,
-          BUILDING_HEIGHT
-        );
-      }
-    }
+    // Draw first set of buildings (starting set)
+    drawBuildingSet(x1);
+    
+    // Draw second set of buildings (for wrapping)
+    drawBuildingSet(x2);
   };
 
   /**
