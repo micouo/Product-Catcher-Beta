@@ -220,23 +220,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       // Draw UI elements
       drawUI(ctx);
       
-      // If paused, draw overlay with pause text
-      if (isPaused) {
-        // Draw semi-transparent overlay
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-        
-        // Draw pause text
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '30px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2);
-        
-        // Add instruction to resume
-        ctx.font = '18px Arial';
-        ctx.fillText('Press ESC or click the pause button to resume', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
-      }
+      // No pause overlay or text, keeping it simple as requested
       
       // Continue the game loop
       requestRef.current = requestAnimationFrame(gameLoop);
@@ -762,23 +746,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       ctx.fillText('Use arrow keys or WASD to move in any direction', GAME_WIDTH / 2, GAME_HEIGHT - 10);
     }
     
-    // Draw pause indicator if game is paused
-    if (isPaused) {
-      // Draw semi-transparent overlay
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      
-      // Draw pause text
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '30px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2);
-      
-      // Add instruction to resume
-      ctx.font = '18px Arial';
-      ctx.fillText('Click the play button to resume', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
-    }
+    // No pause overlay or text, keeping it simple as requested
   };
   
   return (
