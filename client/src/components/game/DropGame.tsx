@@ -4,6 +4,7 @@ import Background from './Background';
 import car1Image from '../../assets/car1.png';
 import pauseImage from '../../assets/pause.png';
 import playImage from '../../assets/play.png';
+import replayImage from '../../assets/replay.png';
 // Import car assets
 import car2Image from '../../assets/car2.png';
 import car3Image from '../../assets/car3.png';
@@ -92,12 +93,14 @@ let carImages: CarImageMap = {
 let playerImage: HTMLImageElement | null = null;
 let pauseButtonImage: HTMLImageElement | null = null;
 let playButtonImage: HTMLImageElement | null = null;
+let replayButtonImage: HTMLImageElement | null = null;
 
-// Define pause button constants - these can be easily adjusted
-const PAUSE_BUTTON_SIZE = 50; // Size of the button (width and height)
-const PAUSE_BUTTON_MARGIN_RIGHT = 20; // Margin from the right edge of the screen
-const PAUSE_BUTTON_MARGIN_TOP = 70; // Margin from the top edge of the screen (increased from 20 to 70)
-const PAUSE_BUTTON_OPACITY = 0.9; // Opacity of the button
+// Define button constants - these can be easily adjusted
+const BUTTON_SIZE = 50; // Size of the button (width and height)
+const BUTTON_MARGIN_RIGHT = 20; // Margin from the right edge of the screen
+const BUTTON_MARGIN_TOP = 70; // Margin from the top edge of the screen (increased from 20 to 70)
+const BUTTON_OPACITY = 0.9; // Opacity of the button
+const BUTTON_SPACING = 60; // Space between buttons
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -119,6 +122,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
   const [pauseButtonLoaded, setPauseButtonLoaded] = useState(false);
   const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
+  const [replayButtonLoaded, setReplayButtonLoaded] = useState(false);
   
   // Car selection state
   const [selectedCar, setSelectedCar] = useState<string>('peppy');
@@ -226,6 +230,16 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         setPlayButtonLoaded(true);
       };
     }
+    
+    // Load replay button
+    if (!replayButtonImage) {
+      const img = new Image();
+      img.src = replayImage;
+      img.onload = () => {
+        replayButtonImage = img;
+        setReplayButtonLoaded(true);
+      };
+    }
   }, []);
   
   // Toggle pause state
@@ -234,6 +248,27 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!isPlaying) return;
     
     setIsPaused(prev => !prev);
+  };
+  
+  // Restart game - bring back to car selection
+  const restartGame = () => {
+    // End current game session
+    if (isPlaying) {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    }
+    
+    // Reset to initial state
+    setIsPlaying(false);
+    setIsPaused(false);
+    setScore(0);
+    setLives(3);
+    setGameObjects([]);
+    setCurrentSpawnRate(BASE_SPAWN_RATE);
+    setSpeedMultiplier(1.0);
+    
+    // Keep high score
   };
   
   // Game loop - Inside useEffect where it belongs
@@ -355,23 +390,44 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!buttonImg) return;
     
     // Position button in top-right corner with margin
-    const x = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN_RIGHT;
-    const y = PAUSE_BUTTON_MARGIN_TOP;
+    const x = GAME_WIDTH - BUTTON_SIZE - BUTTON_MARGIN_RIGHT;
+    const y = BUTTON_MARGIN_TOP;
     
     // Save current state
     ctx.save();
     
     // Set transparency
-    ctx.globalAlpha = PAUSE_BUTTON_OPACITY;
+    ctx.globalAlpha = BUTTON_OPACITY;
     
     // Draw button image
-    ctx.drawImage(buttonImg, x, y, PAUSE_BUTTON_SIZE, PAUSE_BUTTON_SIZE);
+    ctx.drawImage(buttonImg, x, y, BUTTON_SIZE, BUTTON_SIZE);
     
     // Restore context state
     ctx.restore();
   };
   
-  // Handle mouse click for pause button
+  // Draw the replay button
+  const drawReplayButton = (ctx: CanvasRenderingContext2D) => {
+    if (!replayButtonImage) return;
+    
+    // Position button left of the pause button
+    const x = GAME_WIDTH - (BUTTON_SIZE * 2) - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
+    const y = BUTTON_MARGIN_TOP;
+    
+    // Save current state
+    ctx.save();
+    
+    // Set transparency
+    ctx.globalAlpha = BUTTON_OPACITY;
+    
+    // Draw button image
+    ctx.drawImage(replayButtonImage, x, y, BUTTON_SIZE, BUTTON_SIZE);
+    
+    // Restore context state
+    ctx.restore();
+  };
+  
+  // Handle mouse click for pause and replay buttons
   const handleCanvasClick = (e: MouseEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -380,24 +436,38 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    // Position of pause button
-    const buttonX = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN_RIGHT;
-    const buttonY = PAUSE_BUTTON_MARGIN_TOP;
+    // Position of pause button (right button)
+    const pauseButtonX = GAME_WIDTH - BUTTON_SIZE - BUTTON_MARGIN_RIGHT;
+    const pauseButtonY = BUTTON_MARGIN_TOP;
     
-    // Check if click is within button area
+    // Position of replay button (left of pause button)
+    const replayButtonX = GAME_WIDTH - (BUTTON_SIZE * 2) - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
+    const replayButtonY = BUTTON_MARGIN_TOP;
+    
+    // Check if click is within pause button area
     if (
-      clickX >= buttonX && 
-      clickX <= buttonX + PAUSE_BUTTON_SIZE &&
-      clickY >= buttonY && 
-      clickY <= buttonY + PAUSE_BUTTON_SIZE
+      clickX >= pauseButtonX && 
+      clickX <= pauseButtonX + BUTTON_SIZE &&
+      clickY >= pauseButtonY && 
+      clickY <= pauseButtonY + BUTTON_SIZE
     ) {
       togglePause();
+    }
+    
+    // Check if click is within replay button area
+    if (
+      clickX >= replayButtonX && 
+      clickX <= replayButtonX + BUTTON_SIZE &&
+      clickY >= replayButtonY && 
+      clickY <= replayButtonY + BUTTON_SIZE
+    ) {
+      restartGame();
     }
   };
   
 
   
-  // Set up click event listener for pause button
+  // Set up click event listener for pause and replay buttons
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -409,7 +479,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     return () => {
       canvas.removeEventListener('click', handleCanvasClick);
     };
-  }, [isPaused]); // Include isPaused as a dependency for the click handler
+  }, [isPaused, isPlaying]); // Include game state as dependencies for the click handler
   
   // Handle keyboard controls
   useEffect(() => {
@@ -421,6 +491,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         case 'Escape':
           // Toggle pause state when pressing Escape key
           togglePause();
+          break;
+        case 'r':
+        case 'R':
+          // Restart game when pressing R key
+          restartGame();
           break;
         case 'Shift':
           setPlayer(prev => ({ ...prev, boosting: true }));
@@ -825,8 +900,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.textAlign = 'right';
     ctx.fillText(`Lives: ${lives}`, GAME_WIDTH - 20, 30);
     
-    // Draw pause button
+    // Draw game control buttons
     drawPauseButton(ctx);
+    drawReplayButton(ctx);
     
     // Draw controls hint during gameplay
     if (isPlaying) {
