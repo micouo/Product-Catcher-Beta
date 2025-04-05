@@ -178,6 +178,7 @@ export default function Background({ width, height }: BackgroundProps) {
   
   /**
    * Draw trees with the two-image infinite scrolling technique
+   * Trees must move at exactly the same speed as the sidewalk grid
    */
   const drawTrees = (ctx: CanvasRenderingContext2D) => {
     if (!treeLoaded.current || !treeImgRef.current) return;
@@ -194,8 +195,10 @@ export default function Background({ width, height }: BackgroundProps) {
     const visibleWidth = width + 600; // Add 600px buffer to the right
     const patternWidth = Math.ceil(visibleWidth / treeSpacing + 2) * treeSpacing;
     
-    // Calculate tree pattern positions
-    let x1 = treePositionX.current % patternWidth;
+    // IMPORTANT: Use the exact same scroll speed as the sidewalk grid
+    // This ensures trees appear fixed to the sidewalk rather than moving independently
+    // Using treePositionX.current * 0.8 which is the same multiplier used for sidewalk grid
+    let x1 = (treePositionX.current * 0.8) % patternWidth; // Same speed as sidewalk grid
     if (x1 > 0) x1 -= patternWidth;
     const x2 = x1 + patternWidth;
     
@@ -276,8 +279,8 @@ export default function Background({ width, height }: BackgroundProps) {
     const visibleWidth = width + 600;
     const patternWidth = Math.ceil(visibleWidth / lineSpacing + 2) * lineSpacing;
     
-    // Calculate vertical line pattern positions (align with tree movement)
-    let x1 = (treePositionX.current * 0.8) % patternWidth; // Grid moves a bit slower than trees
+    // Calculate vertical line pattern positions - this speed is synchronized with the trees 
+    let x1 = (treePositionX.current * 0.8) % patternWidth; // Trees and sidewalk grid move at exactly the same speed
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw vertical lines with extended range
