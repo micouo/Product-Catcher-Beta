@@ -530,37 +530,70 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // Position the Calgary Tower in the background
     const sidewalkY = height * 0.6;
     
-    // EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER
-    const towerScale = 2; // Scale factor for the tower (adjust as needed)
-    const towerWidth = width * 0.2 * towerScale; // 10% of screen width by default
-    const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
-    const towerYOffset = 40; // Vertical position: smaller = higher, larger = lower
-    const towerXOffset = -200; // Horizontal position: positive = right, negative = left
-    const towerY = sidewalkY - towerHeight + towerYOffset;
+    // ===== EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER =====
+    // You can adjust these values to change appearance and placement
     
-    // Use a much larger spacing to ensure the tower appears less frequently
-    // Making it slower to regenerate as requested
-    const towerSpacing = width * 4; // 4x screen width spacing between towers
+    // APPEARANCE
+    const TOWER_SCALE = 2.0;                   // Scale factor for the tower size
+    const TOWER_WIDTH = width * 0.2 * TOWER_SCALE;  // Width of the tower
+    const TOWER_HEIGHT = height * 0.35 * TOWER_SCALE; // Height of the tower
     
-    // Create a much wider pattern to ensure towers are spaced far apart
+    // POSITIONING
+    const TOWER_Y_OFFSET = 40;                 // Vertical position: smaller = higher, larger = lower
+    const TOWER_X_OFFSET = -100;               // Fine-tune horizontal position adjustment
+    
+    // GENERATION FREQUENCY
+    const TOWER_SPACING_MULTIPLIER = 3.0;      // Higher number = towers appear less frequently
+                                              // Value is multiplied by cluster spacing to ensure towers appear between building clusters
+    
+    // PARALLAX EFFECT
+    const PARALLAX_FACTOR = 0.8;              // Controls how much slower the tower moves compared to buildings
+                                              // Lower = appears more distant, Higher = moves more with buildings
+    
+    // END OF CONFIGURATION SECTION
+    // ============================================
+    
+    const towerY = sidewalkY - TOWER_HEIGHT + TOWER_Y_OFFSET;
+    
+    // Get the building cluster information to place towers between clusters
+    // These should match the values in drawBuildings function
+    
+    // From building function
+    const buildingScale = width * 0.25;
+    const betweenBuildingGap = -85;
+    const betweenClusterGap = -50;
+    
+    // Calculate average building cluster width - use similar calculation as in drawBuildings
+    const avgBuildingWidth = buildingScale * 0.8 * 2.2; // Average of the three building widths
+    const clusterWidth = avgBuildingWidth * 3 + betweenBuildingGap * 2; // 3 buildings with 2 gaps
+    const clusterSpacing = clusterWidth + betweenClusterGap; // Full cluster pattern width
+    
+    // Make tower spacing a multiple of the cluster spacing
+    const towerSpacing = clusterSpacing * TOWER_SPACING_MULTIPLIER;
+    
+    // Create a wider pattern for the towers
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
     
-    // Use the calgary tower's own position tracker for a slower, distant effect
-    // The tower scrolls slower than buildings to appear farther away in the background
-    let x1 = (calgaryTowerPositionX.current) % patternWidth;
+    // Apply the parallax effect for a distant background feel
+    // This makes the tower scroll slower than buildings for a parallax effect
+    let x1 = (calgaryTowerPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw towers with very large spacing to avoid having multiple on screen at once
+    // Draw towers at positions that ensure they're between building clusters
     const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
     
     for (let i = 0; i < numTowers; i++) {
-      // Apply the X offset to tower positioning
-      const x = x1 + i * towerSpacing + towerXOffset;
+      // Calculate the base position using the tower spacing
+      const basePos = x1 + i * towerSpacing;
+      
+      // Position the tower exactly halfway between building clusters
+      // clusterSpacing/2 puts it halfway between clusters, then add offset for fine-tuning
+      const x = basePos + (clusterSpacing / 2) + TOWER_X_OFFSET;
       
       // Only draw if within our visible area with buffer
-      if (x > -towerWidth && x < width + towerWidth) {
-        ctx.drawImage(calgaryTowerImg, x, towerY, towerWidth, towerHeight);
+      if (x > -TOWER_WIDTH && x < width + TOWER_WIDTH) {
+        ctx.drawImage(calgaryTowerImg, x, towerY, TOWER_WIDTH, TOWER_HEIGHT);
       }
     }
   };
@@ -581,16 +614,16 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // You can adjust these values to change appearance and placement
 
     // APPEARANCE
-    const RING_SCALE = 0.9;                   // Scale factor for the ring size
+    const RING_SCALE = 2;                   // Scale factor for the ring size
     const RING_WIDTH = width * 0.15 * RING_SCALE;  // Width of the ring
     const RING_HEIGHT = height * 0.2 * RING_SCALE; // Height of the ring
     
     // POSITIONING
     const RING_Y_OFFSET = 30;                 // Vertical position: smaller = higher, larger = lower
-    const RING_X_OFFSET = 0;                  // Fine-tune horizontal position adjustment
+    const RING_X_OFFSET = -120;                  // Fine-tune horizontal position adjustment
     
     // GENERATION FREQUENCY
-    const RING_SPACING_MULTIPLIER = 2.0;      // Higher number = rings appear less frequently
+    const RING_SPACING_MULTIPLIER = 4.0;      // Higher number = rings appear less frequently
                                              // Value is multiplied by tree spacing to ensure rings appear between trees
     
     // END OF CONFIGURATION SECTION
