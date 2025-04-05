@@ -399,14 +399,29 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY + 40; // Move buildings 5px down to completely eliminate any gap
+    const buildingY = sidewalkY + 42; // Move buildings 5px down to completely eliminate any gap
     
     // Define building sizes - much larger scale for much closer appearance
     const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
     const buildingSizes = [
-      { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42}, // Width increased by 20%
-      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.5, height: height * 0.5 * 1.2 }, // Building 2 increased by another 20%
-      { img: building3Img, width: buildingScale * 0.96 * 1.2, height: height * 0.43 }  // Width increased by 20%
+      { 
+        img: building1Img, 
+        width: buildingScale * 0.92 * 1.2, 
+        height: height * 0.42,
+        yOffset: 0 // Building 1 vertical offset (0 = default position)
+      },
+      { 
+        img: building2Img, 
+        width: buildingScale * 1.02 * 1.2 * 1.5, 
+        height: height * 0.5 * 1.2,
+        yOffset: 60 // Building 2 vertical offset - lower number = higher position
+      },
+      { 
+        img: building3Img, 
+        width: buildingScale * 0.96 * 1.2, 
+        height: height * 0.43,
+        yOffset: 0 // Building 3 vertical offset (0 = default position)
+      }
     ];
     
     // Create building clusters with specific spacing
@@ -454,11 +469,9 @@ export default function Background({ width, height }: BackgroundProps) {
       buildingOrder.forEach((buildingIndex) => {
         const building = buildingSizes[buildingIndex];
         
-        // Draw the building
-        // Special case for building 2 - position it to touch the sidewalk
-        const yPosition = (buildingIndex === 1) 
-          ? sidewalkY - building.height + 40 // Building 2 positioned to touch the sidewalk
-          : buildingY - building.height;
+        // Draw the building with individual vertical positioning
+        // Use each building's specific yOffset for precise vertical positioning
+        const yPosition = buildingY - building.height + building.yOffset;
             
         ctx.drawImage(
           building.img,
