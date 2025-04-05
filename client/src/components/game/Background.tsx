@@ -535,7 +535,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     const towerWidth = width * 0.2 * towerScale; // 10% of screen width by default
     const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
     const towerYOffset = 40; // Vertical position: smaller = higher, larger = lower
-    const towerXOffset = 0; // Horizontal position: positive = right, negative = left
+    const towerXOffset = -200; // Horizontal position: positive = right, negative = left
     const towerY = sidewalkY - towerHeight + towerYOffset;
     
     // Use a much larger spacing to ensure the tower appears less frequently
@@ -577,37 +577,56 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // Position the Blue Ring on the sidewalk between trees
     const sidewalkY = height * 0.6;
     
-    // EASILY CONFIGURABLE PROPERTIES FOR BLUE RING
-    const ringScale = 0.9; // Scale factor for the ring (adjust as needed)
-    const ringWidth = width * 0.15 * ringScale; // 15% of screen width by default
-    const ringHeight = height * 0.2 * ringScale; // 20% of screen height by default
-    const ringYOffset = 30; // Vertical position: smaller = higher, larger = lower
-    const ringXOffset = 0;  // Horizontal position: positive = right, negative = left
-    const ringY = sidewalkY - ringHeight + ringYOffset;
+    // ===== EASILY CONFIGURABLE PROPERTIES FOR BLUE RING =====
+    // You can adjust these values to change appearance and placement
+
+    // APPEARANCE
+    const RING_SCALE = 0.9;                   // Scale factor for the ring size
+    const RING_WIDTH = width * 0.15 * RING_SCALE;  // Width of the ring
+    const RING_HEIGHT = height * 0.2 * RING_SCALE; // Height of the ring
     
-    // Use a much larger spacing to ensure the ring appears less frequently
-    // Making it slower to regenerate as requested
-    const ringSpacing = width * 3.5; // 3.5x screen width spacing between rings
+    // POSITIONING
+    const RING_Y_OFFSET = 30;                 // Vertical position: smaller = higher, larger = lower
+    const RING_X_OFFSET = 0;                  // Fine-tune horizontal position adjustment
     
-    // Create a much wider pattern to ensure rings are spaced far apart
+    // GENERATION FREQUENCY
+    const RING_SPACING_MULTIPLIER = 2.0;      // Higher number = rings appear less frequently
+                                             // Value is multiplied by tree spacing to ensure rings appear between trees
+    
+    // END OF CONFIGURATION SECTION
+    // ============================================
+    
+    const ringY = sidewalkY - RING_HEIGHT + RING_Y_OFFSET;
+    
+    // Get the tree spacing so we can sync the rings with the tree pattern
+    const treeSpacing = 300; // This must match the value in drawTrees
+    
+    // Make the ring spacing a multiple of the tree spacing to ensure it's between trees
+    // Trees are spaced at regular intervals, so we place rings at positions that ensure they're between trees
+    const ringSpacing = treeSpacing * RING_SPACING_MULTIPLIER;
+    
+    // Create a much wider pattern for the rings
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / ringSpacing) * ringSpacing;
     
-    // Anchor the Blue Ring to the sidewalk movement for consistency
-    // Use the sidewalk position tracker (same as used for trees)
+    // Anchor the Blue Ring to the sidewalk movement for consistency (same as trees)
     let x1 = (treePositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw rings with very large spacing to avoid having multiple on screen at once
+    // Draw rings at positions that ensure they're between trees
     const numRings = Math.ceil(patternWidth / ringSpacing) + 1;
     
     for (let i = 0; i < numRings; i++) {
-      // Apply the X offset to ring positioning
-      const x = x1 + i * ringSpacing + ringXOffset;
+      // Calculate the base position using the ring spacing
+      const basePos = x1 + i * ringSpacing;
+      
+      // Position the ring exactly halfway between trees
+      // treeSpacing/2 puts it halfway between trees, then add offset for fine-tuning
+      const x = basePos + (treeSpacing / 2) + RING_X_OFFSET;
       
       // Only draw if within our visible area with buffer
-      if (x > -ringWidth && x < width + ringWidth) {
-        ctx.drawImage(blueRingImg, x, ringY, ringWidth, ringHeight);
+      if (x > -RING_WIDTH && x < width + RING_WIDTH) {
+        ctx.drawImage(blueRingImg, x, ringY, RING_WIDTH, RING_HEIGHT);
       }
     }
   };
