@@ -145,9 +145,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Toggle pause state
   const togglePause = () => {
-    // Only allow toggling pause if the game is playing
-    if (!isPlaying) return;
+    // If game hasn't started yet, start the game first
+    if (!isPlaying) {
+      startGame();
+      return;
+    }
     
+    // Toggle pause state for running game
     setIsPaused(prev => !prev);
   };
   
