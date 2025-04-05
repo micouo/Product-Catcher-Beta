@@ -905,9 +905,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (currentCarImage) {
       // Make the car a good size while maintaining the right proportions
       
-      // Set a fixed size that's good for this car sprite
-      const drawWidth = player.width * 1.8;
-      const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
+      // Set a fixed size that matches the car selection screen
+      const drawWidth = player.width * 1.5;
+      const drawHeight = player.height * 1.2; // Proper aspect ratio to match selection screen
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
@@ -937,7 +937,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          -drawHeight / 2, // No upward offset to match the car selection screen appearance
           drawWidth, 
           drawHeight
         );
@@ -947,7 +947,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           // Apply red overlay with source-atop to prevent affecting outside the car
           ctx.globalCompositeOperation = 'source-atop';
           ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
-          ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
+          ctx.fillRect(-drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         }
         
         ctx.restore();
@@ -962,7 +962,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          -drawHeight / 2, // No upward offset to match the car selection screen appearance
           drawWidth, 
           drawHeight
         );
