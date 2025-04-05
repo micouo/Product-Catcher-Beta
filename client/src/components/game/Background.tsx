@@ -415,7 +415,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   /**
    * Draw buildings with the two-image infinite scrolling technique
    * Buildings are between clouds and sidewalk in the background
-   * Buildings are organized in tight clusters of 3 with small gaps between clusters
+   * Buildings are organized in fixed patterns to eliminate any snapping effect
    */
   const drawBuildings = (ctx: CanvasRenderingContext2D) => {
     // Check if all building images are loaded
@@ -428,82 +428,105 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     const building2Img = building2ImgRef.current;
     const building3Img = building3ImgRef.current;
     
-    // Define building settings
-    const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY + 42; // Move buildings 5px down to completely eliminate any gap
+    // ===== EASILY CONFIGURABLE PROPERTIES FOR BUILDINGS =====
+    // You can adjust these values to change appearance and placement
     
-    // Define building sizes - much larger scale for much closer appearance
-    const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
+    // APPEARANCE & SIZING
+    const BUILDING_SCALE = width * 0.25;     // Base scale factor for buildings
+    
+    // POSITIONING
+    const SIDEWALK_Y = height * 0.6;         // Sidewalk position
+    const BUILDING_Y_OFFSET = 42;            // Baseline vertical adjustment (positive = lower)
+    
+    // SPACING
+    const BETWEEN_BUILDING_GAP = -85;        // Space between buildings within a cluster (negative = overlap)
+    const BETWEEN_CLUSTER_GAP = -50;         // Space between building clusters
+    
+    // PARALLAX EFFECT
+    const PARALLAX_FACTOR = 0.8;             // How buildings move relative to sidewalk (lower = more distant feel)
+    
+    // RENDERING DISTANCE
+    const RENDER_BUFFER = 800;               // How far offscreen to render buildings
+    
+    // END OF CONFIGURATION SECTION
+    // ============================================
+    
+    // Calculate the base Y position for buildings
+    const buildingY = SIDEWALK_Y + BUILDING_Y_OFFSET;
+    
+    // Define the building patterns used throughout the scene
+    // Each building has a consistent size and vertical position
     const buildingSizes = [
       { 
         img: building1Img, 
-        width: buildingScale * 0.6 * 2.4, 
+        width: BUILDING_SCALE * 0.6 * 2.4, 
         height: height * 0.6,
-        yOffset: 24 // Building 1 vertical offset (0 = default position)
+        yOffset: 24 // Building 1 vertical offset
       },
       { 
         img: building2Img, 
-        width: buildingScale * 1.02 * 1.2 * 1.7, 
+        width: BUILDING_SCALE * 1.02 * 1.2 * 1.7, 
         height: height * 0.6 * 1.4,
-        yOffset: 80 // Building 2 vertical offset - lower number = higher position
+        yOffset: 80 // Building 2 vertical offset
       },
       { 
         img: building3Img, 
-        width: buildingScale * 0.6 * 2.7, 
+        width: BUILDING_SCALE * 0.6 * 2.7, 
         height: height * 0.7,
-        yOffset: 34 // Building 3 vertical offset (0 = default position)
+        yOffset: 34 // Building 3 vertical offset
       }
     ];
     
-    // Create building clusters with specific spacing
-    const betweenBuildingGap = -85; // 2px between buildings in a cluster
-    const betweenClusterGap = -50; // 30px between clusters
+    // Define fixed building patterns to ensure consistency
+    // Each pattern defines the order of buildings in a cluster
+    // We'll cycle through these patterns to create variation without randomness
+    const buildingPatterns = [
+      [0, 1, 2], // Pattern 1: Building 1, 2, 3
+      [2, 0, 1], // Pattern 2: Building 3, 1, 2
+      [1, 2, 0]  // Pattern 3: Building 2, 3, 1
+    ];
     
     // Calculate the width of a single cluster (3 buildings + gaps between them)
+    // All clusters will have the same total width regardless of building order
     const clusterWidth = buildingSizes.reduce((sum, building) => sum + building.width, 0) + 
-                         betweenBuildingGap * 1; // 2 gaps between 3 buildings
+                         BETWEEN_BUILDING_GAP * 2; // 2 gaps between 3 buildings
     
     // Calculate the width of a complete pattern (cluster + gap)
-    const patternWidth = clusterWidth + betweenClusterGap;
+    const patternWidth = clusterWidth + BETWEEN_CLUSTER_GAP;
     
-    // Add buffer to prevent pop-in
-    const visibleWidth = width + 800;
+    // Add buffer to prevent pop-in and ensure smooth scrolling
+    const visibleWidth = width + RENDER_BUFFER;
     const numClusters = Math.ceil(visibleWidth / patternWidth) + 1;
     
-    // Use building position with 0.8 multiplier to match trees and sidewalk
+    // Use building position with parallax factor to match trees and sidewalk
     // This ensures the buildings appear fixed relative to the sidewalk
-    let baseX = (buildingPositionX.current * 0.8) % patternWidth;
+    let baseX = (buildingPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (baseX > 0) baseX -= patternWidth;
     
     // Draw multiple building clusters to ensure continuous scene
     for (let clusterIndex = 0; clusterIndex < numClusters; clusterIndex++) {
       const clusterStartX = baseX + (clusterIndex * patternWidth);
       
-      // Skip if cluster is completely off-screen
+      // Skip if cluster is completely off-screen (optimization)
       if (clusterStartX > width || clusterStartX + clusterWidth < 0) continue;
       
-      // For each cluster, generate a random order of buildings (if outside visible area)
-      // Or use pseudo-random but consistent placement for visible buildings
-      let buildingOrder = [0, 1, 2]; // Default order
-      
-      // Use a deterministic "random" order based on cluster position
-      // This ensures the same cluster always has the same buildings
-      // while still giving variation between clusters
-      const seed = Math.abs(Math.floor(clusterStartX / 1000));
-      if (seed % 3 === 0) buildingOrder = [2, 0, 1];
-      else if (seed % 3 === 1) buildingOrder = [1, 2, 0];
+      // Use a completely deterministic pattern based on cluster index
+      // This ensures each position in the world always has the same buildings
+      // The modulo ensures we cycle through the patterns
+      const patternIndex = clusterIndex % buildingPatterns.length;
+      const buildingOrder = buildingPatterns[patternIndex];
       
       // Current x position within the cluster
       let currentX = clusterStartX;
       
-      // Draw each building in the cluster
+      // Draw each building in the cluster using the selected pattern
       buildingOrder.forEach((buildingIndex) => {
         const building = buildingSizes[buildingIndex];
         
-        // Draw the building with individual vertical positioning
-        // Use each building's specific yOffset for precise vertical positioning
+        // Calculate the exact Y position for this building
         const yPosition = buildingY - building.height + building.yOffset;
             
+        // Draw the building
         ctx.drawImage(
           building.img,
           currentX,
@@ -513,7 +536,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
         );
         
         // Move to the next building position
-        currentX += building.width + betweenBuildingGap;
+        currentX += building.width + BETWEEN_BUILDING_GAP;
       });
     }
   };
@@ -530,37 +553,52 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // Position the Calgary Tower in the background
     const sidewalkY = height * 0.6;
     
-    // EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER
-    const towerScale = 2; // Scale factor for the tower (adjust as needed)
-    const towerWidth = width * 0.2 * towerScale; // 10% of screen width by default
-    const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
-    const towerYOffset = 40; // Vertical position: smaller = higher, larger = lower
-    const towerXOffset = -300; // Horizontal position: positive = right, negative = left
-    const towerY = sidewalkY - towerHeight + towerYOffset;
+    // ===== EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER =====
+    // You can adjust these values to change appearance and placement
     
-    // Use a much larger spacing to ensure the tower appears less frequently
-    // Making it slower to regenerate as requested
-    const towerSpacing = width * 2; // 4x screen width spacing between towers
+    // APPEARANCE
+    const TOWER_SCALE = 2.0;                   // Scale factor for the tower size
+    const TOWER_WIDTH = width * 0.2 * TOWER_SCALE;  // Width of the tower
+    const TOWER_HEIGHT = height * 0.35 * TOWER_SCALE; // Height of the tower
     
-    // Create a much wider pattern to ensure towers are spaced far apart
+    // POSITIONING
+    const TOWER_Y_OFFSET = 40;                 // Vertical position: smaller = higher, larger = lower
+    const TOWER_X_OFFSET = -300;               // Fine-tune horizontal position adjustment
+    
+    // GENERATION FREQUENCY
+    const TOWER_SPACING_MULTIPLIER = 3.0;      // Higher number = towers appear less frequently
+                                               // Controls how frequently towers appear
+    
+    // PARALLAX EFFECT
+    const PARALLAX_FACTOR = 0.7;               // Controls how much slower the tower moves compared to buildings
+                                               // Lower = appears more distant, Higher = moves more with buildings
+    
+    // END OF CONFIGURATION SECTION
+    // ============================================
+    
+    const towerY = sidewalkY - TOWER_HEIGHT + TOWER_Y_OFFSET;
+    
+    // Calculate the spacing between towers
+    const towerSpacing = width * TOWER_SPACING_MULTIPLIER; 
+    
+    // Create a wider pattern to ensure towers are spaced appropriately
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
     
-    // Use the calgary tower's own position tracker for a slower, distant effect
-    // The tower scrolls slower than buildings to appear farther away in the background
-    let x1 = (calgaryTowerPositionX.current) % patternWidth;
+    // Apply the parallax effect for a distant background feel
+    let x1 = (calgaryTowerPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw towers with very large spacing to avoid having multiple on screen at once
+    // Draw towers with proper spacing
     const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
     
     for (let i = 0; i < numTowers; i++) {
-      // Apply the X offset to tower positioning
-      const x = x1 + i * towerSpacing + towerXOffset;
+      // Calculate the tower position
+      const x = x1 + i * towerSpacing + TOWER_X_OFFSET;
       
       // Only draw if within our visible area with buffer
-      if (x > -towerWidth && x < width + towerWidth) {
-        ctx.drawImage(calgaryTowerImg, x, towerY, towerWidth, towerHeight);
+      if (x > -TOWER_WIDTH && x < width + TOWER_WIDTH) {
+        ctx.drawImage(calgaryTowerImg, x, towerY, TOWER_WIDTH, TOWER_HEIGHT);
       }
     }
   };
