@@ -35,6 +35,9 @@ export default function Background({ width, height }: BackgroundProps) {
   const sidewalkOffsetRef = useRef(0);
   const roadOffsetRef = useRef(0);
   
+  // Timing variable for frame-rate independent animation
+  const lastTimeRef = useRef<number>(0);
+  
   // We'll use the constants defined above for parallax effect
   // This keeps the local reference for the animation function
   const animationFrameIdRef = useRef<number | null>(null);
@@ -65,11 +68,6 @@ export default function Background({ width, height }: BackgroundProps) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Variables for smooth timing
-    const lastTimeRef = useRef<number>(0);
-    const targetFPS = 60;
-    const timeStep = 1000 / targetFPS; // Time per frame in ms
     
     // Animation loop function with smooth parallax effect
     const animate = (timestamp: number) => {
@@ -77,6 +75,10 @@ export default function Background({ width, height }: BackgroundProps) {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
       const deltaTime = timestamp - lastTimeRef.current;
       lastTimeRef.current = timestamp;
+      
+      // Use a fixed time step target for consistent animation
+      const targetFPS = 60;
+      const timeStep = 1000 / targetFPS; // Time per frame in ms
       
       // Use a smoothing factor based on target frame rate
       // This ensures consistent speed regardless of actual FPS
