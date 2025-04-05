@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound-new';
 import Background from './Background';
-import car1Image from '../../assets/car1.png';
-import pauseImage from '../../assets/pause.png';
-import playImage from '../../assets/play.png';
-import replayImage from '../../assets/replay.png';
+import car1Image from '@assets/car 1.png';
+import pauseImage from '@assets/pause.png';
+import playImage from '@assets/play.png';
+import replayImage from '@assets/replay.png';
 // Import car assets
-import car2Image from '../../assets/car2.png';
-import car3Image from '../../assets/car3.png';
-import car4Image from '../../assets/car4.png';
-import car5Image from '../../assets/car5.png';
-import car6Image from '../../assets/car6.png';
+import car2Image from '@assets/car 2.png';
+import car3Image from '@assets/car 3.png';
+import car4Image from '@assets/car 4.png';
+import car5Image from '@assets/car 5.png';
+import car6Image from '@assets/car 6.png';
+import car7Image from '@assets/car 7.png';
+import car8Image from '@assets/car 8.png';
+import car9Image from '@assets/car 9.png';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -57,6 +60,8 @@ const BASE_OBJECT_SPEED = 2; // Starting speed
 const MAX_OBJECT_SPEED = 7; // Maximum object speed
 const SCORE_SPEED_MULTIPLIER = 0.02; // Speed increases by 2% for every 10 points
 const ANIM_INTERVAL = 150; // milliseconds between animation frames
+const ENGINE_SHAKE_INTERVAL = 50; // milliseconds between engine shake frames
+const ENGINE_SHAKE_AMOUNT = 1.2; // pixels to shake up and down
 
 // Food emojis for products
 const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
@@ -87,7 +92,10 @@ let carImages: CarImageMap = {
   turbo: null,   // Car 3
   drift: null,   // Car 4
   blazer: null,  // Car 5
-  boss: null     // Car 6
+  boss: null,    // Car 6
+  crawler: null, // Car 7
+  bugsy: null,   // Car 8
+  phantom: null  // Car 9
 };
 
 let playerImage: HTMLImageElement | null = null;
@@ -120,6 +128,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
+  // Engine shake animation
+  const [engineShakeOffset, setEngineShakeOffset] = useState(0);
+  const [lastEngineShakeTime, setLastEngineShakeTime] = useState(0);
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
   const [pauseButtonLoaded, setPauseButtonLoaded] = useState(false);
   const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
@@ -133,7 +144,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     turbo: false,
     drift: false,
     blazer: false,
-    boss: false
+    boss: false,
+    crawler: false,
+    bugsy: false,
+    phantom: false
   });
   const [isPlayerDamaged, setIsPlayerDamaged] = useState(false); // Track damage state for red flash effect
   const [damageFlashTime, setDamageFlashTime] = useState(0); // Track time for the flash effect
@@ -215,6 +229,36 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       };
     }
     
+    // Load car 7 (Crawler)
+    if (!carImages.crawler) {
+      const img = new Image();
+      img.src = car7Image;
+      img.onload = () => {
+        carImages.crawler = img;
+        setCarImagesLoaded(prev => ({ ...prev, crawler: true }));
+      };
+    }
+    
+    // Load car 8 (Bugsy)
+    if (!carImages.bugsy) {
+      const img = new Image();
+      img.src = car8Image;
+      img.onload = () => {
+        carImages.bugsy = img;
+        setCarImagesLoaded(prev => ({ ...prev, bugsy: true }));
+      };
+    }
+    
+    // Load car 9 (Phantom)
+    if (!carImages.phantom) {
+      const img = new Image();
+      img.src = car9Image;
+      img.onload = () => {
+        carImages.phantom = img;
+        setCarImagesLoaded(prev => ({ ...prev, phantom: true }));
+      };
+    }
+    
     // Load pause button
     if (!pauseButtonImage) {
       const img = new Image();
@@ -273,6 +317,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setSpeedMultiplier(1.0);
     setIsPlayerDamaged(false); // Reset damage effect
     setDamageFlashCount(0); // Reset flash counter
+    setEngineShakeOffset(0); // Reset engine shake
     
     // Keep high score
   };
@@ -362,7 +407,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player, isPlayerDamaged, damageFlashTime, damageFlashCount]);
+  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player, isPlayerDamaged, damageFlashTime, damageFlashCount, engineShakeOffset]);
   
   // Function to create game objects - defined outside the useEffect for access by gameLoop
   const createGameObject = (): GameObject => {
@@ -742,6 +787,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setSpeedMultiplier(1.0);
     setIsPlayerDamaged(false); // Reset damage effect
     setDamageFlashCount(0); // Reset flash counter
+    setEngineShakeOffset(0); // Reset engine shake
     
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
@@ -795,6 +841,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       setLastAnimTime(now);
     }
     
+    // Engine shake animation (runs even when not moving, to show running engine)
+    if (!isPaused && now - lastEngineShakeTime > ENGINE_SHAKE_INTERVAL) {
+      // Alternate between -1, 0, and 1 for a slight shake effect
+      setEngineShakeOffset((prev) => (prev === 0 ? ENGINE_SHAKE_AMOUNT : (prev === ENGINE_SHAKE_AMOUNT ? -ENGINE_SHAKE_AMOUNT : 0)));
+      setLastEngineShakeTime(now);
+    }
+    
     // Apply shadow for better visibility
     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
     ctx.shadowBlur = 8;
@@ -808,8 +861,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const centerX = player.x + player.width / 2;
     const centerY = player.y + player.height / 2;
     
-    // Translate to the player position
-    ctx.translate(centerX, centerY);
+    // Translate to the player position with engine shake offset
+    // Only apply the vertical (y) offset for engine shake
+    ctx.translate(centerX, centerY + (isPaused ? 0 : engineShakeOffset));
     
     // Apply slight rotation based on movement direction
     let rotation = 0;
@@ -1087,6 +1141,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
                 {selectedCar === 'drift' && "Calm under pressure. The road bends to him."}
                 {selectedCar === 'blazer' && "Burnouts and bravado. Doesn't know what subtle means."}
                 {selectedCar === 'boss' && "Rich, square, and rolling deep. Power in every pixel."}
+                {selectedCar === 'crawler' && "Tougher than a two-dollar steak. Climbs curbs like mountains."}
+                {selectedCar === 'bugsy' && "Short-tempered, loud engine. Always parks crooked."}
+                {selectedCar === 'phantom' && "Quick, elusive, and always one step ahead. You don't chase it—you follow its tail lights."}
               </p>
             </div>
           </div>
