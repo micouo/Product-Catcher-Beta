@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import cloudImage from "../../assets/cloud.png";
-import treeImage from "../../assets/tree 1.png";
-import building1Image from "../../assets/building 1.png";
-import building2Image from "../../assets/building 2.png";
-import building3Image from "../../assets/building 3.png";
+import treeImage from "../../assets/tree1.png";
+import building1Image from "../../assets/building1.png";
+import building2Image from "../../assets/building2.png";
+import building3Image from "../../assets/building3.png";
 import grassImage from "../../assets/grass.png";
 import calgaryTowerImage from "../../assets/calgary-tower.png";
 import blueRingImage from "../../assets/blue-ring.png";
+import pauseImage from "../../assets/pause.png";
+import playImage from "../../assets/play.png";
 
 interface BackgroundProps {
   width: number;
@@ -18,6 +20,9 @@ interface BackgroundProps {
  * using the two-image technique for perfect infinite scrolling.
  */
 export default function Background({ width, height }: BackgroundProps) {
+  // State for pausing animation
+  const [isPaused, setIsPaused] = useState(false);
+  
   // Canvas reference
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -34,6 +39,12 @@ export default function Background({ width, height }: BackgroundProps) {
   
   // Last timestamp for frame-rate independent animation
   const lastTimeRef = useRef(0);
+  
+  // Pause/Play button images
+  const pauseImgRef = useRef(new Image());
+  const playImgRef = useRef(new Image());
+  const pauseLoaded = useRef(false);
+  const playLoaded = useRef(false);
   
   // Image references
   const cloudImgRef = useRef(new Image());
@@ -62,6 +73,19 @@ export default function Background({ width, height }: BackgroundProps) {
   const BLUE_RING_SPEED = TREE_SPEED;     // Same as tree/sidewalk speed (anchored to sidewalk)
   
   useEffect(() => {
+    // Load pause/play button images
+    const pauseImg = pauseImgRef.current;
+    pauseImg.src = pauseImage;
+    pauseImg.onload = () => {
+      pauseLoaded.current = true;
+    };
+    
+    const playImg = playImgRef.current;
+    playImg.src = playImage;
+    playImg.onload = () => {
+      playLoaded.current = true;
+    };
+    
     // Load cloud image
     const cloudImg = cloudImgRef.current;
     cloudImg.src = cloudImage;
@@ -140,13 +164,16 @@ export default function Background({ width, height }: BackgroundProps) {
       // Convert to seconds and apply speed multiplier
       const timeMultiplier = deltaTime / 16.67; // Normalized for 60fps
       
-      // Update element positions based on their speeds
-      cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
-      buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
-      treePositionX.current -= TREE_SPEED * timeMultiplier;
-      roadPositionX.current -= ROAD_SPEED * timeMultiplier;
-      calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
-      blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
+      // Only update positions if not paused
+      if (!isPaused) {
+        // Update element positions based on their speeds
+        cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
+        buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
+        treePositionX.current -= TREE_SPEED * timeMultiplier;
+        roadPositionX.current -= ROAD_SPEED * timeMultiplier;
+        calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
+        blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
+      }
       
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -154,20 +181,54 @@ export default function Background({ width, height }: BackgroundProps) {
       // Draw background elements
       drawBackground(ctx);
       
+      // Draw pause/play button
+      drawPausePlayButton(ctx);
+      
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(animate);
     };
     
     // Start animation
     animationFrameRef.current = requestAnimationFrame(animate);
+
+    // Handle pause button click
+    const handleCanvasClick = (e: MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      // Get click position
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Check if click is within button bounds
+      const buttonSize = 60;
+      const buttonX = width - buttonSize - 15;
+      const buttonY = 15;
+      
+      if (
+        x >= buttonX && 
+        x <= buttonX + buttonSize && 
+        y >= buttonY && 
+        y <= buttonY + buttonSize
+      ) {
+        setIsPaused(!isPaused);
+      }
+    };
+    
+    // Add click event listener
+    canvas.addEventListener('click', handleCanvasClick);
+    
     
     // Cleanup on unmount
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      // Remove click event listener
+      canvas.removeEventListener('click', handleCanvasClick);
     };
-  }, [width, height]);
+  }, [width, height, isPaused]);
   
   /**
    * Draw the sky background
@@ -648,6 +709,35 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
+  /**
+   * Draw the pause/play button in the top right corner
+   */
+  const drawPausePlayButton = (ctx: CanvasRenderingContext2D) => {
+    // Make sure images are loaded
+    if ((!pauseLoaded.current || !pauseImgRef.current) || 
+        (!playLoaded.current || !playImgRef.current)) return;
+    
+    const buttonSize = 60;
+    const buttonX = width - buttonSize - 15; // 15px from right edge
+    const buttonY = 15; // 15px from top edge
+    
+    // Draw the appropriate button based on game state
+    if (isPaused) {
+      // If paused, show play button
+      ctx.drawImage(playImgRef.current, buttonX, buttonY, buttonSize, buttonSize);
+    } else {
+      // If playing, show pause button
+      ctx.drawImage(pauseImgRef.current, buttonX, buttonY, buttonSize, buttonSize);
+    }
+    
+    // Draw button label text below the button
+    ctx.font = '14px Arial';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    const text = isPaused ? 'RESUME' : 'PAUSE';
+    ctx.fillText(text, buttonX + buttonSize / 2, buttonY + buttonSize + 15);
+  };
+  
   /**
    * Draw the complete background with all elements
    */
