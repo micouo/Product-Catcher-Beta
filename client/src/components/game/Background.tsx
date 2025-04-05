@@ -66,35 +66,50 @@ export default function Background({ width, height }: BackgroundProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Animation loop function with parallax effect
-    const animate = () => {
+    // Variables for smooth timing
+    const lastTimeRef = useRef<number>(0);
+    const targetFPS = 60;
+    const timeStep = 1000 / targetFPS; // Time per frame in ms
+    
+    // Animation loop function with smooth parallax effect
+    const animate = (timestamp: number) => {
+      // Calculate delta time for smooth animation regardless of frame rate
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const deltaTime = timestamp - lastTimeRef.current;
+      lastTimeRef.current = timestamp;
+      
+      // Use a smoothing factor based on target frame rate
+      // This ensures consistent speed regardless of actual FPS
+      const smoothFactor = Math.min(deltaTime / timeStep, 2.0);
+      const frameSpeed = BASE_SCROLL_SPEED * smoothFactor;
+      
       // Increment the base offset - this is our "time" value
-      offsetXRef.current += BASE_SCROLL_SPEED;
+      offsetXRef.current += frameSpeed;
       
-      // Update all layer positions based on their parallax factors
-      // Each layer moves at a different speed relative to the base speed
+      // Update layers with precise calculations for smooth, continuous scrolling
       
-      // Sidewalk layer
+      // Sidewalk layer - continuous wrapping based on screen width
       sidewalkOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.SIDEWALK) % width;
       
-      // Road markings - using a smaller repeat cycle for more frequent markers
-      roadOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.ROAD) % 100;
+      // Road markings - smaller repeat cycle for more frequent markers with continuous motion
+      const roadPatternLength = 70; // Combined length of dash+gap
+      roadOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.ROAD) % roadPatternLength;
       
       // Building animation disabled since buildings have been removed
-      // Uncomment when building assets are added with proper parallax factor
-      // buildingOffsetRef.current = (offsetXRef.current * PARALLAX_LAYERS.SIDEWALK) % BUILDING_CYCLE;
+      // Add back when building assets are ready using PARALLAX_LAYERS.SIDEWALK factor
       
-      // Cloud layer - each cloud can move at slightly different speeds for more natural look
+      // Cloud layers - each with individual speed for natural parallax effect
+      // Using larger cycle values to prevent noticeable repetition
       cloudOffsetsRef.current = cloudOffsetsRef.current.map((_, index) => {
-        // Add slight variation to cloud speeds based on index
-        const cloudVariation = 1 + (index * 0.05);
-        return (offsetXRef.current * PARALLAX_LAYERS.CLOUDS * cloudVariation) % (width * 2);
+        // Create varied speeds with smooth transitions
+        const layerVariation = 1.0 + (index * 0.08); // Subtle variation between layers
+        return (offsetXRef.current * PARALLAX_LAYERS.CLOUDS * layerVariation) % (width * 3);
       });
       
       // Redraw the background with updated offsets
       drawBackground(ctx, width, height);
       
-      // Continue animation loop
+      // Continue animation loop with timestamp for timing calculations
       animationFrameIdRef.current = requestAnimationFrame(animate);
     };
     
@@ -183,7 +198,7 @@ export default function Background({ width, height }: BackgroundProps) {
     }
   };
 
-  // Draw clouds using the provided cloud image
+  // Draw clouds using the provided cloud image with perfect looping
   const drawClouds = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -192,46 +207,43 @@ export default function Background({ width, height }: BackgroundProps) {
     // Check if cloud image is loaded
     if (!cloudImgRef.current || !cloudLoadedRef.current) return;
 
-    // Define cloud positions - set these to fixed values for a consistent background
-    const cloudPositions = [
-      { x: width * 0.15, y: height * 0.12, scale: 0.2 },
-      { x: width * 0.4, y: height * 0.08, scale: 0.15 },
-      { x: width * 0.85, y: height * 0.1, scale: 0.18 },
-      { x: width * 0.65, y: height * 0.15, scale: 0.2 }, // Added fourth cloud
-    ];
-
     const cloudImg = cloudImgRef.current;
-
-    // Draw each cloud with its own offset to create a parallax effect
-    cloudPositions.forEach((cloud, index) => {
-      // Calculate size - scale based on the original image dimensions
-      const cloudWidth = cloudImg.width * cloud.scale;
-      const cloudHeight = cloudImg.height * cloud.scale;
-
-      // Apply scrolling offset for this cloud - wrap around when out of view
-      const cloudXOffset = cloudOffsetsRef.current[index];
+    
+    // Define cloud patterns - each pattern has its own properties and spacing
+    const cloudPatterns = [
+      // Pattern 1: Large clouds at upper level
+      { yPos: height * 0.12, scale: 0.2, spacing: width * 0.8, offset: cloudOffsetsRef.current[0] },
+      // Pattern 2: Medium clouds at middle level
+      { yPos: height * 0.08, scale: 0.15, spacing: width * 0.65, offset: cloudOffsetsRef.current[1] },
+      // Pattern 3: Small clouds at lower level
+      { yPos: height * 0.15, scale: 0.18, spacing: width * 0.9, offset: cloudOffsetsRef.current[2] },
+    ];
+    
+    // Draw each cloud pattern with continuous scrolling
+    cloudPatterns.forEach(pattern => {
+      // Calculate base dimensions for clouds in this pattern
+      const cloudWidth = cloudImg.width * pattern.scale;
+      const cloudHeight = cloudImg.height * pattern.scale;
       
-      // For LEFT-TO-RIGHT scrolling, ADD the offset to x position
-      // As offset increases, cloud appears to move left-to-right
-      const xPos = (cloud.x - cloudWidth / 2) + cloudXOffset;
+      // Calculate how many clouds we need for this pattern to fill the screen plus buffer
+      const totalClouds = Math.ceil(width / pattern.spacing) + 2;
       
-      // Draw cloud image centered at the position
-      ctx.drawImage(
-        cloudImg,
-        xPos, // Apply cloud offset for scrolling
-        cloud.y - cloudHeight / 2, // Vertical position stays the same
-        cloudWidth,
-        cloudHeight,
-      );
+      // Calculate precise offset for perfect continuous looping
+      const patternOffset = pattern.offset % pattern.spacing;
       
-      // Draw duplicate cloud for seamless scrolling (when first cloud moves off screen)
-      ctx.drawImage(
-        cloudImg,
-        xPos - width, // Draw a second cloud one screen-width to the left
-        cloud.y - cloudHeight / 2,
-        cloudWidth,
-        cloudHeight,
-      );
+      // Draw the clouds in this pattern with continuous seamless scrolling
+      for (let i = -1; i < totalClouds; i++) {
+        const x = (i * pattern.spacing) - patternOffset;
+        
+        // Draw the cloud at the calculated position
+        ctx.drawImage(
+          cloudImg,
+          x,
+          pattern.yPos - cloudHeight / 2,
+          cloudWidth,
+          cloudHeight
+        );
+      }
     });
   };
 
@@ -306,12 +318,18 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
 
-    // Draw vertical lines with scrolling effect - stop at the player area
-    // Draw more lines than needed to allow for seamless scrolling
+    // Draw vertical lines with seamless continuous scrolling
     const verticalLineSpacing = 40;
-    for (let x = -verticalLineSpacing + (offset % verticalLineSpacing); 
-         x < width + verticalLineSpacing; 
-         x += verticalLineSpacing) {
+    
+    // Calculate how many lines we need to cover the screen width plus extra buffer
+    const totalLines = Math.ceil(width / verticalLineSpacing) + 4; // +4 for buffer
+    
+    // Calculate the base position offset from the reference point
+    const baseOffset = offset % verticalLineSpacing;
+    
+    // Draw the set of vertical lines that cover the entire viewport plus buffer
+    for (let i = -2; i < totalLines; i++) {
+      const x = (i * verticalLineSpacing) - baseOffset;
       
       ctx.beginPath();
       ctx.moveTo(x, height * 0.6);
@@ -319,21 +337,25 @@ export default function Background({ width, height }: BackgroundProps) {
       ctx.stroke();
     }
     
-    // Add trees along the sidewalk at regular intervals
-    // Trees should scroll with the sidewalk but maintain fixed size
-    const treeSpacing = 300; // Space between trees for better visibility
-    const treeSize = 38.5; // Fixed size for all trees (reduced by additional 5%)
-    const treeY = height * 0.618; // Position trees slightly higher up on the sidewalk
+    // Add trees along the sidewalk with perfect looping
+    const treeSpacing = 300; // Space between trees
+    const treeSize = 38.5; // Fixed size for trees (reduced)
+    const treeY = height * 0.618; // Position trees higher up on sidewalk
     
-    // Apply sidewalk scrolling offset
-    // Calculate positions to place trees, accounting for the scrolling offset
-    for (let x = -treeSpacing + (offset % treeSpacing); x < width + treeSpacing; x += treeSpacing) {
-      // Draw trees with fixed size (no variation)
+    // Calculate number of trees needed to fill screen plus buffer for seamless transition
+    const totalTrees = Math.ceil(width / treeSpacing) + 4; // +4 for buffer
+    
+    // Calculate base position for trees, ensuring smooth continuous movement
+    const treeBaseOffset = offset % treeSpacing;
+    
+    // Draw trees in a continuous loop pattern
+    for (let i = -2; i < totalTrees; i++) {
+      const x = (i * treeSpacing) - treeBaseOffset;
       drawTree(ctx, x, treeY, treeSize);
     }
   };
 
-  // Draw road markings on street
+  // Draw road markings on street with seamless infinite scrolling
   const drawStreetMarkings = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -343,27 +365,37 @@ export default function Background({ width, height }: BackgroundProps) {
     ctx.strokeStyle = "#FFFFFF";
     ctx.lineWidth = 6;
     
-    // Apply road markings scrolling offset
+    // Get the road offset for scrolling
     const offset = roadOffsetRef.current;
     
-    // Use a dash pattern that will create a moving dashed line effect
-    const dashLength = 20;
-    const gapLength = 15;
-    const dashPattern = [dashLength, gapLength];
-    ctx.setLineDash(dashPattern);
+    // Continuous scrolling approach for road markings
+    // Instead of using setLineDash which can cause subtle visual jumps,
+    // we'll manually draw the dash pattern for perfect control
     
-    // Offset the dash pattern to create movement
-    ctx.lineDashOffset = -offset;
-
-    // Draw center line in middle of street area (playerAreaY to bottom)
+    const dashLength = 30; // Length of each dash
+    const gapLength = 40;  // Length of gap between dashes
+    const patternLength = dashLength + gapLength; // Total length of one dash+gap pattern
+    
+    // Calculate how many dashes needed to cover the width plus buffer
+    const totalDashes = Math.ceil(width / patternLength) + 4; // +4 for buffer
+    
+    // Calculate the base offset (precise position within pattern cycle)
+    const baseOffset = offset % patternLength;
+    
+    // Draw center line in middle of street area
     const centerY = playerAreaY + (height - playerAreaY) / 2;
-    ctx.beginPath();
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(width, centerY);
-    ctx.stroke();
-
-    // Reset line style
-    ctx.setLineDash([]);
+    
+    // Draw the dashes manually for pixel-perfect control
+    for (let i = -2; i < totalDashes; i++) {
+      // Calculate starting position of this dash
+      const dashStart = (i * patternLength) - baseOffset;
+      
+      // Draw only the dash part (not the gap)
+      ctx.beginPath();
+      ctx.moveTo(dashStart, centerY);
+      ctx.lineTo(dashStart + dashLength, centerY);
+      ctx.stroke();
+    }
   };
 
   // Draw the entire background scene
