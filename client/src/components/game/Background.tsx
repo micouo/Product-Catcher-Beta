@@ -166,7 +166,7 @@ export default function Background({ width, height }: BackgroundProps) {
     const treeSize = 38.5;
     // Position trees properly on the sidewalk - tree trunks should be on the sidewalk
     const sidewalkY = height * 0.6;
-    const treeY = sidewalkY + 45; // Position tree trunk base on the sidewalk
+    const treeY = sidewalkY + 20; // Position tree trunk base higher on the sidewalk
     const treeSpacing = 300;
     
     // Create a pattern wide enough to fill the screen plus extra buffer
@@ -218,10 +218,11 @@ export default function Background({ width, height }: BackgroundProps) {
     const treeHeight = treeImg.height * scale;
     
     // Draw centered tree
+    // Increased vertical offset to position tree higher on sidewalk
     ctx.drawImage(
       treeImg,
       x - treeWidth / 2,
-      y - treeHeight * 0.85,
+      y - treeHeight * 0.95, // Increased from 0.85 to 0.95 for higher placement
       treeWidth,
       treeHeight
     );
