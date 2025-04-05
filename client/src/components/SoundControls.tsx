@@ -13,7 +13,8 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
     toggleSound, 
     toggleMusic, 
     initializeAudio,
-    playSound
+    playSound,
+    startMusic
   } = useSound();
 
   // Initialize audio on first user interaction
@@ -37,12 +38,16 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
     };
   }, [initializeAudio]);
 
-  // Force start audio on manual button click
+  // Force start audio on manual button click 
   const handleManualStart = () => {
     // This is a direct user interaction, which ensures audio can play
     initializeAudio();
-    // Try playing a test sound
-    playSound('collect');
+    // Start background music
+    startMusic();
+    // Play a test sound
+    setTimeout(() => {
+      playSound('collect');
+    }, 300); // Short delay to ensure initialization is complete
   };
 
   return (

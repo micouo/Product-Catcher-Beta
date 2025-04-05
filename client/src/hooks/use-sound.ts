@@ -70,9 +70,11 @@ export function useSound() {
       
       // Create audio elements if they don't exist yet
       if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.wav');
+        backgroundMusicElement = new Audio('/background-music.mp3');
         backgroundMusicElement.loop = true;
         backgroundMusicElement.volume = 0.3;
+        // Preload the audio
+        backgroundMusicElement.preload = 'auto';
       }
       
       if (!hitSoundElement) {
@@ -173,8 +175,9 @@ export function useSound() {
     try {
       // Create background music element if it doesn't exist
       if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.wav');
+        backgroundMusicElement = new Audio('/background-music.mp3');
         backgroundMusicElement.loop = true;
+        backgroundMusicElement.preload = 'auto';
       }
       
       // Set volume before playing
@@ -288,5 +291,7 @@ export function useSound() {
     musicEnabled,
     setMusicVolume,
     initializeAudio,
+    startMusic,
+    stopMusic
   };
 }
