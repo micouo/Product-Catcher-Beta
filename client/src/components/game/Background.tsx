@@ -125,13 +125,12 @@ export default function Background({ width, height }: BackgroundProps) {
     const cloudImg = cloudImgRef.current;
     
     // Clouds using multi-layer approach with different sizes and speeds
-    // Reduced cloud sizes significantly based on user feedback
-    // Further reduced cloud widths to make them narrower (additional 50% reduction from original)
-    // Added horizontal offsets to distribute clouds more evenly across the screen
+    // Cloud sizes increased by 15% from previous values
+    // Horizontal offsets maintained to distribute clouds evenly across the screen
     const cloudLayers = [
-      { y: 40, width: width * 0.136, height: height * 0.15, speed: 1.0, offsetMultiplier: 1.0, xOffset: width * 0.1 },
-      { y: 80, width: width * 0.088, height: height * 0.1, speed: 1.2, offsetMultiplier: 1.2, xOffset: width * 0.4 },
-      { y: 20, width: width * 0.112, height: height * 0.12, speed: 0.8, offsetMultiplier: 0.8, xOffset: width * 0.7 }
+      { y: 40, width: width * 0.156, height: height * 0.173, speed: 1.0, offsetMultiplier: 1.0, xOffset: width * 0.1 }, // 15% size increase
+      { y: 80, width: width * 0.101, height: height * 0.115, speed: 1.2, offsetMultiplier: 1.2, xOffset: width * 0.4 }, // 15% size increase
+      { y: 20, width: width * 0.129, height: height * 0.138, speed: 0.8, offsetMultiplier: 0.8, xOffset: width * 0.7 }  // 15% size increase
     ];
     
     // Draw each cloud layer with its own parameters
@@ -170,7 +169,8 @@ export default function Background({ width, height }: BackgroundProps) {
           // Add a second cloud within each section at a different position for variety
           // This creates more natural-looking cloud distribution
           const secondCloudOffset = sectionWidth * 0.4; // Position second cloud at 40% of section
-          ctx.drawImage(cloudImg, xPos + secondCloudOffset, layer.y + 10, layer.width * 0.8, layer.height * 0.8);
+          // Secondary cloud also increased by 15% (from 0.8 to 0.92 = 15% larger than before)
+          ctx.drawImage(cloudImg, xPos + secondCloudOffset, layer.y + 10, layer.width * 0.92, layer.height * 0.92);
         }
       }
     });
