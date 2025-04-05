@@ -907,7 +907,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // Set a fixed size that matches the car selection screen
       const drawWidth = player.width * 1.5;
-      const drawHeight = player.height * 1.2; // Proper aspect ratio to match selection screen
+      const drawHeight = player.width * 0.8; // Proper aspect ratio to maintain car proportions
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
