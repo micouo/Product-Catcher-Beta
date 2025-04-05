@@ -140,25 +140,37 @@ export default function Background({ width, height }: BackgroundProps) {
       // Using layer-specific speed multiplier for varied parallax effect
       let layerPositionX = cloudPositionX.current * layer.offsetMultiplier;
       
-      // Increase spacing for better cloud distribution
-      // Use larger sections to distribute clouds more evenly across the canvas
-      const sectionWidth = width * 2.5; // Make sections much wider than the screen for better spacing
+      // Modified cloud rendering to ensure continuous generation of clouds
+      // We'll use repeating patterns with modulo, but ensure the spacing is large enough
+      // to prevent visible patterns while still ensuring continuous cloud coverage
       
-      // Calculate positions with wider sections to space clouds out more evenly
-      // Apply layer-specific offset to distribute clouds across the width
-      let x1 = (layerPositionX + layer.xOffset) % sectionWidth;
-      if (x1 > 0) x1 -= sectionWidth; // Ensure the first image starts at or left of origin
+      // Create a wider section for better cloud distribution and visual diversity
+      const sectionWidth = width * 3.0; // Wider section for more natural-looking spacing
       
-      // Draw multiple copies to ensure full coverage with proper spacing
-      // Add a larger buffer for off-screen rendering to prevent "popping" effect
-      const buffer = width * 1.5; // Even larger buffer to prevent visible cloud generation
-      for (let i = 0; i < 5; i++) { // Draw more copies with wider spacing to ensure coverage
-        // Apply the layer's xOffset to position clouds at different horizontal positions
-        const xPos = x1 + (i * sectionWidth);
+      // Calculate the base position for our cloud pattern
+      let baseX = layerPositionX % sectionWidth;
+      if (baseX > 0) baseX -= sectionWidth;
+      
+      // Much larger buffer to ensure clouds are always generated before entering viewport
+      const buffer = width * 2.5;
+      
+      // Draw more copies to ensure continuous coverage regardless of scroll speed
+      // This ensures clouds are always present even if several move off-screen
+      const numCopiesNeeded = Math.ceil((width + 2 * buffer) / sectionWidth) + 2;
+      
+      // Draw multiple copies with proper spacing to ensure continuous coverage
+      for (let i = 0; i < numCopiesNeeded; i++) {
+        // Position clouds with varying offsets plus their layer-specific offset
+        const xPos = baseX + (i * sectionWidth) + layer.xOffset;
         
-        // Only draw if within our extended visible area (including significant off-screen buffer)
+        // Draw if within our greatly extended buffer area
         if (xPos < width + buffer && xPos > -buffer) {
           ctx.drawImage(cloudImg, xPos, layer.y, layer.width, layer.height);
+          
+          // Add a second cloud within each section at a different position for variety
+          // This creates more natural-looking cloud distribution
+          const secondCloudOffset = sectionWidth * 0.4; // Position second cloud at 40% of section
+          ctx.drawImage(cloudImg, xPos + secondCloudOffset, layer.y + 10, layer.width * 0.8, layer.height * 0.8);
         }
       }
     });
