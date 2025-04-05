@@ -58,7 +58,7 @@ export default function Background({ width, height }: BackgroundProps) {
   const BUILDING_SPEED = 0.6; // Medium-slow (buildings in background)
   const TREE_SPEED = 1.5;   // Medium (trees on sidewalk)
   const ROAD_SPEED = 2.0;   // Fastest (road markings)
-  const CALGARY_TOWER_SPEED = TREE_SPEED; // Same as tree/sidewalk speed (anchored to sidewalk)
+  const CALGARY_TOWER_SPEED = 0.4; // Slower than buildings to appear in distant background
   const BLUE_RING_SPEED = TREE_SPEED;     // Same as tree/sidewalk speed (anchored to sidewalk)
   
   useEffect(() => {
@@ -542,9 +542,9 @@ export default function Background({ width, height }: BackgroundProps) {
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
     
-    // Use the tree/sidewalk position tracker for consistent speed
-    // This ensures the tower is anchored to the sidewalk movement
-    let x1 = (treePositionX.current) % patternWidth;
+    // Use the calgary tower's own position tracker for a slower, distant effect
+    // The tower scrolls slower than buildings to appear farther away in the background
+    let x1 = (calgaryTowerPositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw towers with very large spacing to avoid having multiple on screen at once
