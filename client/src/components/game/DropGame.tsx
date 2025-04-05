@@ -4,6 +4,12 @@ import Background from './Background';
 import pixelCarImage from '../../assets/pixelcar.png';
 import pauseImage from '../../assets/pause.png';
 import playImage from '../../assets/play.png';
+// Import car assets
+import car2Image from '../../assets/car2.png';
+import car3Image from '../../assets/car3.png';
+import car4Image from '../../assets/car4.png';
+import car5Image from '../../assets/car5.png';
+import car6Image from '../../assets/car6.png';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -69,6 +75,20 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
 }
 
 // Store images as refs to avoid re-creating them
+// Car images collection
+type CarImageMap = {
+  [key: string]: HTMLImageElement | null;
+};
+
+let carImages: CarImageMap = {
+  default: null, // Original pixel car
+  car2: null,
+  car3: null,
+  car4: null,
+  car5: null,
+  car6: null
+};
+
 let playerImage: HTMLImageElement | null = null;
 let pauseButtonImage: HTMLImageElement | null = null;
 let playButtonImage: HTMLImageElement | null = null;
@@ -99,6 +119,17 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
   const [pauseButtonLoaded, setPauseButtonLoaded] = useState(false);
   const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
+  
+  // Car selection state
+  const [selectedCar, setSelectedCar] = useState<string>('default');
+  const [carImagesLoaded, setCarImagesLoaded] = useState<{[key: string]: boolean}>({
+    default: false,
+    car2: false,
+    car3: false,
+    car4: false,
+    car5: false,
+    car6: false
+  });
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -112,18 +143,71 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     boosting: false,
   });
   
-  // Load the player image and pause/play buttons on component mount
+  // Load all car images, pause/play buttons on component mount
   useEffect(() => {
-    // Only load the images once
-    if (!playerImage) {
+    // Initialize and load default car
+    if (!carImages.default) {
       const img = new Image();
-      img.src = pixelCarImage; // Use the imported image path
+      img.src = pixelCarImage;
       img.onload = () => {
-        playerImage = img;
+        carImages.default = img;
+        playerImage = img; // Set as the initial player image
+        setCarImagesLoaded(prev => ({ ...prev, default: true }));
         setPlayerImageLoaded(true);
       };
     }
     
+    // Load car 2
+    if (!carImages.car2) {
+      const img = new Image();
+      img.src = car2Image;
+      img.onload = () => {
+        carImages.car2 = img;
+        setCarImagesLoaded(prev => ({ ...prev, car2: true }));
+      };
+    }
+    
+    // Load car 3
+    if (!carImages.car3) {
+      const img = new Image();
+      img.src = car3Image;
+      img.onload = () => {
+        carImages.car3 = img;
+        setCarImagesLoaded(prev => ({ ...prev, car3: true }));
+      };
+    }
+    
+    // Load car 4
+    if (!carImages.car4) {
+      const img = new Image();
+      img.src = car4Image;
+      img.onload = () => {
+        carImages.car4 = img;
+        setCarImagesLoaded(prev => ({ ...prev, car4: true }));
+      };
+    }
+    
+    // Load car 5
+    if (!carImages.car5) {
+      const img = new Image();
+      img.src = car5Image;
+      img.onload = () => {
+        carImages.car5 = img;
+        setCarImagesLoaded(prev => ({ ...prev, car5: true }));
+      };
+    }
+    
+    // Load car 6
+    if (!carImages.car6) {
+      const img = new Image();
+      img.src = car6Image;
+      img.onload = () => {
+        carImages.car6 = img;
+        setCarImagesLoaded(prev => ({ ...prev, car6: true }));
+      };
+    }
+    
+    // Load pause button
     if (!pauseButtonImage) {
       const img = new Image();
       img.src = pauseImage;
@@ -133,6 +217,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       };
     }
     
+    // Load play button
     if (!playButtonImage) {
       const img = new Image();
       img.src = playImage;
@@ -540,6 +625,12 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     });
   };
   
+  // Track car selection canvas changes
+  useEffect(() => {
+    // This effect runs when selectedCar changes to update the preview canvas
+    // The canvas ref in the JSX will handle the actual drawing
+  }, [selectedCar, carImagesLoaded]);
+
   // Start game
   const startGame = () => {
     // Initialize audio context on game start
@@ -547,6 +638,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Play start sound
     playSound('start');
+    
+    // Update player image based on selected car
+    playerImage = carImages[selectedCar];
     
     // Reset game state
     setIsPlaying(true);
@@ -629,18 +723,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Image is loaded in the useEffect hook on component mount
     
-    // Draw the sprite if image is loaded
-    if (playerImage) {
+    // Draw the sprite if the selected car image is loaded
+    const currentCarImage = carImages[selectedCar];
+    if (currentCarImage) {
       // Make the car a good size while maintaining the right proportions
-      // The pixel art is a square image but we want to display it at the proper aspect ratio
       
-      // Set a fixed size that's good for this pixel car sprite
+      // Set a fixed size that's good for this car sprite
       const drawWidth = player.width * 1.8;
       const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
       
       // Draw with slight vertical offset to center the car properly
       ctx.drawImage(
-        playerImage, 
+        currentCarImage, 
         -drawWidth / 2,
         -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
         drawWidth, 
@@ -760,30 +854,94 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       {!isPlaying && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
-          <h2 className="text-3xl font-game text-blue-500 mb-4">
-            {score > 0 ? 'Game Over!' : 'Speed Racer Food Delivery'}
+          <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            {score > 0 ? 'Game Over!' : 'District Driver'}
           </h2>
+          
           {score > 0 && (
             <p className="text-2xl text-white mb-4">Your Score: {score}</p>
           )}
+          
+          {/* Game menu content with flex layout for instructions and car selector */}
+          <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
+            {/* Instructions on the left */}
+            <div className="flex-1 text-gray-300 text-left">
+              <p className="text-xl font-semibold mb-2 text-blue-400">How to Play:</p>
+              <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
+              <p className="mb-1">• Avoid the red spiky obstacles</p>
+              <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
+              <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
+              <p className="mb-1">• Press ESC key or click the pause button to pause/unpause the game</p>
+              <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
+              <p className="mb-1">• Your car will automatically face the direction you're moving</p>
+              <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
+            </div>
+            
+            {/* Car selection on the right */}
+            <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+              <p className="text-xl font-semibold mb-4 text-blue-400">Choose Your Car:</p>
+              
+              {/* Car preview area */}
+              <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
+                {/* Current selected car display */}
+                <div className="w-40 h-32 relative flex justify-center items-center">
+                  <canvas 
+                    width={160}
+                    height={128}
+                    className="object-contain"
+                    ref={(canvas) => {
+                      if (canvas && carImages[selectedCar]) {
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                          ctx.clearRect(0, 0, 160, 128);
+                          ctx.drawImage(carImages[selectedCar], 0, 0, 160, 128);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                
+                {/* Car selection arrows */}
+                <div className="absolute inset-x-0 flex justify-between items-center px-2">
+                  <button 
+                    onClick={() => {
+                      const cars = Object.keys(carImages);
+                      const currentIndex = cars.indexOf(selectedCar);
+                      const prevIndex = currentIndex <= 0 ? cars.length - 1 : currentIndex - 1;
+                      setSelectedCar(cars[prevIndex]);
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                  >
+                    ←
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const cars = Object.keys(carImages);
+                      const currentIndex = cars.indexOf(selectedCar);
+                      const nextIndex = (currentIndex + 1) % cars.length;
+                      setSelectedCar(cars[nextIndex]);
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+              
+              {/* Display car name */}
+              <p className="text-lg text-white mb-4 capitalize">
+                {selectedCar === 'default' ? 'Pixel Car' : selectedCar.replace('car', 'Car ')}
+              </p>
+            </div>
+          </div>
+          
+          {/* Start button */}
           <button
             onClick={startGame}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg cursor-pointer"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
           >
-            <i className="ri-play-fill mr-2"></i> {score > 0 ? 'Play Again' : 'Start Game'}
+            {score > 0 ? 'Play Again' : 'Start Game'}
           </button>
-          
-          <div className="mt-8 text-gray-300 text-center max-w-md">
-            <p className="mb-2"><b>How to Play:</b></p>
-            <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
-            <p className="mb-1">• Avoid the red spiky obstacles</p>
-            <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
-            <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
-            <p className="mb-1">• Press ESC key or click the pause button to pause/unpause the game</p>
-            <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-            <p className="mb-1">• Your car will automatically face the direction you're moving</p>
-            <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
-          </div>
         </div>
       )}
     </div>
