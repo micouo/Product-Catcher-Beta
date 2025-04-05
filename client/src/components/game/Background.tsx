@@ -399,14 +399,14 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY - 2; // Position buildings very close to sidewalk
+    const buildingY = sidewalkY; // Position buildings exactly at sidewalk level
     
-    // Define building sizes - larger scale for closer appearance
-    const buildingScale = width * 0.11; // Increased base scale for buildings
+    // Define building sizes - much larger scale for much closer appearance
+    const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
     const buildingSizes = [
-      { img: building1Img, width: buildingScale * 0.92, height: height * 0.26 },
-      { img: building2Img, width: buildingScale * 1.02, height: height * 0.28 },
-      { img: building3Img, width: buildingScale * 0.96, height: height * 0.27 }
+      { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42 }, // Width increased by 20%
+      { img: building2Img, width: buildingScale * 1.02 * 1.2, height: height * 0.44 }, // Width increased by 20%
+      { img: building3Img, width: buildingScale * 0.96 * 1.2, height: height * 0.43 }  // Width increased by 20%
     ];
     
     // Create building clusters with specific spacing
@@ -483,8 +483,8 @@ export default function Background({ width, height }: BackgroundProps) {
     const grassHeight = height * 0.06; // 6% of canvas height
     const grassWidth = width * 0.2; // 20% of canvas width
     
-    // Position the grass so it sits on the sidewalk
-    const grassY = sidewalkY - grassHeight * 0.7; // Position so most of grass is above sidewalk
+    // Position the grass so it overlaps the sidewalk by exactly 2 pixels
+    const grassY = sidewalkY - grassHeight + 2; // Position to overlap sidewalk by 2px
     
     // Add extra buffer to ensure continuous appearance
     const visibleWidth = width + 800;
