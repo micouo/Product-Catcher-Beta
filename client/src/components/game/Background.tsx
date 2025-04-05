@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import cloudImage from "../../assets/cloud.png";
 import treeImage from "../../assets/tree 1.png";
+import building1Image from "../../assets/building 1.png";
+import building2Image from "../../assets/building 2.png";
+import building3Image from "../../assets/building 3.png";
 
 interface BackgroundProps {
   width: number;
@@ -20,6 +23,7 @@ export default function Background({ width, height }: BackgroundProps) {
   
   // Track positions of background elements
   const cloudPositionX = useRef(0);
+  const buildingPositionX = useRef(0);
   const treePositionX = useRef(0);
   const roadPositionX = useRef(0);
   
@@ -29,11 +33,18 @@ export default function Background({ width, height }: BackgroundProps) {
   // Image references
   const cloudImgRef = useRef(new Image());
   const treeImgRef = useRef(new Image());
+  const building1ImgRef = useRef(new Image());
+  const building2ImgRef = useRef(new Image());
+  const building3ImgRef = useRef(new Image());
   const cloudLoaded = useRef(false);
   const treeLoaded = useRef(false);
+  const building1Loaded = useRef(false);
+  const building2Loaded = useRef(false);
+  const building3Loaded = useRef(false);
   
   // Layer speeds
   const CLOUD_SPEED = 0.3;  // Slowest (clouds in background)
+  const BUILDING_SPEED = 0.6; // Medium-slow (buildings in background)
   const TREE_SPEED = 1.5;   // Medium (trees on sidewalk)
   const ROAD_SPEED = 2.0;   // Fastest (road markings)
   
@@ -50,6 +61,25 @@ export default function Background({ width, height }: BackgroundProps) {
     treeImg.src = treeImage;
     treeImg.onload = () => {
       treeLoaded.current = true;
+    };
+    
+    // Load building images
+    const building1Img = building1ImgRef.current;
+    building1Img.src = building1Image;
+    building1Img.onload = () => {
+      building1Loaded.current = true;
+    };
+    
+    const building2Img = building2ImgRef.current;
+    building2Img.src = building2Image;
+    building2Img.onload = () => {
+      building2Loaded.current = true;
+    };
+    
+    const building3Img = building3ImgRef.current;
+    building3Img.src = building3Image;
+    building3Img.onload = () => {
+      building3Loaded.current = true;
     };
     
     // Get canvas context
@@ -78,6 +108,7 @@ export default function Background({ width, height }: BackgroundProps) {
       
       // Update element positions based on their speeds
       cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
+      buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
       treePositionX.current -= TREE_SPEED * timeMultiplier;
       roadPositionX.current -= ROAD_SPEED * timeMultiplier;
       
@@ -341,6 +372,66 @@ export default function Background({ width, height }: BackgroundProps) {
   };
   
   /**
+   * Draw buildings with the two-image infinite scrolling technique
+   * Buildings are between clouds and sidewalk in the background
+   */
+  const drawBuildings = (ctx: CanvasRenderingContext2D) => {
+    // Check if all building images are loaded
+    if (!building1Loaded.current || !building1ImgRef.current ||
+        !building2Loaded.current || !building2ImgRef.current ||
+        !building3Loaded.current || !building3ImgRef.current) return;
+    
+    // Get building images
+    const building1Img = building1ImgRef.current;
+    const building2Img = building2ImgRef.current;
+    const building3Img = building3ImgRef.current;
+    
+    // Define building settings
+    const sidewalkY = height * 0.6; // Same as sidewalk Y position
+    const buildingSpacing = width * 1.2; // Space buildings far apart for visual variety
+    const buildingY = sidewalkY - 10; // Position buildings just above sidewalk
+    
+    // Define building sizes - appropriate scale to work with scene
+    const buildingSizes = [
+      { img: building1Img, width: width * 0.25, height: height * 0.3 },
+      { img: building2Img, width: width * 0.3, height: height * 0.28 },
+      { img: building3Img, width: width * 0.28, height: height * 0.27 }
+    ];
+    
+    // Create a wide pattern with all three buildings
+    const visibleWidth = width + 800; // Add buffer to prevent pop-in
+    const patternWidth = buildingSpacing * buildingSizes.length;
+    
+    // Use building position with 0.8 multiplier to match trees and sidewalk
+    // This ensures the buildings appear fixed relative to the sidewalk
+    let x1 = (buildingPositionX.current * 0.8) % patternWidth;
+    if (x1 > 0) x1 -= patternWidth;
+    
+    // Draw multiple building patterns to ensure continuous scene
+    // Each pattern contains all building types for variety
+    for (let offset = 0; offset < 3; offset++) {
+      const startX = x1 + (offset * patternWidth);
+      
+      // Draw each building in the pattern
+      buildingSizes.forEach((building, index) => {
+        const x = startX + (index * buildingSpacing);
+        
+        // Only draw visible buildings (with generous buffer)
+        if (x > -building.width && x < width + building.width) {
+          // Draw centered building with bottom aligned to sidewalk
+          ctx.drawImage(
+            building.img,
+            x,
+            buildingY - building.height,
+            building.width,
+            building.height
+          );
+        }
+      });
+    }
+  };
+
+  /**
    * Draw the complete background with all elements
    */
   const drawBackground = (ctx: CanvasRenderingContext2D) => {
@@ -349,6 +440,9 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Draw clouds (in sky)
     drawClouds(ctx);
+    
+    // Draw buildings (behind sidewalk)
+    drawBuildings(ctx);
     
     // Draw sidewalk
     drawSidewalk(ctx);
