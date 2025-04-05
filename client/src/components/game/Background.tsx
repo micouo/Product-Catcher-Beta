@@ -58,8 +58,8 @@ export default function Background({ width, height }: BackgroundProps) {
   const BUILDING_SPEED = 0.6; // Medium-slow (buildings in background)
   const TREE_SPEED = 1.5;   // Medium (trees on sidewalk)
   const ROAD_SPEED = 2.0;   // Fastest (road markings)
-  const CALGARY_TOWER_SPEED = 0.5; // Slower than buildings to appear in distant background
-  const BLUE_RING_SPEED = 1.4;     // Slightly slower than trees but faster than buildings
+  const CALGARY_TOWER_SPEED = TREE_SPEED; // Same as tree/sidewalk speed (anchored to sidewalk)
+  const BLUE_RING_SPEED = TREE_SPEED;     // Same as tree/sidewalk speed (anchored to sidewalk)
   
   useEffect(() => {
     // Load cloud image
@@ -264,8 +264,8 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // IMPORTANT: Use the exact same scroll speed as the sidewalk grid
     // This ensures trees appear fixed to the sidewalk rather than moving independently
-    // Using treePositionX.current * 0.8 which is the same multiplier used for sidewalk grid
-    let x1 = (treePositionX.current * 0.8) % patternWidth; // Same speed as sidewalk grid
+    // Using treePositionX.current directly with no multiplier for perfect synchronization
+    let x1 = (treePositionX.current) % patternWidth; // Direct 1:1 mapping for perfect sync
     if (x1 > 0) x1 -= patternWidth;
     const x2 = x1 + patternWidth;
     
@@ -347,7 +347,8 @@ export default function Background({ width, height }: BackgroundProps) {
     const patternWidth = Math.ceil(visibleWidth / lineSpacing + 2) * lineSpacing;
     
     // Calculate vertical line pattern positions - this speed is synchronized with the trees 
-    let x1 = (treePositionX.current * 0.8) % patternWidth; // Trees and sidewalk grid move at exactly the same speed
+    // Using treePositionX.current directly with no multiplier for perfect synchronization
+    let x1 = (treePositionX.current) % patternWidth; // Direct 1:1 matching for perfect sync
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw vertical lines with extended range
@@ -452,7 +453,7 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Create building clusters with specific spacing
     const betweenBuildingGap = -85; // 2px between buildings in a cluster
-    const betweenClusterGap = -150; // 30px between clusters
+    const betweenClusterGap = -50; // 30px between clusters
     
     // Calculate the width of a single cluster (3 buildings + gaps between them)
     const clusterWidth = buildingSizes.reduce((sum, building) => sum + building.width, 0) + 
@@ -541,8 +542,9 @@ export default function Background({ width, height }: BackgroundProps) {
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / towerSpacing) * towerSpacing;
     
-    // Use the Calgary Tower position tracker with a slow speed multiplier
-    let x1 = (calgaryTowerPositionX.current * 0.7) % patternWidth;
+    // Use the tree/sidewalk position tracker for consistent speed
+    // This ensures the tower is anchored to the sidewalk movement
+    let x1 = (treePositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw towers with very large spacing to avoid having multiple on screen at once
@@ -628,8 +630,9 @@ export default function Background({ width, height }: BackgroundProps) {
     const grassSpacing = grassWidth * 0.6; // More overlap (60% instead of 70%) for seamless appearance
     const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
     
-    // Use the same synchronization as trees for grass movement
-    let x1 = (treePositionX.current * 0.8) % patternWidth; 
+    // Use the same exact synchronization as trees for grass movement
+    // Exact 1:1 matching speed with tree/sidewalk without multiplier for perfect sync
+    let x1 = (treePositionX.current) % patternWidth; 
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw grass patches along the sidewalk - significantly increased patch count
