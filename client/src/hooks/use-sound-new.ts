@@ -53,7 +53,6 @@ export function useSound() {
   const musicOscillatorRef = useRef<OscillatorNode | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const interactionRef = useRef<boolean>(false);
-  const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
@@ -61,11 +60,6 @@ export function useSound() {
       try {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         interactionRef.current = true;
-        
-        // Music is disabled by default, so we don't start it here
-        // if (musicEnabled) {
-        //   startBackgroundMusic();
-        // }
       } catch (error) {
         console.error('Web Audio API not supported', error);
       }
@@ -101,6 +95,8 @@ export function useSound() {
   
   // Play a generated sound (for sounds without files)
   const playGeneratedSound = (type: SoundType) => {
+    // Initialize audio context if needed
+    if (!audioContextRef.current) initializeAudio();
     const context = audioContextRef.current;
     if (!context) return;
     
@@ -187,19 +183,8 @@ export function useSound() {
 
   // Toggle background music on/off - currently disabled
   const toggleMusic = () => {
-    // Since we've disabled music, just toggle the state but don't play music
     setMusicEnabled(prev => {
       const newState = !prev;
-      // Comment out music playback for now
-      /*
-      if (newState) {
-        initializeAudio();
-        startBackgroundMusic();
-      } else if (musicOscillatorRef.current) {
-        musicOscillatorRef.current.stop();
-        musicOscillatorRef.current = null;
-      }
-      */
       return newState;
     });
   };
