@@ -503,18 +503,32 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     let baseX = (buildingPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (baseX > 0) baseX -= patternWidth;
     
+    // Create a map to store assigned patterns to specific world positions
+    // This ensures that buildings always maintain the same pattern even as they scroll
+    // We'll use a very large world section to ensure all visible positions are covered
+    const worldExtent = 100000; // Large enough to cover all positions during gameplay
+    const worldSectionSize = patternWidth; // Each section gets its own pattern
+    
+    // World position of the leftmost visible cluster
+    // This is the absolute world coordinate (very large number)
+    const worldLeftmostPos = Math.floor(buildingPositionX.current / worldSectionSize) * worldSectionSize;
+    
     // Draw multiple building clusters to ensure continuous scene
     for (let clusterIndex = 0; clusterIndex < numClusters; clusterIndex++) {
+      // Calculate screen position
       const clusterStartX = baseX + (clusterIndex * patternWidth);
       
       // Skip if cluster is completely off-screen (optimization)
       if (clusterStartX > width || clusterStartX + clusterWidth < 0) continue;
       
-      // Use a completely deterministic pattern based on cluster index
-      // This ensures each position in the world always has the same buildings
-      // The modulo ensures we cycle through the patterns
-      const patternIndex = clusterIndex % buildingPatterns.length;
-      const buildingOrder = buildingPatterns[patternIndex];
+      // Calculate world position for this specific cluster
+      // This ensures each world position always gets the same pattern regardless of scrolling
+      const worldPos = worldLeftmostPos + (clusterIndex * worldSectionSize);
+      
+      // Use world position to derive a consistent pattern index
+      // Using a fixed hash function to get the same pattern every time for this world position
+      const hash = Math.abs(Math.floor(worldPos / 1000)) % buildingPatterns.length;
+      const buildingOrder = buildingPatterns[hash];
       
       // Current x position within the cluster
       let currentX = clusterStartX;
@@ -589,11 +603,19 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     let x1 = (calgaryTowerPositionX.current * PARALLAX_FACTOR) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
+    // Create a consistent world-based pattern for tower placement
+    // This ensures towers always appear at the same world positions
+    const worldSectionSize = towerSpacing;
+    const worldLeftmostPos = Math.floor(calgaryTowerPositionX.current / worldSectionSize) * worldSectionSize;
+    
     // Draw towers with proper spacing
     const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
     
     for (let i = 0; i < numTowers; i++) {
-      // Calculate the tower position
+      // Calculate world position for this specific tower
+      const worldPos = worldLeftmostPos + (i * worldSectionSize);
+      
+      // Calculate screen position
       const x = x1 + i * towerSpacing + TOWER_X_OFFSET;
       
       // Only draw if within our visible area with buffer
@@ -651,10 +673,18 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     let x1 = (treePositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
+    // Create a consistent world-based pattern for ring placement
+    // This ensures rings always appear at the same world positions between trees
+    const worldSectionSize = ringSpacing;
+    const worldLeftmostPos = Math.floor(treePositionX.current / worldSectionSize) * worldSectionSize;
+    
     // Draw rings at positions that ensure they're between trees
     const numRings = Math.ceil(patternWidth / ringSpacing) + 1;
     
     for (let i = 0; i < numRings; i++) {
+      // Calculate world position for this specific ring
+      const worldPos = worldLeftmostPos + (i * worldSectionSize);
+      
       // Calculate the base position using the ring spacing
       const basePos = x1 + i * ringSpacing;
       
