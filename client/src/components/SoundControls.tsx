@@ -1,4 +1,4 @@
-import { useSound } from '../hooks/use-sound-simple';
+import { useSound } from '../hooks/use-sound';
 import { useEffect } from 'react';
 import { VolumeX, Volume2, Music, Music3 } from 'lucide-react';
 

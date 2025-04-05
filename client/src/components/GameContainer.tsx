@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import LoadingState from "./LoadingState";
 import DropGame from "./game/DropGame";
-import { useSound } from "../hooks/use-sound-simple";
+import { useSound } from "../hooks/use-sound";
 
 export default function GameContainer() {
   const [isLoading, setIsLoading] = useState(true);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSound } from '../../hooks/use-sound-simple';
+import { useSound } from '../../hooks/use-sound-new';
 import Background from './Background';
 import car1Image from '@assets/car 1.png';
 import pauseImage from '@assets/pause.png';
@@ -750,7 +750,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             // If obstacle hits player, reduce lives
             setLives(prevLives => {
               if (prevLives <= 1) {
-                playSound('hit'); // Use hit sound for game over
+                playSound('gameOver');
                 endGame();
                 if (onGameOver) onGameOver();
               }
@@ -792,7 +792,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       initializeAudio();
       // Play start sound after a slight delay
       setTimeout(() => {
-        playSound('collect'); // Use collect sound for game start
+        playSound('start');
       }, 50);
     }, 50);
     
@@ -821,8 +821,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setIsPlaying(false);
     setHighScore(prev => Math.max(prev, score));
     
-    // Play game over sound (using hit sound)
-    playSound('hit');
+    // Play game over sound
+    playSound('gameOver');
   };
   
   // Draw player area border

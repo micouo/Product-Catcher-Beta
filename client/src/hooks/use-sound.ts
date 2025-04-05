@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'music';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
@@ -51,7 +51,9 @@ export function useSound() {
   
   // Ref hooks must be in consistent order on every render
   const audioContextRef = useRef<AudioContext | null>(null);
-  const musicIntervalRef = useRef<number | null>(null); // Store interval ID instead of oscillator
+  const musicOscillatorRef = useRef<OscillatorNode | null>(null);
+  const musicGainRef = useRef<GainNode | null>(null);
+  const interactionRef = useRef<boolean>(false);
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   
   // Initialize audio context on first user interaction
@@ -66,8 +68,14 @@ export function useSound() {
       // Mark that we've had user interaction
       interactionRef.current = true;
       
-      // We won't try to create a file-based music element anymore
-      // since we're using Web Audio API directly for music
+      // Create audio elements if they don't exist yet
+      if (!backgroundMusicElement) {
+        backgroundMusicElement = new Audio('/background-music.mp3');
+        backgroundMusicElement.loop = true;
+        backgroundMusicElement.volume = 0.3;
+        // Preload the audio
+        backgroundMusicElement.preload = 'auto';
+      }
       
       if (!hitSoundElement) {
         hitSoundElement = new Audio('/sounds/hit.wav');
@@ -82,11 +90,16 @@ export function useSound() {
       }
       
       // Start background music in response to user interaction
-      if (musicEnabled && !musicInitialized) {
-        // Use our improved playSound method to play music
-        // This must be in response to a user action
-        playSound('music');
-        setMusicInitialized(true);
+      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
+        // Play the music (must be in response to a user action)
+        backgroundMusicElement.play()
+          .then(() => {
+            console.log('Background music started successfully');
+            setMusicInitialized(true);
+          })
+          .catch(err => {
+            console.error('Error playing background music:', err);
+          });
       }
     } catch (error) {
       console.error('Error initializing audio:', error);
@@ -95,68 +108,18 @@ export function useSound() {
   
   // Create and play a sound
   const playSound = (type: SoundType) => {
-    // Skip this check for music - music has its own enabled state
-    if (type !== 'music' && !soundEnabled) return;
+    if (!soundEnabled) return;
     
-    // Skip this check for sound effects when music is disabled
-    if (type === 'music' && !musicEnabled) return;
-    
-    // Special case for music since we're having issues with file playback
-    if (type === 'music') {
-      // Very simple tone generation for background ambience
-      if (audioContextRef.current && musicEnabled) {
-        try {
-          // Simple cleanup of previous oscillator if exists
-          if (musicOscillatorRef.current) {
-            try {
-              musicOscillatorRef.current.stop();
-              musicOscillatorRef.current = null;
-            } catch (e) {
-              // Ignore errors
-            }
-          }
-          
-          console.log('Creating simplified background music');
-          
-          // Create a basic oscillator with a simple sine wave
-          const ctx = audioContextRef.current;
-          
-          // Create a gain node for volume control
-          const gainNode = ctx.createGain();
-          gainNode.gain.value = 0.05; // Very quiet
-          gainNode.connect(ctx.destination);
-          
-          // Create a basic oscillator
-          const oscillator = ctx.createOscillator();
-          oscillator.type = 'sine';
-          oscillator.frequency.value = 220; // A3 note
-          oscillator.connect(gainNode);
-          oscillator.start();
-          
-          // Store for later reference
-          musicOscillatorRef.current = oscillator;
-          musicGainRef.current = gainNode;
-          
-          console.log('Successfully created background music with Web Audio API');
-        } catch (error) {
-          console.error('Error creating minimal background music:', error);
-        }
-      }
-      return;
-    }
-    
-    // Regular sound handling for non-music sounds
+    // If we have a real audio element for this sound, play it
     if (audioElements[type]) {
       try {
         // Stop and reset the audio to allow replaying the sound immediately
         const audio = audioElements[type];
         if (audio) {
           audio.currentTime = 0;
-          
-          // Play the sound
           audio.play().catch(err => {
-            console.error(`Error playing ${type}:`, err);
-            // Fall back to generated sound
+            console.error('Error playing audio:', err);
+            // Fall back to generated sound on error
             playGeneratedSound(type);
           });
         }
@@ -212,10 +175,9 @@ export function useSound() {
     try {
       // Create background music element if it doesn't exist
       if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.wav');
+        backgroundMusicElement = new Audio('/background-music.mp3');
         backgroundMusicElement.loop = true;
         backgroundMusicElement.preload = 'auto';
-        console.log('Created background music element in startBackgroundMusic (WAV)');
       }
       
       // Set volume before playing
@@ -243,8 +205,8 @@ export function useSound() {
       const newState = !prev;
       
       if (newState) {
-        // Turn music on using our playSound method
-        playSound('music');
+        // Turn music on
+        startBackgroundMusic();
       } else {
         // Turn music off
         try {
@@ -305,29 +267,16 @@ export function useSound() {
   // Explicitly start the background music
   const startMusic = () => {
     if (musicEnabled) {
-      // Use our playSound function which now also handles music
-      playSound('music');
+      startBackgroundMusic();
     }
   };
   
   // Explicitly stop the background music
   const stopMusic = () => {
     try {
-      // Stop file-based music if it exists
       if (backgroundMusicElement) {
         backgroundMusicElement.pause();
         backgroundMusicElement.currentTime = 0;
-      }
-      
-      // Stop Web Audio API music if it exists
-      if (musicOscillatorRef.current) {
-        try {
-          musicOscillatorRef.current.stop();
-          musicOscillatorRef.current = null;
-        } catch (err) {
-          // Ignore errors from stopping oscillators
-          console.log('Stopped Web Audio background music');
-        }
       }
     } catch (error) {
       console.error('Error stopping background music:', error);
