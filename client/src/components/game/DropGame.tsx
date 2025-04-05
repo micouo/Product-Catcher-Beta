@@ -396,8 +396,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // Always draw everything
       
-      // Draw player area border BEFORE drawing player and objects
-      // so the car will be layered on top of it
+      // First pass - draw everything except the player
+      
+      // Draw player area border
       drawPlayerArea(ctx);
       
       // Draw objects
@@ -405,7 +406,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         drawObject(ctx, obj);
       });
       
-      // Draw player last so it's always on top
+      // Second pass - draw player on top of everything
       drawPlayer(ctx);
       
       // Draw UI elements
