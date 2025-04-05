@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
 import Background from './Background';
 import pixelCarImage from '../../assets/pixelcar.png';
-import pauseImage from '../../assets/pause.png';
-import playImage from '../../assets/play.png';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -34,41 +32,37 @@ interface Player {
   boosting: boolean;
 }
 
-// Game constants
-const GAME_WIDTH = 480;
-const GAME_HEIGHT = 720;
-const PLAYER_WIDTH = 40;
-const PLAYER_HEIGHT = 40;
+const GAME_WIDTH = 800;
+const GAME_HEIGHT = 600;
+const PLAYER_WIDTH = 80; // Width for car sprite
+const PLAYER_HEIGHT = 50; // Height for car sprite - slightly smaller for better proportions
 const PLAYER_SPEED = 5;
-const BOOST_MULTIPLIER = 1.5;
-const PLAYER_AREA_HEIGHT = 240; // Area at the bottom where player can move
-const BASE_OBJECT_SPEED = 3;
-const MAX_OBJECT_SPEED = 8;
+const BOOST_MULTIPLIER = 1.8;
 const OBJECT_WIDTH = 40;
 const OBJECT_HEIGHT = 40;
-const BASE_SPAWN_RATE = 1000; // ms
-const MIN_SPAWN_RATE = 400; // Minimum ms between spawns
-const BASE_PRODUCT_PROBABILITY = 0.7; // 70% chance of spawning a product
-const SCORE_SPEED_MULTIPLIER = 0.02; // How much to increase speed per 10 points
-const ANIM_INTERVAL = 150; // ms between animation frames
-const BUTTON_SIZE = 40; // Size of the pause/play button (square)
-const BUTTON_PADDING = 10; // Padding from the edges of the screen
+const BASE_SPAWN_RATE = 1500; // Starting ms between spawns
+const MIN_SPAWN_RATE = 600; // Minimum spawn rate (fastest)
+const BASE_PRODUCT_PROBABILITY = 0.7; // Base probability for products (decreases with score)
+const PLAYER_AREA_HEIGHT = 200; // Height of the player movement area - increased for more space
+const BASE_OBJECT_SPEED = 2; // Starting speed
+const MAX_OBJECT_SPEED = 7; // Maximum object speed
+const SCORE_SPEED_MULTIPLIER = 0.02; // Speed increases by 2% for every 10 points
+const ANIM_INTERVAL = 150; // milliseconds between animation frames
 
-// Food emojis to use for products
-const FOOD_EMOJIS = ['🍕', '🍜', '🌮', '🍳', '☕', '🍦'];
+// Food emojis for products
+const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
 
-// Utility function for drawing rounded rectangles
+// Helper function to draw rounded rectangles since roundRect may not be available in all browsers
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
-  ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.arcTo(x + width, y, x + width, y + radius, radius);
   ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
   ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.arcTo(x, y + height, x, y + height - radius, radius);
   ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.arcTo(x, y, x + radius, y, radius);
   ctx.closePath();
 }
 
@@ -83,7 +77,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const { playSound, initializeAudio } = useSound();
   
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -93,13 +86,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
-  
-  // Pause button refs and states
-  const pauseImageRef = useRef<HTMLImageElement | null>(null);
-  const playImageRef = useRef<HTMLImageElement | null>(null);
-  const pauseButtonLoaded = useRef(false);
-  const playButtonLoaded = useRef(false);
-  
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -113,47 +99,22 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     boosting: false,
   });
   
-  // Toggle pause state
-  const togglePause = () => {
-    setIsPaused(prev => !prev);
-  };
-  
-  // Load the player and button images on component mount
+  // Load the player image on component mount
   useEffect(() => {
-    // Load player image
+    // Only load the image once
     if (!playerImage) {
       const img = new Image();
-      img.src = pixelCarImage;
+      img.src = pixelCarImage; // Use the imported image path
       img.onload = () => {
         playerImage = img;
         setPlayerImageLoaded(true);
-      };
-    }
-    
-    // Load pause button image
-    if (!pauseImageRef.current) {
-      const pauseImg = new Image();
-      pauseImg.src = pauseImage;
-      pauseImg.onload = () => {
-        pauseImageRef.current = pauseImg;
-        pauseButtonLoaded.current = true;
-      };
-    }
-    
-    // Load play button image
-    if (!playImageRef.current) {
-      const playImg = new Image();
-      playImg.src = playImage;
-      playImg.onload = () => {
-        playImageRef.current = playImg;
-        playButtonLoaded.current = true;
       };
     }
   }, []);
   
   // Game loop with animation frame
   useEffect(() => {
-    if (!isPlaying || isPaused) return;
+    if (!isPlaying) return;
     
     // Function to create game objects
     const createGameObject = (): GameObject => {
@@ -260,66 +221,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, isPaused, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime]);
-  
-  // Add event listener for pause button
-  useEffect(() => {
-    if (!isPlaying) return;
-    
-    const handleCanvasClick = (e: MouseEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      
-      // Check if click is within pause button area
-      const buttonX = GAME_WIDTH - BUTTON_SIZE - BUTTON_PADDING;
-      const buttonY = BUTTON_PADDING;
-      
-      if (
-        clickX >= buttonX && 
-        clickX <= buttonX + BUTTON_SIZE && 
-        clickY >= buttonY && 
-        clickY <= buttonY + BUTTON_SIZE
-      ) {
-        togglePause();
-      }
-    };
-    
-    const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.addEventListener('click', handleCanvasClick);
-    }
-    
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('click', handleCanvasClick);
-      }
-    };
-  }, [isPlaying]);
-  
-  // Add event listener for P key to pause/unpause game
-  useEffect(() => {
-    if (!isPlaying) return;
-    
-    const handlePauseKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'p' || e.key === 'P') {
-        togglePause();
-      }
-    };
-    
-    document.addEventListener('keydown', handlePauseKeyPress);
-    
-    return () => {
-      document.removeEventListener('keydown', handlePauseKeyPress);
-    };
-  }, [isPlaying]);
+  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime]);
   
   // Handle keyboard controls
   useEffect(() => {
-    if (!isPlaying || isPaused) return;
+    if (!isPlaying) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
       // Handle each key separately without using else if to allow multiple keys
@@ -438,7 +344,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [isPlaying, isPaused, playSound]);
+  }, [isPlaying, playSound]);
   
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
@@ -727,28 +633,13 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('Use arrow keys or WASD to move in any direction', GAME_WIDTH / 2, GAME_HEIGHT - 10);
-      
-      // Draw pause/play button (only when game is playing)
-      if (pauseButtonLoaded.current || playButtonLoaded.current) {
-        const buttonImage = isPaused ? playImageRef.current : pauseImageRef.current;
-        if (buttonImage) {
-          const buttonX = GAME_WIDTH - BUTTON_SIZE - BUTTON_PADDING;
-          const buttonY = BUTTON_PADDING;
-          
-          // Draw with a slight glow effect
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-          ctx.shadowBlur = 10;
-          ctx.drawImage(buttonImage, buttonX, buttonY, BUTTON_SIZE, BUTTON_SIZE);
-          ctx.shadowBlur = 0;
-        }
-      }
     }
   };
   
   return (
     <div className="game-container relative">
       {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused} />
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
       
       {/* Game Canvas */}
       <canvas
@@ -782,20 +673,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• Your car will automatically face the direction you're moving</p>
             <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
-            <p className="mb-1">• Press P or click the pause button to pause/resume the game</p>
           </div>
-        </div>
-      )}
-      
-      {isPlaying && isPaused && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-70 z-20">
-          <h2 className="text-3xl font-game text-blue-500 mb-4">Game Paused</h2>
-          <button
-            onClick={togglePause}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-md transition shadow-md flex items-center text-lg cursor-pointer"
-          >
-            Resume Game
-          </button>
         </div>
       )}
     </div>

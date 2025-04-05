@@ -11,14 +11,13 @@ import blueRingImage from "../../assets/blue-ring.png";
 interface BackgroundProps {
   width: number;
   height: number;
-  isPaused?: boolean;
 }
 
 /**
  * A simple background component that renders a continuously scrolling background
  * using the two-image technique for perfect infinite scrolling.
  */
-export default function Background({ width, height, isPaused = false }: BackgroundProps) {
+export default function Background({ width, height }: BackgroundProps) {
   // Canvas reference
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -141,16 +140,13 @@ export default function Background({ width, height, isPaused = false }: Backgrou
       // Convert to seconds and apply speed multiplier
       const timeMultiplier = deltaTime / 16.67; // Normalized for 60fps
       
-      // Only update positions if not paused
-      if (!isPaused) {
-        // Update element positions based on their speeds
-        cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
-        buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
-        treePositionX.current -= TREE_SPEED * timeMultiplier;
-        roadPositionX.current -= ROAD_SPEED * timeMultiplier;
-        calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
-        blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
-      }
+      // Update element positions based on their speeds
+      cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
+      buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
+      treePositionX.current -= TREE_SPEED * timeMultiplier;
+      roadPositionX.current -= ROAD_SPEED * timeMultiplier;
+      calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
+      blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
       
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -171,7 +167,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [width, height, isPaused]);
+  }, [width, height]);
   
   /**
    * Draw the sky background
@@ -327,7 +323,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
    */
   const drawSidewalk = (ctx: CanvasRenderingContext2D) => {
     const sidewalkY = height * 0.6;
-    const playerAreaY = height - 240;
+    const playerAreaY = height - 202;
     
     // Fill sidewalk area
     ctx.fillStyle = "#A9A9A9";
@@ -372,7 +368,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
    * Draw the road and its markings with the two-image technique
    */
   const drawRoad = (ctx: CanvasRenderingContext2D) => {
-    const playerAreaY = height - 240;
+    const playerAreaY = height - 202;
     
     // Fill road area
     ctx.fillStyle = "#333333";
