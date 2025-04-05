@@ -182,8 +182,7 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       // Draw background elements
       drawBackground(ctx);
       
-      // Draw pause/play button
-      drawPausePlayButton(ctx);
+      // No longer drawing pause/play button on canvas
       
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -192,42 +191,11 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
     // Start animation
     animationFrameRef.current = requestAnimationFrame(animate);
 
-    // Handle pause button click
-    const handleCanvasClick = (e: MouseEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      // Get click position
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      // Check if click is within button bounds
-      const buttonSize = 70; // Must match the size in drawPausePlayButton
-      const buttonX = width - buttonSize - 15;
-      const buttonY = buttonYOffset;
-      
-      if (
-        x >= buttonX && 
-        x <= buttonX + buttonSize && 
-        y >= buttonY && 
-        y <= buttonY + buttonSize
-      ) {
-        setIsPaused(!isPaused);
-      }
-    };
-    
-    // Add click event listener
-    canvas.addEventListener('click', handleCanvasClick);
-    
-    
     // Cleanup on unmount
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      // Remove click event listener
-      canvas.removeEventListener('click', handleCanvasClick);
     };
   }, [width, height, isPaused, buttonYOffset]);
   
@@ -710,35 +678,7 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
     }
   };
 
-  /**
-   * Draw the pause/play button in the top right corner
-   */
-  const drawPausePlayButton = (ctx: CanvasRenderingContext2D) => {
-    // Make sure images are loaded
-    if ((!pauseLoaded.current || !pauseImgRef.current) || 
-        (!playLoaded.current || !playImgRef.current)) return;
-    
-    const buttonSize = 70;
-    const buttonX = width - buttonSize - 15; // 15px from right edge
-    const buttonY = buttonYOffset; // Use the configurable offset
-    
-    // Draw a semi-transparent circular background for better visibility
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.beginPath();
-    ctx.arc(buttonX + buttonSize/2, buttonY + buttonSize/2, buttonSize/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw the appropriate button based on game state
-    if (isPaused) {
-      // If paused, show play button
-      ctx.drawImage(playImgRef.current, buttonX, buttonY, buttonSize, buttonSize);
-    } else {
-      // If playing, show pause button
-      ctx.drawImage(pauseImgRef.current, buttonX, buttonY, buttonSize, buttonSize);
-    }
-    
-    // No label text needed
-  };
+  // No longer need the drawPausePlayButton function since we're using a DOM button
   
   /**
    * Draw the complete background with all elements
@@ -773,12 +713,25 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
   };
   
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className="absolute top-0 left-0 z-0 pointer-events-auto"
-      style={{cursor: "pointer"}}
-    />
+    <div className="relative">
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        className="absolute top-0 left-0 z-0"
+      />
+      <button
+        onClick={() => setIsPaused(!isPaused)}
+        className="absolute z-10 right-3 top-16 w-14 h-14 flex items-center justify-center rounded-md overflow-hidden"
+        style={{ cursor: 'pointer' }}
+      >
+        <img 
+          src={isPaused ? playImgRef.current?.src : pauseImgRef.current?.src} 
+          alt={isPaused ? "Play" : "Pause"}
+          width={56}
+          height={56}
+        />
+      </button>
+    </div>
   );
 }
