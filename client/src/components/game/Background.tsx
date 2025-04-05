@@ -374,6 +374,7 @@ export default function Background({ width, height }: BackgroundProps) {
   /**
    * Draw buildings with the two-image infinite scrolling technique
    * Buildings are between clouds and sidewalk in the background
+   * Buildings are organized in tight clusters of 3 with small gaps between clusters
    */
   const drawBuildings = (ctx: CanvasRenderingContext2D) => {
     // Check if all building images are loaded
@@ -388,45 +389,72 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingSpacing = width * 1.2; // Space buildings far apart for visual variety
-    const buildingY = sidewalkY - 10; // Position buildings just above sidewalk
+    const buildingY = sidewalkY - 5; // Position buildings just above sidewalk
     
     // Define building sizes - appropriate scale to work with scene
+    const buildingScale = width * 0.085; // Base scale for buildings
     const buildingSizes = [
-      { img: building1Img, width: width * 0.25, height: height * 0.3 },
-      { img: building2Img, width: width * 0.3, height: height * 0.28 },
-      { img: building3Img, width: width * 0.28, height: height * 0.27 }
+      { img: building1Img, width: buildingScale * 0.92, height: height * 0.21 },
+      { img: building2Img, width: buildingScale * 1.02, height: height * 0.22 },
+      { img: building3Img, width: buildingScale * 0.96, height: height * 0.23 }
     ];
     
-    // Create a wide pattern with all three buildings
-    const visibleWidth = width + 800; // Add buffer to prevent pop-in
-    const patternWidth = buildingSpacing * buildingSizes.length;
+    // Create building clusters with specific spacing
+    const betweenBuildingGap = 2; // 2px between buildings in a cluster
+    const betweenClusterGap = 30; // 30px between clusters
+    
+    // Calculate the width of a single cluster (3 buildings + gaps between them)
+    const clusterWidth = buildingSizes.reduce((sum, building) => sum + building.width, 0) + 
+                         betweenBuildingGap * 2; // 2 gaps between 3 buildings
+    
+    // Calculate the width of a complete pattern (cluster + gap)
+    const patternWidth = clusterWidth + betweenClusterGap;
+    
+    // Add buffer to prevent pop-in
+    const visibleWidth = width + 800;
+    const numClusters = Math.ceil(visibleWidth / patternWidth) + 1;
     
     // Use building position with 0.8 multiplier to match trees and sidewalk
     // This ensures the buildings appear fixed relative to the sidewalk
-    let x1 = (buildingPositionX.current * 0.8) % patternWidth;
-    if (x1 > 0) x1 -= patternWidth;
+    let baseX = (buildingPositionX.current * 0.8) % patternWidth;
+    if (baseX > 0) baseX -= patternWidth;
     
-    // Draw multiple building patterns to ensure continuous scene
-    // Each pattern contains all building types for variety
-    for (let offset = 0; offset < 3; offset++) {
-      const startX = x1 + (offset * patternWidth);
+    // Draw multiple building clusters to ensure continuous scene
+    for (let clusterIndex = 0; clusterIndex < numClusters; clusterIndex++) {
+      const clusterStartX = baseX + (clusterIndex * patternWidth);
       
-      // Draw each building in the pattern
-      buildingSizes.forEach((building, index) => {
-        const x = startX + (index * buildingSpacing);
+      // Skip if cluster is completely off-screen
+      if (clusterStartX > width || clusterStartX + clusterWidth < 0) continue;
+      
+      // For each cluster, generate a random order of buildings (if outside visible area)
+      // Or use pseudo-random but consistent placement for visible buildings
+      let buildingOrder = [0, 1, 2]; // Default order
+      
+      // Use a deterministic "random" order based on cluster position
+      // This ensures the same cluster always has the same buildings
+      // while still giving variation between clusters
+      const seed = Math.abs(Math.floor(clusterStartX / 1000));
+      if (seed % 3 === 0) buildingOrder = [2, 0, 1];
+      else if (seed % 3 === 1) buildingOrder = [1, 2, 0];
+      
+      // Current x position within the cluster
+      let currentX = clusterStartX;
+      
+      // Draw each building in the cluster
+      buildingOrder.forEach((buildingIndex) => {
+        const building = buildingSizes[buildingIndex];
         
-        // Only draw visible buildings (with generous buffer)
-        if (x > -building.width && x < width + building.width) {
-          // Draw centered building with bottom aligned to sidewalk
-          ctx.drawImage(
-            building.img,
-            x,
-            buildingY - building.height,
-            building.width,
-            building.height
-          );
-        }
+        // Draw the building
+        ctx.drawImage(
+          building.img,
+          currentX,
+          buildingY - building.height,
+          building.width,
+          building.height
+        );
+        
+        // Move to the next building position
+        currentX += building.width + betweenBuildingGap;
       });
     }
   };
