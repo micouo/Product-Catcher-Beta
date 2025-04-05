@@ -905,9 +905,16 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (currentCarImage) {
       // Make the car a good size while maintaining the right proportions
       
-      // Set a fixed size that's good for this car sprite
+      // Set a fixed width for all car sprites
       const drawWidth = player.width * 1.8;
-      const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
+      
+      // Adjust height based on car type (reducing height for cars 2-5 by 10%)
+      let heightRatio = 0.9; // Default ratio
+      if (selectedCar >= 2 && selectedCar <= 5) {
+        heightRatio = 0.81; // 10% reduction (0.9 * 0.9 = 0.81)
+      }
+      
+      const drawHeight = drawWidth * heightRatio;
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
