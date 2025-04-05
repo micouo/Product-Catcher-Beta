@@ -75,7 +75,8 @@ let playButtonImage: HTMLImageElement | null = null;
 
 // Define pause button constants - these can be easily adjusted
 const PAUSE_BUTTON_SIZE = 50; // Size of the button (width and height)
-const PAUSE_BUTTON_MARGIN = 20; // Margin from the edge of the screen
+const PAUSE_BUTTON_MARGIN_X = 20; // Margin from the right edge of the screen
+const PAUSE_BUTTON_MARGIN_Y = 80; // Margin from the top edge of the screen (now customizable)
 const PAUSE_BUTTON_OPACITY = 0.9; // Opacity of the button
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
@@ -284,12 +285,16 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const buttonImg = isPaused ? playButtonImage : pauseButtonImage;
     if (!buttonImg) return;
     
-    // Position button in top-right corner with margin
-    const x = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN;
-    const y = PAUSE_BUTTON_MARGIN;
+    // Position button in top-right corner with configurable margins
+    const x = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN_X;
+    const y = PAUSE_BUTTON_MARGIN_Y; // Now uses the customizable Y margin
     
-    // Save current state
+    // Draw a circular background to make the button more visible
     ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.arc(x + PAUSE_BUTTON_SIZE/2, y + PAUSE_BUTTON_SIZE/2, PAUSE_BUTTON_SIZE/2 + 5, 0, Math.PI * 2);
+    ctx.fill();
     
     // Set transparency
     ctx.globalAlpha = PAUSE_BUTTON_OPACITY;
@@ -310,16 +315,21 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    // Position of pause button
-    const buttonX = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN;
-    const buttonY = PAUSE_BUTTON_MARGIN;
+    // Position of pause button - using the exact same calculation as in drawPauseButton
+    const buttonX = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN_X;
+    const buttonY = PAUSE_BUTTON_MARGIN_Y;
     
-    // Check if click is within button area
+    // Add a slightly larger hit area for better usability (10px padding)
+    const hitPadding = 10;
+    
+    // Log the click position and button position for debugging
+    console.log(`Click: ${clickX},${clickY} | Button: ${buttonX},${buttonY}`);
+    
     if (
-      clickX >= buttonX && 
-      clickX <= buttonX + PAUSE_BUTTON_SIZE &&
-      clickY >= buttonY && 
-      clickY <= buttonY + PAUSE_BUTTON_SIZE
+      clickX >= buttonX - hitPadding && 
+      clickX <= buttonX + PAUSE_BUTTON_SIZE + hitPadding &&
+      clickY >= buttonY - hitPadding && 
+      clickY <= buttonY + PAUSE_BUTTON_SIZE + hitPadding
     ) {
       togglePause();
     }
@@ -339,7 +349,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     return () => {
       canvas.removeEventListener('click', handleCanvasClick);
     };
-  }, []); // No dependencies needed here
+  }, [PAUSE_BUTTON_MARGIN_X, PAUSE_BUTTON_MARGIN_Y]); // Update when button position changes
   
   // Handle keyboard controls
   useEffect(() => {
