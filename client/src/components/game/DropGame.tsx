@@ -148,93 +148,109 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!isPlaying) return;
     
     setIsPaused(prev => !prev);
-    
-    // If pausing, cancel the animation frame
-    if (!isPaused && requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-      requestRef.current = undefined;
-    }
-    
-    // If resuming, restart the game loop
-    if (isPaused) {
-      requestRef.current = requestAnimationFrame(gameLoop);
-    }
   };
   
-  // The game loop function - moved outside the useEffect for access by togglePause
-  const gameLoop = (timestamp: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Game loop - Inside useEffect where it belongs
+  useEffect(() => {
+    if (!isPlaying) return;
     
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    
-    // Draw background first
-    // Note: The background is now rendered separately as its own canvas element
-    
-    // Draw player area border
-    drawPlayerArea(ctx);
-    
-    // Update player position based on direction
-    updatePlayerPosition();
-    
-    // Spawn new objects periodically
-    if (Date.now() - lastSpawnTimeRef.current > currentSpawnRate) {
-      const newObject = createGameObject();
-      setGameObjects(prev => [...prev, newObject]);
-      lastSpawnTimeRef.current = Date.now();
-    }
-    
-    // Increase difficulty based on score
-    // Calculate score-based difficulty 
-    const scoreFactor = score / 10; // Difficulty increase per 10 points
-    
-    // Calculate new spawn rate (gets faster as score increases)
-    const newSpawnRate = Math.max(
-      MIN_SPAWN_RATE,
-      BASE_SPAWN_RATE - (scoreFactor * 50)
-    );
-    
-    // Calculate new speed multiplier (increases as score increases)
-    const newSpeedMultiplier = Math.min(
-      MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
-      1 + (scoreFactor * SCORE_SPEED_MULTIPLIER)
-    );
-    
-    // Only update if values have changed
-    if (newSpawnRate !== currentSpawnRate) {
-      setCurrentSpawnRate(newSpawnRate);
-    }
-    
-    if (newSpeedMultiplier !== speedMultiplier) {
-      setSpeedMultiplier(newSpeedMultiplier);
-    }
-    
-    // Move existing objects and check collisions
-    moveObjectsAndCheckCollisions();
-    
-    // Draw player
-    drawPlayer(ctx);
-    
-    // Draw objects
-    gameObjects.forEach(obj => {
-      drawObject(ctx, obj);
-    });
-    
-    // Draw UI elements
-    drawUI(ctx);
-    
-    // Draw pause button
-    drawPauseButton(ctx);
-    
-    // Continue the game loop
-    if (!isPaused) {
+    const gameLoop = (timestamp: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      
+      // Draw player area border
+      drawPlayerArea(ctx);
+      
+      // Only update game state if not paused
+      if (!isPaused) {
+        // Update player position based on direction
+        updatePlayerPosition();
+        
+        // Spawn new objects periodically
+        if (Date.now() - lastSpawnTimeRef.current > currentSpawnRate) {
+          const newObject = createGameObject();
+          setGameObjects(prev => [...prev, newObject]);
+          lastSpawnTimeRef.current = Date.now();
+        }
+        
+        // Increase difficulty based on score
+        const scoreFactor = score / 10; // Difficulty increase per 10 points
+        
+        // Calculate new spawn rate (gets faster as score increases)
+        const newSpawnRate = Math.max(
+          MIN_SPAWN_RATE,
+          BASE_SPAWN_RATE - (scoreFactor * 50)
+        );
+        
+        // Calculate new speed multiplier (increases as score increases)
+        const newSpeedMultiplier = Math.min(
+          MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
+          1 + (scoreFactor * SCORE_SPEED_MULTIPLIER)
+        );
+        
+        // Only update if values have changed
+        if (newSpawnRate !== currentSpawnRate) {
+          setCurrentSpawnRate(newSpawnRate);
+        }
+        
+        if (newSpeedMultiplier !== speedMultiplier) {
+          setSpeedMultiplier(newSpeedMultiplier);
+        }
+        
+        // Move existing objects and check collisions
+        moveObjectsAndCheckCollisions();
+      }
+      
+      // Always draw everything
+      // Draw player
+      drawPlayer(ctx);
+      
+      // Draw objects
+      gameObjects.forEach(obj => {
+        drawObject(ctx, obj);
+      });
+      
+      // Draw UI elements
+      drawUI(ctx);
+      
+      // If paused, draw overlay with pause text
+      if (isPaused) {
+        // Draw semi-transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        
+        // Draw pause text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+        
+        // Add instruction to resume
+        ctx.font = '18px Arial';
+        ctx.fillText('Press ESC or click the pause button to resume', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
+      }
+      
+      // Continue the game loop
       requestRef.current = requestAnimationFrame(gameLoop);
-    }
-  };
+    };
+    
+    // Start the animation loop
+    requestRef.current = requestAnimationFrame(gameLoop);
+    
+    // Cleanup
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player]);
   
   // Function to create game objects - defined outside the useEffect for access by gameLoop
   const createGameObject = (): GameObject => {
@@ -309,22 +325,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     }
   };
   
-  // Initialize game loop when game starts
-  useEffect(() => {
-    if (!isPlaying) return;
-    
-    // If not paused, start the game loop
-    if (!isPaused) {
-      requestRef.current = requestAnimationFrame(gameLoop);
-    }
-    
-    // Cleanup on unmount or when game stops
-    return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
-  }, [isPlaying, isPaused]);
+
   
   // Set up click event listener for pause button
   useEffect(() => {
@@ -338,7 +339,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     return () => {
       canvas.removeEventListener('click', handleCanvasClick);
     };
-  }, [isPaused]); // Need to include isPaused to ensure correct click handling
+  }, []); // No dependencies needed here
   
   // Handle keyboard controls
   useEffect(() => {
@@ -465,7 +466,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [isPlaying, playSound, togglePause]);
+  }, [isPlaying, playSound]);
   
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
