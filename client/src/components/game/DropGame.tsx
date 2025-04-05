@@ -96,11 +96,12 @@ let playButtonImage: HTMLImageElement | null = null;
 let replayButtonImage: HTMLImageElement | null = null;
 
 // Define button constants - these can be easily adjusted
-const BUTTON_SIZE = 50; // Size of the button (width and height)
+const BUTTON_SIZE = 50; // Size of the pause button (width and height)
+const REPLAY_BUTTON_SIZE = 65; // Size of the replay button - 30% larger than pause button
 const BUTTON_MARGIN_RIGHT = 20; // Margin from the right edge of the screen
 const BUTTON_MARGIN_TOP = 70; // Margin from the top edge of the screen (increased from 20 to 70)
 const BUTTON_OPACITY = 0.9; // Opacity of the button
-const BUTTON_SPACING = 60; // Space between buttons
+const BUTTON_SPACING = 20; // Space between buttons (reduced from 60 to 20 to make them closer)
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -411,8 +412,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!replayButtonImage) return;
     
     // Position button left of the pause button
-    const x = GAME_WIDTH - (BUTTON_SIZE * 2) - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
-    const y = BUTTON_MARGIN_TOP;
+    const x = GAME_WIDTH - BUTTON_SIZE - REPLAY_BUTTON_SIZE - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
+    const y = BUTTON_MARGIN_TOP - ((REPLAY_BUTTON_SIZE - BUTTON_SIZE) / 2); // Center vertically with pause button
     
     // Save current state
     ctx.save();
@@ -421,7 +422,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.globalAlpha = BUTTON_OPACITY;
     
     // Draw button image
-    ctx.drawImage(replayButtonImage, x, y, BUTTON_SIZE, BUTTON_SIZE);
+    ctx.drawImage(replayButtonImage, x, y, REPLAY_BUTTON_SIZE, REPLAY_BUTTON_SIZE);
     
     // Restore context state
     ctx.restore();
@@ -441,8 +442,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const pauseButtonY = BUTTON_MARGIN_TOP;
     
     // Position of replay button (left of pause button)
-    const replayButtonX = GAME_WIDTH - (BUTTON_SIZE * 2) - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
-    const replayButtonY = BUTTON_MARGIN_TOP;
+    const replayButtonX = GAME_WIDTH - BUTTON_SIZE - REPLAY_BUTTON_SIZE - BUTTON_MARGIN_RIGHT - BUTTON_SPACING;
+    const replayButtonY = BUTTON_MARGIN_TOP - ((REPLAY_BUTTON_SIZE - BUTTON_SIZE) / 2);
     
     // Check if click is within pause button area
     if (
@@ -457,9 +458,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Check if click is within replay button area
     if (
       clickX >= replayButtonX && 
-      clickX <= replayButtonX + BUTTON_SIZE &&
+      clickX <= replayButtonX + REPLAY_BUTTON_SIZE &&
       clickY >= replayButtonY && 
-      clickY <= replayButtonY + BUTTON_SIZE
+      clickY <= replayButtonY + REPLAY_BUTTON_SIZE
     ) {
       restartGame();
     }
