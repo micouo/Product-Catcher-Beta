@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import hitSound from '../assets/sounds/hit.wav';
-import pickupSound from '../assets/sounds/pickup.wav';
 
 type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
 
@@ -10,8 +8,8 @@ backgroundMusicElement.loop = true; // Enable looping
 
 // Audio elements for real sound files
 const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {
-  hit: new Audio(hitSound),
-  collect: new Audio(pickupSound),
+  hit: new Audio('/sounds/hit.wav'),
+  collect: new Audio('/sounds/pickup.wav'),
 };
 
 // Sound generation parameters (for sounds without files)

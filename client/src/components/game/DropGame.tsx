@@ -325,12 +325,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   // Background music is handled automatically by the useSound hook
   // when initializeAudio is called on first interaction
   useEffect(() => {
-    // Initialize audio as soon as component mounts,
-    // which will start playing background music automatically
-    initializeAudio();
+    // Use a small timeout to prevent setState during render
+    const timer = setTimeout(() => {
+      // Initialize audio after component is fully mounted,
+      // which will start playing background music automatically
+      initializeAudio();
+    }, 100);
     
-    // Clean up will be handled by the useSound hook when component unmounts
-    // Per requirements, music continues during pause and game over screens
+    // Clean up
+    return () => {
+      clearTimeout(timer);
+      // Other cleanup will be handled by the useSound hook when component unmounts
+    };
   }, []);
 
 
@@ -781,10 +787,14 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   // Start game
   const startGame = () => {
     // Initialize audio context on game start
-    initializeAudio();
-    
-    // Play start sound
-    playSound('start');
+    // Use a small timeout to ensure the audio context is initialized properly
+    setTimeout(() => {
+      initializeAudio();
+      // Play start sound after a slight delay
+      setTimeout(() => {
+        playSound('start');
+      }, 50);
+    }, 50);
     
     // Update player image based on selected car
     playerImage = carImages[selectedCar];
