@@ -398,6 +398,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // First pass - draw everything except the player
       
+      // Draw player area border
+      drawPlayerArea(ctx);
+      
       // Draw objects
       gameObjects.forEach(obj => {
         drawObject(ctx, obj);
@@ -550,8 +553,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     };
   }, [isPaused, isPlaying]); // Include game state as dependencies for the click handler
   
-  // Note: We've removed the white dotted border that was previously showing the player area
-
   // Handle keyboard controls
   useEffect(() => {
     if (!isPlaying) return;
@@ -905,9 +906,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (currentCarImage) {
       // Make the car a good size while maintaining the right proportions
       
-      // Set a fixed size that matches the car selection screen
-      const drawWidth = player.width * 1.5;
-      const drawHeight = player.width * 0.8; // Proper aspect ratio to maintain car proportions
+      // Set a fixed size that's good for this car sprite
+      const drawWidth = player.width * 1.8;
+      const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
@@ -937,7 +938,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2, // No upward offset to match the car selection screen appearance
+          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
           drawWidth, 
           drawHeight
         );
@@ -947,7 +948,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           // Apply red overlay with source-atop to prevent affecting outside the car
           ctx.globalCompositeOperation = 'source-atop';
           ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
-          ctx.fillRect(-drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+          ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
         }
         
         ctx.restore();
@@ -962,7 +963,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2, // No upward offset to match the car selection screen appearance
+          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
           drawWidth, 
           drawHeight
         );
