@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSound } from '../../hooks/use-sound';
+import { useSound } from '../../hooks/use-sound-new';
 import Background from './Background';
-import TransitionEffect, { ButtonFlash } from '../TransitionEffect';
 import car1Image from '@assets/car 1.png';
 import pauseImage from '@assets/pause.png';
 import playImage from '@assets/play.png';
@@ -117,19 +116,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const requestRef = useRef<number>();
   const lastSpawnTimeRef = useRef<number>(Date.now());
   const gameStartTimeRef = useRef<number>(0);
-  const { 
-    playSound, 
-    initializeAudio, 
-    playBackgroundMusic, 
-    stopBackgroundMusic,
-    pauseBackgroundMusic,
-    resumeBackgroundMusic,
-    isMusicPlaying
-  } = useSound();
-  
-  // Transition states
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isButtonFlashing, setIsButtonFlashing] = useState(false);
+  const { playSound, initializeAudio } = useSound();
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -308,19 +295,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Only allow toggling pause if the game is playing
     if (!isPlaying) return;
     
-    // Toggle pause state
-    setIsPaused(prev => {
-      const newState = !prev;
-      
-      // Handle background music pause/resume
-      if (newState) {
-        pauseBackgroundMusic();
-      } else {
-        resumeBackgroundMusic();
-      }
-      
-      return newState;
-    });
+    setIsPaused(prev => !prev);
   };
   
   // Restart game - bring back to car selection
@@ -331,9 +306,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     }
-    
-    // Stop background music with fade out
-    stopBackgroundMusic(true);
     
     // Reset to initial state
     setIsPlaying(false);
@@ -799,23 +771,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Initialize audio context on game start
     initializeAudio();
     
-    // Start button flash effect
-    setIsButtonFlashing(true);
-    
-    // Update player image based on selected car
-    playerImage = carImages[selectedCar];
-    
-    // Start transition effect
-    setIsTransitioning(true);
-  };
-  
-  // Handle transition complete
-  const handleTransitionComplete = () => {
     // Play start sound
     playSound('start');
     
-    // Start background music when transition completes
-    playBackgroundMusic(true); // true = fade in
+    // Update player image based on selected car
+    playerImage = carImages[selectedCar];
     
     // Reset game state
     setIsPlaying(true);
@@ -841,9 +801,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Play game over sound
     playSound('gameOver');
-    
-    // Don't stop the music when game over - it continues playing
-    // This matches the requirement that music continues during game over screen
   };
   
   // Draw player area border
@@ -1093,10 +1050,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
-      {/* Background Layer - always visible */}
+      {/* Background Layer - only scrolls when game is playing and not paused */}
       <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused || !isPlaying} />
       
-      {/* Game Canvas - always visible */}
+      {/* Game Canvas */}
       <canvas
         ref={canvasRef}
         width={GAME_WIDTH}
@@ -1104,114 +1061,101 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
       />
       
-      {/* Start screen / Game over screen with transition effect */}
       {!isPlaying && (
-        <TransitionEffect 
-          isActive={isTransitioning} 
-          duration={1000}
-          onTransitionComplete={handleTransitionComplete}
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
-            <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              {score > 0 ? 'Game Over!' : 'District Driver'}
-            </h2>
-            
-            {score > 0 && (
-              <p className="text-2xl text-white mb-4">Your Score: {score}</p>
-            )}
-            
-            {/* Game menu content with flex layout for instructions and car selector */}
-            <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
-              {/* Instructions on the left */}
-              <div className="flex-1 text-gray-300 text-left">
-                <p className="text-xl font-semibold mb-2 text-blue-400">How to Play:</p>
-                <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
-                <p className="mb-1">• Avoid the red spiky obstacles</p>
-                <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
-                <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
-                <p className="mb-1">• Press ESC key or click the pause button to pause/unpause the game</p>
-                <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
-                <p className="mb-1">• Your car will automatically face the direction you're moving</p>
-                <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
-              </div>
-              
-              {/* Car selection on the right */}
-              <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
-                <p className="text-xl font-semibold mb-4 text-blue-400">Choose Your Car:</p>
-                
-                {/* Car preview area */}
-                <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
-                  {/* Current selected car display */}
-                  <div className="w-40 h-32 relative flex justify-center items-center">
-                    <img 
-                      src={carImages[selectedCar]?.src} 
-                      alt={selectedCar}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  
-                  {/* Car selection arrows */}
-                  <div className="absolute inset-x-0 flex justify-between items-center px-2">
-                    <button 
-                      onClick={() => {
-                        const cars = Object.keys(carImages);
-                        const currentIndex = cars.indexOf(selectedCar);
-                        const prevIndex = currentIndex <= 0 ? cars.length - 1 : currentIndex - 1;
-                        setSelectedCar(cars[prevIndex]);
-                      }}
-                      className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
-                    >
-                      ←
-                    </button>
-                    <button 
-                      onClick={() => {
-                        const cars = Object.keys(carImages);
-                        const currentIndex = cars.indexOf(selectedCar);
-                        const nextIndex = (currentIndex + 1) % cars.length;
-                        setSelectedCar(cars[nextIndex]);
-                      }}
-                      className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
-                    >
-                      →
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Display car name */}
-                <p className="text-lg text-white mb-2 capitalize">
-                  {selectedCar}
-                </p>
-                
-                {/* Display car description */}
-                <p className="text-sm text-gray-300 mb-4 text-center px-2">
-                  {selectedCar === 'peppy' && "Zippy and cheerful. Always late, always fast."}
-                  {selectedCar === 'rusty' && "Faded paint, full of charm. Might stall, might win."}
-                  {selectedCar === 'turbo' && "Aggressive and loud. Probably drinks energy drinks."}
-                  {selectedCar === 'drift' && "Calm under pressure. The road bends to him."}
-                  {selectedCar === 'blazer' && "Burnouts and bravado. Doesn't know what subtle means."}
-                  {selectedCar === 'boss' && "Rich, square, and rolling deep. Power in every pixel."}
-                  {selectedCar === 'crawler' && "Tougher than a two-dollar steak. Climbs curbs like mountains."}
-                  {selectedCar === 'bugsy' && "Short-tempered, loud engine. Always parks crooked."}
-                  {selectedCar === 'phantom' && "Quick, elusive, and always one step ahead. You don't chase it—you follow its tail lights."}
-                </p>
-              </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
+          <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            {score > 0 ? 'Game Over!' : 'District Driver'}
+          </h2>
+          
+          {score > 0 && (
+            <p className="text-2xl text-white mb-4">Your Score: {score}</p>
+          )}
+          
+          {/* Game menu content with flex layout for instructions and car selector */}
+          <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
+            {/* Instructions on the left */}
+            <div className="flex-1 text-gray-300 text-left">
+              <p className="text-xl font-semibold mb-2 text-blue-400">How to Play:</p>
+              <p className="mb-1">• Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳, ☕, 🍦)</p>
+              <p className="mb-1">• Avoid the red spiky obstacles</p>
+              <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
+              <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
+              <p className="mb-1">• Press ESC key or click the pause button to pause/unpause the game</p>
+              <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
+              <p className="mb-1">• Your car will automatically face the direction you're moving</p>
+              <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
             </div>
             
-            {/* Start button with flash effect */}
-            <ButtonFlash 
-              isActive={isButtonFlashing} 
-              duration={100}
-              onFlashComplete={() => setIsButtonFlashing(false)}
-            >
-              <button
-                onClick={startGame}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
-              >
-                {score > 0 ? 'Play Again' : 'Start Game'}
-              </button>
-            </ButtonFlash>
+            {/* Car selection on the right */}
+            <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+              <p className="text-xl font-semibold mb-4 text-blue-400">Choose Your Car:</p>
+              
+              {/* Car preview area */}
+              <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
+                {/* Current selected car display */}
+                <div className="w-40 h-32 relative flex justify-center items-center">
+                  <img 
+                    src={carImages[selectedCar]?.src} 
+                    alt={selectedCar}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                
+                {/* Car selection arrows */}
+                <div className="absolute inset-x-0 flex justify-between items-center px-2">
+                  <button 
+                    onClick={() => {
+                      const cars = Object.keys(carImages);
+                      const currentIndex = cars.indexOf(selectedCar);
+                      const prevIndex = currentIndex <= 0 ? cars.length - 1 : currentIndex - 1;
+                      setSelectedCar(cars[prevIndex]);
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                  >
+                    ←
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const cars = Object.keys(carImages);
+                      const currentIndex = cars.indexOf(selectedCar);
+                      const nextIndex = (currentIndex + 1) % cars.length;
+                      setSelectedCar(cars[nextIndex]);
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+              
+              {/* Display car name */}
+              <p className="text-lg text-white mb-2 capitalize">
+                {selectedCar}
+              </p>
+              
+              {/* Display car description */}
+              <p className="text-sm text-gray-300 mb-4 text-center px-2">
+                {selectedCar === 'peppy' && "Zippy and cheerful. Always late, always fast."}
+                {selectedCar === 'rusty' && "Faded paint, full of charm. Might stall, might win."}
+                {selectedCar === 'turbo' && "Aggressive and loud. Probably drinks energy drinks."}
+                {selectedCar === 'drift' && "Calm under pressure. The road bends to him."}
+                {selectedCar === 'blazer' && "Burnouts and bravado. Doesn't know what subtle means."}
+                {selectedCar === 'boss' && "Rich, square, and rolling deep. Power in every pixel."}
+                {selectedCar === 'crawler' && "Tougher than a two-dollar steak. Climbs curbs like mountains."}
+                {selectedCar === 'bugsy' && "Short-tempered, loud engine. Always parks crooked."}
+                {selectedCar === 'phantom' && "Quick, elusive, and always one step ahead. You don't chase it—you follow its tail lights."}
+              </p>
+            </div>
           </div>
-        </TransitionEffect>
+          
+          {/* Start button */}
+          <button
+            onClick={startGame}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
+          >
+            {score > 0 ? 'Play Again' : 'Start Game'}
+          </button>
+        </div>
       )}
     </div>
   );
