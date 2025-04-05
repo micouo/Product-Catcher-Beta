@@ -99,66 +99,66 @@ interface CarConfig {
 let carConfigs: Record<string, CarConfig> = {
   peppy: {    // Car 1
     image: null,
-    width: 150,     // Default width
-    height: 150,    // Default height
+    width: 80,     // Default width
+    height: 50,    // Default height
     offsetY: 10,   // Default vertical offset
-    description: 'Zippy and cheerful. Always late, always fast.'
+    description: 'Peppy – Zippy and cheerful. Always late, always fast.'
   },
   rusty: {    // Car 2
     image: null,
-    width: 160,     // Slightly wider
-    height: 120,
+    width: 85,     // Slightly wider
+    height: 48,
     offsetY: 8,
-    description: 'Faded paint, full of charm. Might stall, might win.'
+    description: 'Rusty – Faded paint, full of charm. Might stall, might win.'
   },
   turbo: {    // Car 3
     image: null,
-    width: 160,     // Wider
-    height: 120,    // Shorter
+    width: 90,     // Wider
+    height: 45,    // Shorter
     offsetY: 12,
-    description: 'Aggressive and loud. Probably drinks energy drinks.'
+    description: 'Turbo – Aggressive and loud. Probably drinks energy drinks.'
   },
   drift: {    // Car 4
     image: null,
-    width: 160,
-    height: 120,    // Taller
+    width: 82,
+    height: 52,    // Taller
     offsetY: 8,
-    description: 'Calm under pressure. The road bends to him.'
+    description: 'Drift – Calm under pressure. The road bends to him.'
   },
   blazer: {   // Car 5
     image: null,
-    width: 160,
-    height: 115,
+    width: 87,
+    height: 49,
     offsetY: 9,
-    description: 'Burnouts and bravado. Doesnt know what subtle means.'
+    description: 'Blazer – Burnouts and bravado. Doesn\'t know what subtle means.'
   },
   boss: {     // Car 6
     image: null,
-    width: 160,     // Widest
-    height: 135,    // Tallest
+    width: 95,     // Widest
+    height: 60,    // Tallest
     offsetY: 5,
-    description: 'Rich, square, and rolling deep. Power in every pixel.'
+    description: 'Boss – Rich, square, and rolling deep. Power in every pixel.'
   },
   crawler: {  // Car 7
     image: null,
-    width: 160,
-    height: 150,    // Taller for off-road vehicle
+    width: 88,
+    height: 56,    // Taller for off-road vehicle
     offsetY: 6,
-    description: 'Tougher than a two-dollar steak. Climbs curbs like mountains.'
+    description: 'Crawler – Tougher than a two-dollar steak. Climbs curbs like mountains.'
   },
   bugsy: {    // Car 8
     image: null,
-    width: 120,     // Narrowest
-    height: 120,
+    width: 75,     // Narrowest
+    height: 47,
     offsetY: 8,
-    description: 'Short-tempered, loud engine. Always parks crooked.'
+    description: 'Bugsy – Short-tempered, loud engine. Always parks crooked.'
   },
   phantom: {  // Car 9
     image: null,
-    width: 160,
-    height: 115,
+    width: 85,
+    height: 45,
     offsetY: 14,   // Higher offset to make it look sleeker
-    description: 'Quick, elusive, and always one step ahead. You don\'t chase it—you follow its tail lights.'
+    description: 'Phantom – Quick, elusive, and always one step ahead. You don\'t chase it—you follow its tail lights.'
   }
 };
 
@@ -1167,7 +1167,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               </p>
               
               {/* Display car description */}
-              <p className="text-lg text-gray-300 mb-4 text-center px-2">
+              <p className="text-sm text-gray-300 mb-4 text-center px-2">
                 {carConfigs[selectedCar]?.description || "Choose your car wisely"}
               </p>
             </div>
