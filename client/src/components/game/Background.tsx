@@ -1,29 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import cloudImage from "../../assets/cloud.png";
-import treeImage from "../../assets/tree1.png";
-import building1Image from "../../assets/building1.png";
-import building2Image from "../../assets/building2.png";
-import building3Image from "../../assets/building3.png";
+import treeImage from "../../assets/tree 1.png";
+import building1Image from "../../assets/building 1.png";
+import building2Image from "../../assets/building 2.png";
+import building3Image from "../../assets/building 3.png";
 import grassImage from "../../assets/grass.png";
 import calgaryTowerImage from "../../assets/calgary-tower.png";
 import blueRingImage from "../../assets/blue-ring.png";
-import pauseImage from "../../assets/pause.png";
-import playImage from "../../assets/play.png";
 
 interface BackgroundProps {
   width: number;
   height: number;
-  buttonYOffset?: number; // Optional Y offset for the pause/play button
 }
 
 /**
  * A simple background component that renders a continuously scrolling background
  * using the two-image technique for perfect infinite scrolling.
  */
-export default function Background({ width, height, buttonYOffset = 15 }: BackgroundProps) {
-  // State for pausing animation
-  const [isPaused, setIsPaused] = useState(false);
-  
+export default function Background({ width, height }: BackgroundProps) {
   // Canvas reference
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -40,12 +34,6 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
   
   // Last timestamp for frame-rate independent animation
   const lastTimeRef = useRef(0);
-  
-  // Pause/Play button images
-  const pauseImgRef = useRef(new Image());
-  const playImgRef = useRef(new Image());
-  const pauseLoaded = useRef(false);
-  const playLoaded = useRef(false);
   
   // Image references
   const cloudImgRef = useRef(new Image());
@@ -74,19 +62,6 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
   const BLUE_RING_SPEED = TREE_SPEED;     // Same as tree/sidewalk speed (anchored to sidewalk)
   
   useEffect(() => {
-    // Load pause/play button images
-    const pauseImg = pauseImgRef.current;
-    pauseImg.src = pauseImage;
-    pauseImg.onload = () => {
-      pauseLoaded.current = true;
-    };
-    
-    const playImg = playImgRef.current;
-    playImg.src = playImage;
-    playImg.onload = () => {
-      playLoaded.current = true;
-    };
-    
     // Load cloud image
     const cloudImg = cloudImgRef.current;
     cloudImg.src = cloudImage;
@@ -165,16 +140,13 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       // Convert to seconds and apply speed multiplier
       const timeMultiplier = deltaTime / 16.67; // Normalized for 60fps
       
-      // Only update positions if not paused
-      if (!isPaused) {
-        // Update element positions based on their speeds
-        cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
-        buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
-        treePositionX.current -= TREE_SPEED * timeMultiplier;
-        roadPositionX.current -= ROAD_SPEED * timeMultiplier;
-        calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
-        blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
-      }
+      // Update element positions based on their speeds
+      cloudPositionX.current -= CLOUD_SPEED * timeMultiplier;
+      buildingPositionX.current -= BUILDING_SPEED * timeMultiplier;
+      treePositionX.current -= TREE_SPEED * timeMultiplier;
+      roadPositionX.current -= ROAD_SPEED * timeMultiplier;
+      calgaryTowerPositionX.current -= CALGARY_TOWER_SPEED * timeMultiplier;
+      blueRingPositionX.current -= BLUE_RING_SPEED * timeMultiplier;
       
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -182,22 +154,20 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       // Draw background elements
       drawBackground(ctx);
       
-      // No longer drawing pause/play button on canvas
-      
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(animate);
     };
     
     // Start animation
     animationFrameRef.current = requestAnimationFrame(animate);
-
+    
     // Cleanup on unmount
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [width, height, isPaused, buttonYOffset]);
+  }, [width, height]);
   
   /**
    * Draw the sky background
@@ -678,8 +648,6 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
     }
   };
 
-  // No longer need the drawPausePlayButton function since we're using a DOM button
-  
   /**
    * Draw the complete background with all elements
    */
@@ -713,25 +681,11 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
   };
   
   return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="absolute top-0 left-0 z-0"
-      />
-      <button
-        onClick={() => setIsPaused(!isPaused)}
-        className="absolute z-10 right-3 top-16 w-14 h-14 flex items-center justify-center rounded-md overflow-hidden"
-        style={{ cursor: 'pointer' }}
-      >
-        <img 
-          src={isPaused ? playImgRef.current?.src : pauseImgRef.current?.src} 
-          alt={isPaused ? "Play" : "Pause"}
-          width={56}
-          height={56}
-        />
-      </button>
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      className="absolute top-0 left-0 z-0"
+    />
   );
 }
