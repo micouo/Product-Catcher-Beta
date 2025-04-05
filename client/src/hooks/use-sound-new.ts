@@ -10,9 +10,9 @@ const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {
   collect: new Audio(pickupSound),
 };
 
-// Set the volume for hit sound (64% of normal volume - reduced by 20% twice)
+// Set the volume for hit sound (45% of normal volume)
 if (audioElements.hit) {
-  audioElements.hit.volume = 0.64; // 0.8 * 0.8 = 0.64
+  audioElements.hit.volume = 0.45; // Reduced to 45% as requested
 }
 
 // Sound generation parameters (for sounds without files)
