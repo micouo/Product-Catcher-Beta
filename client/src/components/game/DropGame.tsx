@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
 import Background from './Background';
-import pixelCarImage from '../../assets/pixelcar.png';
+import car1Image from '../../assets/car1.png';
 import pauseImage from '../../assets/pause.png';
 import playImage from '../../assets/play.png';
 // Import car assets
@@ -81,12 +81,12 @@ type CarImageMap = {
 };
 
 let carImages: CarImageMap = {
-  default: null, // Original pixel car
-  car2: null,
-  car3: null,
-  car4: null,
-  car5: null,
-  car6: null
+  peppy: null,   // Car 1
+  rusty: null,   // Car 2
+  turbo: null,   // Car 3
+  drift: null,   // Car 4
+  blazer: null,  // Car 5
+  boss: null     // Car 6
 };
 
 let playerImage: HTMLImageElement | null = null;
@@ -121,14 +121,14 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
   
   // Car selection state
-  const [selectedCar, setSelectedCar] = useState<string>('default');
+  const [selectedCar, setSelectedCar] = useState<string>('peppy');
   const [carImagesLoaded, setCarImagesLoaded] = useState<{[key: string]: boolean}>({
-    default: false,
-    car2: false,
-    car3: false,
-    car4: false,
-    car5: false,
-    car6: false
+    peppy: false,
+    rusty: false,
+    turbo: false,
+    drift: false,
+    blazer: false,
+    boss: false
   });
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
@@ -145,65 +145,65 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Load all car images, pause/play buttons on component mount
   useEffect(() => {
-    // Initialize and load default car
-    if (!carImages.default) {
+    // Load car 1 (Peppy)
+    if (!carImages.peppy) {
       const img = new Image();
-      img.src = pixelCarImage;
+      img.src = car1Image;
       img.onload = () => {
-        carImages.default = img;
+        carImages.peppy = img;
         playerImage = img; // Set as the initial player image
-        setCarImagesLoaded(prev => ({ ...prev, default: true }));
+        setCarImagesLoaded(prev => ({ ...prev, peppy: true }));
         setPlayerImageLoaded(true);
       };
     }
     
-    // Load car 2
-    if (!carImages.car2) {
+    // Load car 2 (Rusty)
+    if (!carImages.rusty) {
       const img = new Image();
       img.src = car2Image;
       img.onload = () => {
-        carImages.car2 = img;
-        setCarImagesLoaded(prev => ({ ...prev, car2: true }));
+        carImages.rusty = img;
+        setCarImagesLoaded(prev => ({ ...prev, rusty: true }));
       };
     }
     
-    // Load car 3
-    if (!carImages.car3) {
+    // Load car 3 (Turbo)
+    if (!carImages.turbo) {
       const img = new Image();
       img.src = car3Image;
       img.onload = () => {
-        carImages.car3 = img;
-        setCarImagesLoaded(prev => ({ ...prev, car3: true }));
+        carImages.turbo = img;
+        setCarImagesLoaded(prev => ({ ...prev, turbo: true }));
       };
     }
     
-    // Load car 4
-    if (!carImages.car4) {
+    // Load car 4 (Drift)
+    if (!carImages.drift) {
       const img = new Image();
       img.src = car4Image;
       img.onload = () => {
-        carImages.car4 = img;
-        setCarImagesLoaded(prev => ({ ...prev, car4: true }));
+        carImages.drift = img;
+        setCarImagesLoaded(prev => ({ ...prev, drift: true }));
       };
     }
     
-    // Load car 5
-    if (!carImages.car5) {
+    // Load car 5 (Blazer)
+    if (!carImages.blazer) {
       const img = new Image();
       img.src = car5Image;
       img.onload = () => {
-        carImages.car5 = img;
-        setCarImagesLoaded(prev => ({ ...prev, car5: true }));
+        carImages.blazer = img;
+        setCarImagesLoaded(prev => ({ ...prev, blazer: true }));
       };
     }
     
-    // Load car 6
-    if (!carImages.car6) {
+    // Load car 6 (Boss)
+    if (!carImages.boss) {
       const img = new Image();
       img.src = car6Image;
       img.onload = () => {
-        carImages.car6 = img;
-        setCarImagesLoaded(prev => ({ ...prev, car6: true }));
+        carImages.boss = img;
+        setCarImagesLoaded(prev => ({ ...prev, boss: true }));
       };
     }
     
@@ -718,8 +718,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Apply rotation only (no bounce scaling effect)
     ctx.rotate(rotation);
     
-    // Flip the sprite horizontally to make it face right
-    ctx.scale(-1, 1);
+    // No need to flip the sprite horizontally anymore as images are already mirrored
     
     // Image is loaded in the useEffect hook on component mount
     
@@ -742,8 +741,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       );
     } else {
       // Fallback simple colored rectangle if image hasn't loaded yet
-      // The -1 scale from above is already applied, so we don't need to do anything
-      // special here for the horizontal flip
       ctx.fillStyle = '#3B82F6'; // Blue color matching the sprite
       ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
     }
@@ -930,7 +927,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               
               {/* Display car name */}
               <p className="text-lg text-white mb-4 capitalize">
-                {selectedCar === 'default' ? 'Pixel Car' : selectedCar.replace('car', 'Car ')}
+                {selectedCar}
               </p>
             </div>
           </div>
