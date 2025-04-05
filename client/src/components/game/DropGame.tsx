@@ -398,9 +398,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // First pass - draw everything except the player
       
-      // Draw player area border
-      drawPlayerArea(ctx);
-      
       // Draw objects
       gameObjects.forEach(obj => {
         drawObject(ctx, obj);
@@ -553,6 +550,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     };
   }, [isPaused, isPlaying]); // Include game state as dependencies for the click handler
   
+  // Note: We've removed the white dotted border that was previously showing the player area
+
   // Handle keyboard controls
   useEffect(() => {
     if (!isPlaying) return;
