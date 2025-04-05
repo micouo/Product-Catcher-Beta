@@ -399,7 +399,7 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY; // Position buildings exactly at sidewalk level
+    const buildingY = sidewalkY + 1; // Add 1px to ensure buildings overlap sidewalk with no gap
     
     // Define building sizes - much larger scale for much closer appearance
     const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
@@ -486,23 +486,23 @@ export default function Background({ width, height }: BackgroundProps) {
     // Position the grass so it overlaps the sidewalk by exactly 2 pixels
     const grassY = sidewalkY - grassHeight + 2; // Position to overlap sidewalk by 2px
     
-    // Add extra buffer to ensure continuous appearance
-    const visibleWidth = width + 800;
-    const grassSpacing = grassWidth * 0.7; // More overlap for seamless appearance
+    // Add much larger buffer to ensure continuous appearance
+    const visibleWidth = width + 1600; // Doubled buffer to prevent gaps
+    const grassSpacing = grassWidth * 0.6; // More overlap (60% instead of 70%) for seamless appearance
     const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
     
     // Use the same synchronization as trees for grass movement
     let x1 = (treePositionX.current * 0.8) % patternWidth; 
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw grass patches along the sidewalk
-    const numPatches = Math.ceil(patternWidth / grassSpacing) + 1;
+    // Draw grass patches along the sidewalk - significantly increased patch count
+    const numPatches = Math.ceil(patternWidth / grassSpacing) + 3; // Added 2 more patches
     
     for (let i = 0; i < numPatches; i++) {
       const x = x1 + (i * grassSpacing);
       
-      // Only draw if within our extended visible area (with buffer)
-      if (x > -grassWidth && x < width + grassWidth) {
+      // Only draw if within our much larger extended visible area (with wider buffer)
+      if (x > -grassWidth * 2 && x < width + grassWidth * 2) {
         ctx.drawImage(grassImg, x, grassY, grassWidth, grassHeight);
       }
     }
