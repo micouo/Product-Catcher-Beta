@@ -399,13 +399,13 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Define building settings
     const sidewalkY = height * 0.6; // Same as sidewalk Y position
-    const buildingY = sidewalkY + 5; // Move buildings 5px down to completely eliminate any gap
+    const buildingY = sidewalkY + 40; // Move buildings 5px down to completely eliminate any gap
     
     // Define building sizes - much larger scale for much closer appearance
     const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
     const buildingSizes = [
-      { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42 }, // Width increased by 20%
-      { img: building2Img, width: buildingScale * 1.02 * 1.2, height: height * 0.44 }, // Width increased by 20%
+      { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42}, // Width increased by 20%
+      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.2, height: height * 0.44 * 1.2 }, // Building 2 increased by another 20%
       { img: building3Img, width: buildingScale * 0.96 * 1.2, height: height * 0.43 }  // Width increased by 20%
     ];
     
@@ -484,7 +484,7 @@ export default function Background({ width, height }: BackgroundProps) {
     const grassWidth = width * 0.2; // 20% of canvas width
     
     // Position the grass so it overlaps the sidewalk substantially
-    const grassY = sidewalkY - grassHeight + 8; // Move grass 8px down to eliminate any gap
+    const grassY = sidewalkY - grassHeight + 20; // Move grass 8px down to eliminate any gap
     
     // Add much larger buffer to ensure continuous appearance
     const visibleWidth = width + 1600; // Doubled buffer to prevent gaps
