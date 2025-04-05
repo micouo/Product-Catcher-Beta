@@ -1093,24 +1093,24 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
-      {/* Screen transition effect - wraps everything */}
-      <TransitionEffect 
-        isActive={isTransitioning} 
-        duration={1000}
-        onTransitionComplete={handleTransitionComplete}
-      >
-        {/* Background Layer - only scrolls when game is playing and not paused */}
-        <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused || !isPlaying} />
-        
-        {/* Game Canvas */}
-        <canvas
-          ref={canvasRef}
-          width={GAME_WIDTH}
-          height={GAME_HEIGHT}
-          className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
-        />
-        
-        {!isPlaying && (
+      {/* Background Layer - always visible */}
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused || !isPlaying} />
+      
+      {/* Game Canvas - always visible */}
+      <canvas
+        ref={canvasRef}
+        width={GAME_WIDTH}
+        height={GAME_HEIGHT}
+        className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
+      />
+      
+      {/* Start screen / Game over screen with transition effect */}
+      {!isPlaying && (
+        <TransitionEffect 
+          isActive={isTransitioning} 
+          duration={1000}
+          onTransitionComplete={handleTransitionComplete}
+        >
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
             <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               {score > 0 ? 'Game Over!' : 'District Driver'}
@@ -1211,8 +1211,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               </button>
             </ButtonFlash>
           </div>
-        )}
-      </TransitionEffect>
+        </TransitionEffect>
+      )}
     </div>
   );
 }
