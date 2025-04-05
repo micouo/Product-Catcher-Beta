@@ -305,13 +305,17 @@ export function useSound() {
 
   // Toggle sound effects on/off
   const toggleSound = () => {
-    setSoundEnabled(prev => !prev);
+    setSoundEnabled(prev => {
+      console.log("Sound toggled to:", !prev);
+      return !prev;
+    });
   };
 
   // Toggle background music on/off
   const toggleMusic = () => {
     setMusicEnabled(prev => {
       const newState = !prev;
+      console.log("Music toggled to:", newState);
       
       if (newState) {
         // Turn music on

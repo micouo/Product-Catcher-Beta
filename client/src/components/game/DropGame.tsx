@@ -86,17 +86,86 @@ type CarImageMap = {
   [key: string]: HTMLImageElement | null;
 };
 
-let carImages: CarImageMap = {
-  peppy: null,   // Car 1
-  rusty: null,   // Car 2
-  turbo: null,   // Car 3
-  drift: null,   // Car 4
-  blazer: null,  // Car 5
-  boss: null,    // Car 6
-  crawler: null, // Car 7
-  bugsy: null,   // Car 8
-  phantom: null  // Car 9
+// Car configuration including dimensions for each car
+interface CarConfig {
+  image: HTMLImageElement | null;
+  width: number;    // Individual width for this car
+  height: number;   // Individual height for this car
+  offsetY: number;  // Vertical offset (positive = move up, negative = move down)
+  description: string; // Car description
+}
+
+// Car configuration map with customizable dimensions for each car
+let carConfigs: Record<string, CarConfig> = {
+  peppy: {    // Car 1
+    image: null,
+    width: 80,     // Default width
+    height: 50,    // Default height
+    offsetY: 10,   // Default vertical offset
+    description: 'Peppy – Zippy and cheerful. Always late, always fast.'
+  },
+  rusty: {    // Car 2
+    image: null,
+    width: 85,     // Slightly wider
+    height: 48,
+    offsetY: 8,
+    description: 'Rusty – Faded paint, full of charm. Might stall, might win.'
+  },
+  turbo: {    // Car 3
+    image: null,
+    width: 90,     // Wider
+    height: 45,    // Shorter
+    offsetY: 12,
+    description: 'Turbo – Aggressive and loud. Probably drinks energy drinks.'
+  },
+  drift: {    // Car 4
+    image: null,
+    width: 82,
+    height: 52,    // Taller
+    offsetY: 8,
+    description: 'Drift – Calm under pressure. The road bends to him.'
+  },
+  blazer: {   // Car 5
+    image: null,
+    width: 87,
+    height: 49,
+    offsetY: 9,
+    description: 'Blazer – Burnouts and bravado. Doesn\'t know what subtle means.'
+  },
+  boss: {     // Car 6
+    image: null,
+    width: 95,     // Widest
+    height: 60,    // Tallest
+    offsetY: 5,
+    description: 'Boss – Rich, square, and rolling deep. Power in every pixel.'
+  },
+  crawler: {  // Car 7
+    image: null,
+    width: 88,
+    height: 56,    // Taller for off-road vehicle
+    offsetY: 6,
+    description: 'Crawler – Tougher than a two-dollar steak. Climbs curbs like mountains.'
+  },
+  bugsy: {    // Car 8
+    image: null,
+    width: 75,     // Narrowest
+    height: 47,
+    offsetY: 8,
+    description: 'Bugsy – Short-tempered, loud engine. Always parks crooked.'
+  },
+  phantom: {  // Car 9
+    image: null,
+    width: 85,
+    height: 45,
+    offsetY: 14,   // Higher offset to make it look sleeker
+    description: 'Phantom – Quick, elusive, and always one step ahead. You don\'t chase it—you follow its tail lights.'
+  }
 };
+
+// For backward compatibility - create a carImages mapping from carConfigs
+let carImages: CarImageMap = Object.fromEntries(
+  Object.entries(carConfigs).map(([key, config]) => [key, config.image])
+);
 
 let playerImage: HTMLImageElement | null = null;
 let pauseButtonImage: HTMLImageElement | null = null;
@@ -154,7 +223,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [damageFlashCount, setDamageFlashCount] = useState(0); // Track flash count for multiple flashes
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
-    y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
+    y: GAME_HEIGHT - PLAYER_HEIGHT - 0,
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
     speed: PLAYER_SPEED,
@@ -167,97 +236,37 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Load all car images, pause/play buttons on component mount
   useEffect(() => {
-    // Load car 1 (Peppy)
-    if (!carImages.peppy) {
-      const img = new Image();
-      img.src = car1Image;
-      img.onload = () => {
-        carImages.peppy = img;
-        playerImage = img; // Set as the initial player image
-        setCarImagesLoaded(prev => ({ ...prev, peppy: true }));
-        setPlayerImageLoaded(true);
-      };
-    }
+    // Helper function to load a car image
+    const loadCarImage = (carKey: string, imageSrc: string) => {
+      if (!carConfigs[carKey].image) {
+        const img = new Image();
+        img.src = imageSrc;
+        img.onload = () => {
+          // Update both our configuration system and legacy system
+          carConfigs[carKey].image = img;
+          carImages[carKey] = img;
+          
+          // Set as initial player image if it's the first car (peppy)
+          if (carKey === 'peppy') {
+            playerImage = img;
+            setPlayerImageLoaded(true);
+          }
+          
+          setCarImagesLoaded(prev => ({ ...prev, [carKey]: true }));
+        };
+      }
+    };
     
-    // Load car 2 (Rusty)
-    if (!carImages.rusty) {
-      const img = new Image();
-      img.src = car2Image;
-      img.onload = () => {
-        carImages.rusty = img;
-        setCarImagesLoaded(prev => ({ ...prev, rusty: true }));
-      };
-    }
-    
-    // Load car 3 (Turbo)
-    if (!carImages.turbo) {
-      const img = new Image();
-      img.src = car3Image;
-      img.onload = () => {
-        carImages.turbo = img;
-        setCarImagesLoaded(prev => ({ ...prev, turbo: true }));
-      };
-    }
-    
-    // Load car 4 (Drift)
-    if (!carImages.drift) {
-      const img = new Image();
-      img.src = car4Image;
-      img.onload = () => {
-        carImages.drift = img;
-        setCarImagesLoaded(prev => ({ ...prev, drift: true }));
-      };
-    }
-    
-    // Load car 5 (Blazer)
-    if (!carImages.blazer) {
-      const img = new Image();
-      img.src = car5Image;
-      img.onload = () => {
-        carImages.blazer = img;
-        setCarImagesLoaded(prev => ({ ...prev, blazer: true }));
-      };
-    }
-    
-    // Load car 6 (Boss)
-    if (!carImages.boss) {
-      const img = new Image();
-      img.src = car6Image;
-      img.onload = () => {
-        carImages.boss = img;
-        setCarImagesLoaded(prev => ({ ...prev, boss: true }));
-      };
-    }
-    
-    // Load car 7 (Crawler)
-    if (!carImages.crawler) {
-      const img = new Image();
-      img.src = car7Image;
-      img.onload = () => {
-        carImages.crawler = img;
-        setCarImagesLoaded(prev => ({ ...prev, crawler: true }));
-      };
-    }
-    
-    // Load car 8 (Bugsy)
-    if (!carImages.bugsy) {
-      const img = new Image();
-      img.src = car8Image;
-      img.onload = () => {
-        carImages.bugsy = img;
-        setCarImagesLoaded(prev => ({ ...prev, bugsy: true }));
-      };
-    }
-    
-    // Load car 9 (Phantom)
-    if (!carImages.phantom) {
-      const img = new Image();
-      img.src = car9Image;
-      img.onload = () => {
-        carImages.phantom = img;
-        setCarImagesLoaded(prev => ({ ...prev, phantom: true }));
-      };
-    }
+    // Load all car images
+    loadCarImage('peppy', car1Image);     // Car 1
+    loadCarImage('rusty', car2Image);     // Car 2
+    loadCarImage('turbo', car3Image);     // Car 3
+    loadCarImage('drift', car4Image);     // Car 4
+    loadCarImage('blazer', car5Image);    // Car 5
+    loadCarImage('boss', car6Image);      // Car 6
+    loadCarImage('crawler', car7Image);   // Car 7
+    loadCarImage('bugsy', car8Image);     // Car 8
+    loadCarImage('phantom', car9Image);   // Car 9
     
     // Load pause button
     if (!pauseButtonImage) {
@@ -899,16 +908,16 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // No need to flip the sprite horizontally anymore as images are already mirrored
     
-    // Image is loaded in the useEffect hook on component mount
+    // Get car configuration for the selected car
+    const carConfig = carConfigs[selectedCar];
     
     // Draw the sprite if the selected car image is loaded
-    const currentCarImage = carImages[selectedCar];
+    const currentCarImage = carConfig.image;
     if (currentCarImage) {
-      // Make the car a good size while maintaining the right proportions
-      
-      // Set a fixed size that's good for this car sprite
-      const drawWidth = player.width * 1.8;
-      const drawHeight = drawWidth * 0.9; // Adjust height to be slightly less than width
+      // Use the custom dimensions from car configuration
+      const drawWidth = carConfig.width;
+      const drawHeight = carConfig.height;
+      const offsetY = carConfig.offsetY;
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
@@ -938,7 +947,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          -drawHeight / 2 - offsetY, // Use the car-specific vertical offset
           drawWidth, 
           drawHeight
         );
@@ -948,7 +957,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           // Apply red overlay with source-atop to prevent affecting outside the car
           ctx.globalCompositeOperation = 'source-atop';
           ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
-          ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
+          ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - offsetY, drawWidth, drawHeight);
         }
         
         ctx.restore();
@@ -963,7 +972,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
-          -drawHeight / 2 - 10, // Offset upward to account for the delivery basket on top
+          -drawHeight / 2 - offsetY, // Use the car-specific vertical offset
           drawWidth, 
           drawHeight
         );
@@ -1159,15 +1168,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               
               {/* Display car description */}
               <p className="text-sm text-gray-300 mb-4 text-center px-2">
-                {selectedCar === 'peppy' && "Zippy and cheerful. Always late, always fast."}
-                {selectedCar === 'rusty' && "Faded paint, full of charm. Might stall, might win."}
-                {selectedCar === 'turbo' && "Aggressive and loud. Probably drinks energy drinks."}
-                {selectedCar === 'drift' && "Calm under pressure. The road bends to him."}
-                {selectedCar === 'blazer' && "Burnouts and bravado. Doesn't know what subtle means."}
-                {selectedCar === 'boss' && "Rich, square, and rolling deep. Power in every pixel."}
-                {selectedCar === 'crawler' && "Tougher than a two-dollar steak. Climbs curbs like mountains."}
-                {selectedCar === 'bugsy' && "Short-tempered, loud engine. Always parks crooked."}
-                {selectedCar === 'phantom' && "Quick, elusive, and always one step ahead. You don't chase it—you follow its tail lights."}
+                {carConfigs[selectedCar]?.description || "Choose your car wisely"}
               </p>
             </div>
           </div>
