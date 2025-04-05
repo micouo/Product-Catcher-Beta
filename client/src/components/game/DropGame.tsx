@@ -621,12 +621,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (player.movingLeft) rotation = -0.1;
     if (player.movingRight) rotation = 0.1;
     
-    // Apply slight scaling for animation bounce effect
-    const bounceScale = 1 + Math.sin(animFrame * Math.PI / 2) * 0.05;
-    
-    // Apply rotation and scaling
+    // Apply rotation only (no bounce scaling effect)
     ctx.rotate(rotation);
-    ctx.scale(bounceScale, bounceScale);
     
     // Flip the sprite horizontally to make it face right
     ctx.scale(-1, 1);

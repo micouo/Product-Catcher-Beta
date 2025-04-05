@@ -623,15 +623,15 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     const sidewalkY = height * 0.6;
     
     // Size the grass appropriately - increased height for better coverage
-    const grassHeight = height * 0.08; // 8% of canvas height (increased from 6%)
+    const grassHeight = height * 0.08; // 8% of canvas height
     const grassWidth = width * 0.2; // 20% of canvas width
     
     // Position the grass so it overlaps the sidewalk substantially
-    const grassY = sidewalkY - grassHeight + 20; // Move grass 8px down to eliminate any gap
+    const grassY = sidewalkY - grassHeight + 20; // Move grass down to eliminate any gap
     
     // Add much larger buffer to ensure continuous appearance
-    const visibleWidth = width + 1600; // Doubled buffer to prevent gaps
-    const grassSpacing = grassWidth * 0.6; // More overlap (60% instead of 70%) for seamless appearance
+    const visibleWidth = width + 2000; // Even larger buffer to prevent gaps
+    const grassSpacing = grassWidth * 0.5; // More aggressive overlap (50% instead of 60%) for seamless appearance
     const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
     
     // Use the same exact synchronization as trees for grass movement
@@ -639,15 +639,36 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     let x1 = (treePositionX.current) % patternWidth; 
     if (x1 > 0) x1 -= patternWidth;
     
-    // Draw grass patches along the sidewalk - significantly increased patch count
-    const numPatches = Math.ceil(patternWidth / grassSpacing) + 3; // Added 2 more patches
+    // Draw grass patches along the sidewalk - greatly increased patch count
+    const numPatches = Math.ceil(patternWidth / grassSpacing) + 5; // Added even more patches
     
+    // First row of grass (bottom row)
     for (let i = 0; i < numPatches; i++) {
       const x = x1 + (i * grassSpacing);
       
       // Only draw if within our much larger extended visible area (with wider buffer)
-      if (x > -grassWidth * 2 && x < width + grassWidth * 2) {
+      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
         ctx.drawImage(grassImg, x, grassY, grassWidth, grassHeight);
+      }
+    }
+    
+    // Second row of grass (slightly higher and offset)
+    for (let i = 0; i < numPatches; i++) {
+      const x = x1 + (i * grassSpacing) + grassWidth * 0.25; // Offset by 25% width for staggered effect
+      
+      // Only draw if within our much larger extended visible area (with wider buffer)
+      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
+        ctx.drawImage(grassImg, x, grassY - 5, grassWidth, grassHeight);
+      }
+    }
+    
+    // Third row of grass (even higher and offset differently)
+    for (let i = 0; i < numPatches; i++) {
+      const x = x1 + (i * grassSpacing) - grassWidth * 0.15; // Different offset for variety
+      
+      // Only draw if within our much larger extended visible area (with wider buffer)
+      if (x > -grassWidth * 3 && x < width + grassWidth * 3) {
+        ctx.drawImage(grassImg, x, grassY - 10, grassWidth, grassHeight);
       }
     }
   };
