@@ -405,7 +405,7 @@ export default function Background({ width, height }: BackgroundProps) {
     const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
     const buildingSizes = [
       { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42}, // Width increased by 20%
-      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.2, height: height * 0.44 * 1.2 }, // Building 2 increased by another 20%
+      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.5, height: height * 0.44 * 1.5 }, // Building 2 increased by another 20%
       { img: building3Img, width: buildingScale * 0.96 * 1.2, height: height * 0.43 }  // Width increased by 20%
     ];
     
