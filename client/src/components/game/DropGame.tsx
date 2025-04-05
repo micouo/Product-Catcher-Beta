@@ -997,8 +997,18 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
               </div>
               
               {/* Display car name */}
-              <p className="text-lg text-white mb-4 capitalize">
+              <p className="text-lg text-white mb-2 capitalize">
                 {selectedCar}
+              </p>
+              
+              {/* Display car description */}
+              <p className="text-sm text-gray-300 mb-4 text-center px-2">
+                {selectedCar === 'peppy' && "Zippy and cheerful. Always late, always fast."}
+                {selectedCar === 'rusty' && "Faded paint, full of charm. Might stall, might win."}
+                {selectedCar === 'turbo' && "Aggressive and loud. Probably drinks energy drinks."}
+                {selectedCar === 'drift' && "Calm under pressure. The road bends to him."}
+                {selectedCar === 'blazer' && "Burnouts and bravado. Doesn't know what subtle means."}
+                {selectedCar === 'boss' && "Rich, square, and rolling deep. Power in every pixel."}
               </p>
             </div>
           </div>
