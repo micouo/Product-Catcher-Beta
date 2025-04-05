@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../hooks/use-sound';
 import Background from './Background';
 import pixelCarImage from '../../assets/pixelcar.png';
+import pauseImage from '../../assets/pause.png';
+import playImage from '../../assets/play.png';
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -66,8 +68,15 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
   ctx.closePath();
 }
 
-// Store player image as a ref to avoid re-creating it
+// Store images as refs to avoid re-creating them
 let playerImage: HTMLImageElement | null = null;
+let pauseButtonImage: HTMLImageElement | null = null;
+let playButtonImage: HTMLImageElement | null = null;
+
+// Define pause button constants - these can be easily adjusted
+const PAUSE_BUTTON_SIZE = 50; // Size of the button (width and height)
+const PAUSE_BUTTON_MARGIN = 20; // Margin from the edge of the screen
+const PAUSE_BUTTON_OPACITY = 0.9; // Opacity of the button
 
 export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,6 +86,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const { playSound, initializeAudio } = useSound();
   
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -86,6 +96,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   const [animFrame, setAnimFrame] = useState(0);
   const [lastAnimTime, setLastAnimTime] = useState(0);
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
+  const [pauseButtonLoaded, setPauseButtonLoaded] = useState(false);
+  const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -99,9 +111,9 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     boosting: false,
   });
   
-  // Load the player image on component mount
+  // Load the player image and pause/play buttons on component mount
   useEffect(() => {
-    // Only load the image once
+    // Only load the images once
     if (!playerImage) {
       const img = new Image();
       img.src = pixelCarImage; // Use the imported image path
@@ -110,110 +122,201 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         setPlayerImageLoaded(true);
       };
     }
+    
+    if (!pauseButtonImage) {
+      const img = new Image();
+      img.src = pauseImage;
+      img.onload = () => {
+        pauseButtonImage = img;
+        setPauseButtonLoaded(true);
+      };
+    }
+    
+    if (!playButtonImage) {
+      const img = new Image();
+      img.src = playImage;
+      img.onload = () => {
+        playButtonImage = img;
+        setPlayButtonLoaded(true);
+      };
+    }
   }, []);
   
-  // Game loop with animation frame
+  // Toggle pause state
+  const togglePause = () => {
+    // Only allow toggling pause if the game is playing
+    if (!isPlaying) return;
+    
+    setIsPaused(prev => !prev);
+    
+    // If pausing, cancel the animation frame
+    if (!isPaused && requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = undefined;
+    }
+    
+    // If resuming, restart the game loop
+    if (isPaused) {
+      requestRef.current = requestAnimationFrame(gameLoop);
+    }
+  };
+  
+  // The game loop function - moved outside the useEffect for access by togglePause
+  const gameLoop = (timestamp: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    
+    // Draw background first
+    // Note: The background is now rendered separately as its own canvas element
+    
+    // Draw player area border
+    drawPlayerArea(ctx);
+    
+    // Update player position based on direction
+    updatePlayerPosition();
+    
+    // Spawn new objects periodically
+    if (Date.now() - lastSpawnTimeRef.current > currentSpawnRate) {
+      const newObject = createGameObject();
+      setGameObjects(prev => [...prev, newObject]);
+      lastSpawnTimeRef.current = Date.now();
+    }
+    
+    // Increase difficulty based on score
+    // Calculate score-based difficulty 
+    const scoreFactor = score / 10; // Difficulty increase per 10 points
+    
+    // Calculate new spawn rate (gets faster as score increases)
+    const newSpawnRate = Math.max(
+      MIN_SPAWN_RATE,
+      BASE_SPAWN_RATE - (scoreFactor * 50)
+    );
+    
+    // Calculate new speed multiplier (increases as score increases)
+    const newSpeedMultiplier = Math.min(
+      MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
+      1 + (scoreFactor * SCORE_SPEED_MULTIPLIER)
+    );
+    
+    // Only update if values have changed
+    if (newSpawnRate !== currentSpawnRate) {
+      setCurrentSpawnRate(newSpawnRate);
+    }
+    
+    if (newSpeedMultiplier !== speedMultiplier) {
+      setSpeedMultiplier(newSpeedMultiplier);
+    }
+    
+    // Move existing objects and check collisions
+    moveObjectsAndCheckCollisions();
+    
+    // Draw player
+    drawPlayer(ctx);
+    
+    // Draw objects
+    gameObjects.forEach(obj => {
+      drawObject(ctx, obj);
+    });
+    
+    // Draw UI elements
+    drawUI(ctx);
+    
+    // Draw pause button
+    drawPauseButton(ctx);
+    
+    // Continue the game loop
+    if (!isPaused) {
+      requestRef.current = requestAnimationFrame(gameLoop);
+    }
+  };
+  
+  // Function to create game objects - defined outside the useEffect for access by gameLoop
+  const createGameObject = (): GameObject => {
+    // Calculate dynamic product probability based on score
+    // As score increases, reduce product probability (increase obstacles)
+    // Minimum probability will be 40% products even at high scores
+    const scoreFactor = score / 100; // Reduce by 1% per 100 points
+    const productProbability = Math.max(0.4, BASE_PRODUCT_PROBABILITY - (scoreFactor * 0.05));
+    
+    const isProduct = Math.random() < productProbability;
+    const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
+    
+    // Apply speed multiplier to make objects faster over time
+    const baseSpeed = BASE_OBJECT_SPEED + Math.random() * 3; // Random base speed
+    const scaledSpeed = baseSpeed * speedMultiplier; // Apply speed multiplier
+    
+    return {
+      id: Math.random(),
+      x: Math.random() * (GAME_WIDTH - OBJECT_WIDTH),
+      y: -OBJECT_HEIGHT, // Start above the canvas
+      width: OBJECT_WIDTH,
+      height: OBJECT_HEIGHT,
+      type: isProduct ? 'product' : 'obstacle',
+      foodType: isProduct ? FOOD_EMOJIS[randomFoodIndex] : undefined,
+      speed: scaledSpeed,
+    };
+  };
+    
+  // Draw the pause/play button
+  const drawPauseButton = (ctx: CanvasRenderingContext2D) => {
+    const buttonImg = isPaused ? playButtonImage : pauseButtonImage;
+    if (!buttonImg) return;
+    
+    // Position button in top-right corner with margin
+    const x = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN;
+    const y = PAUSE_BUTTON_MARGIN;
+    
+    // Save current state
+    ctx.save();
+    
+    // Set transparency
+    ctx.globalAlpha = PAUSE_BUTTON_OPACITY;
+    
+    // Draw button image
+    ctx.drawImage(buttonImg, x, y, PAUSE_BUTTON_SIZE, PAUSE_BUTTON_SIZE);
+    
+    // Restore context state
+    ctx.restore();
+  };
+  
+  // Handle mouse click for pause button
+  const handleCanvasClick = (e: MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    
+    // Position of pause button
+    const buttonX = GAME_WIDTH - PAUSE_BUTTON_SIZE - PAUSE_BUTTON_MARGIN;
+    const buttonY = PAUSE_BUTTON_MARGIN;
+    
+    // Check if click is within button area
+    if (
+      clickX >= buttonX && 
+      clickX <= buttonX + PAUSE_BUTTON_SIZE &&
+      clickY >= buttonY && 
+      clickY <= buttonY + PAUSE_BUTTON_SIZE
+    ) {
+      togglePause();
+    }
+  };
+  
+  // Initialize game loop when game starts
   useEffect(() => {
     if (!isPlaying) return;
     
-    // Function to create game objects
-    const createGameObject = (): GameObject => {
-      // Calculate dynamic product probability based on score
-      // As score increases, reduce product probability (increase obstacles)
-      // Minimum probability will be 40% products even at high scores
-      const scoreFactor = score / 100; // Reduce by 1% per 100 points
-      const productProbability = Math.max(0.4, BASE_PRODUCT_PROBABILITY - (scoreFactor * 0.05));
-      
-      const isProduct = Math.random() < productProbability;
-      const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
-      
-      // Apply speed multiplier to make objects faster over time
-      const baseSpeed = BASE_OBJECT_SPEED + Math.random() * 3; // Random base speed
-      const scaledSpeed = baseSpeed * speedMultiplier; // Apply speed multiplier
-      
-      return {
-        id: Math.random(),
-        x: Math.random() * (GAME_WIDTH - OBJECT_WIDTH),
-        y: -OBJECT_HEIGHT, // Start above the canvas
-        width: OBJECT_WIDTH,
-        height: OBJECT_HEIGHT,
-        type: isProduct ? 'product' : 'obstacle',
-        foodType: isProduct ? FOOD_EMOJIS[randomFoodIndex] : undefined,
-        speed: scaledSpeed,
-      };
-    };
-    
-    const gameLoop = (timestamp: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      
-      // Draw background first
-      // Note: The background is now rendered separately as its own canvas element
-      
-      // Draw player area border
-      drawPlayerArea(ctx);
-      
-      // Update player position based on direction
-      updatePlayerPosition();
-      
-      // Spawn new objects periodically
-      if (Date.now() - lastSpawnTimeRef.current > currentSpawnRate) {
-        const newObject = createGameObject();
-        setGameObjects(prev => [...prev, newObject]);
-        lastSpawnTimeRef.current = Date.now();
-      }
-      
-      // Increase difficulty based on score
-      // Calculate score-based difficulty 
-      const scoreFactor = score / 10; // Difficulty increase per 10 points
-      
-      // Calculate new spawn rate (gets faster as score increases)
-      const newSpawnRate = Math.max(
-        MIN_SPAWN_RATE,
-        BASE_SPAWN_RATE - (scoreFactor * 50)
-      );
-      
-      // Calculate new speed multiplier (increases as score increases)
-      const newSpeedMultiplier = Math.min(
-        MAX_OBJECT_SPEED / BASE_OBJECT_SPEED,
-        1 + (scoreFactor * SCORE_SPEED_MULTIPLIER)
-      );
-      
-      // Only update if values have changed
-      if (newSpawnRate !== currentSpawnRate) {
-        setCurrentSpawnRate(newSpawnRate);
-      }
-      
-      if (newSpeedMultiplier !== speedMultiplier) {
-        setSpeedMultiplier(newSpeedMultiplier);
-      }
-      
-      // Move existing objects and check collisions
-      moveObjectsAndCheckCollisions();
-      
-      // Draw player
-      drawPlayer(ctx);
-      
-      // Draw objects
-      gameObjects.forEach(obj => {
-        drawObject(ctx, obj);
-      });
-      
-      // Draw UI elements
-      drawUI(ctx);
-      
-      // Continue the game loop
+    // If not paused, start the game loop
+    if (!isPaused) {
       requestRef.current = requestAnimationFrame(gameLoop);
-    };
-    
-    // Start the game loop
-    requestRef.current = requestAnimationFrame(gameLoop);
+    }
     
     // Cleanup on unmount or when game stops
     return () => {
@@ -221,7 +324,21 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, player, gameObjects, currentSpawnRate, speedMultiplier, animFrame, lastAnimTime]);
+  }, [isPlaying, isPaused]);
+  
+  // Set up click event listener for pause button
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Add click event listener
+    canvas.addEventListener('click', handleCanvasClick);
+    
+    // Cleanup
+    return () => {
+      canvas.removeEventListener('click', handleCanvasClick);
+    };
+  }, [isPaused]); // Need to include isPaused to ensure correct click handling
   
   // Handle keyboard controls
   useEffect(() => {
@@ -230,6 +347,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Handle each key separately without using else if to allow multiple keys
       switch(e.key) {
+        case 'Escape':
+          // Toggle pause state when pressing Escape key
+          togglePause();
+          break;
         case 'Shift':
           setPlayer(prev => ({ ...prev, boosting: true }));
           break;
@@ -344,7 +465,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [isPlaying, playSound]);
+  }, [isPlaying, playSound, togglePause]);
   
   // Update player position based on movement flags
   const updatePlayerPosition = () => {
@@ -443,6 +564,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     
     // Reset game state
     setIsPlaying(true);
+    setIsPaused(false); // Make sure game starts in unpaused state
     setScore(0);
     setLives(3);
     setGameObjects([]);
@@ -627,12 +749,33 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     ctx.textAlign = 'right';
     ctx.fillText(`Lives: ${lives}`, GAME_WIDTH - 20, 30);
     
+    // Draw pause button
+    drawPauseButton(ctx);
+    
     // Draw controls hint during gameplay
     if (isPlaying) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('Use arrow keys or WASD to move in any direction', GAME_WIDTH / 2, GAME_HEIGHT - 10);
+    }
+    
+    // Draw pause indicator if game is paused
+    if (isPaused) {
+      // Draw semi-transparent overlay
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      
+      // Draw pause text
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '30px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2);
+      
+      // Add instruction to resume
+      ctx.font = '18px Arial';
+      ctx.fillText('Click the play button to resume', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
     }
   };
   
@@ -670,6 +813,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <p className="mb-1">• Avoid the red spiky obstacles</p>
             <p className="mb-1">• Use arrow keys or WASD to move freely in any direction</p>
             <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
+            <p className="mb-1">• Press ESC key or click the pause button to pause/unpause the game</p>
             <p className="mb-1">• On mobile, tap different screen areas to move in that direction</p>
             <p className="mb-1">• Your car will automatically face the direction you're moving</p>
             <p className="mb-1">• As your score increases, objects move faster and more obstacles appear!</p>
