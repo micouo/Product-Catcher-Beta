@@ -751,8 +751,8 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   return (
     <div className="game-container relative">
-      {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused} />
+      {/* Background Layer - only scrolls when game is playing and not paused */}
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused || !isPlaying} />
       
       {/* Game Canvas */}
       <canvas
