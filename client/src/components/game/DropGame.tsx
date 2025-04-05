@@ -639,7 +639,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   return (
     <div className="game-container relative">
       {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} buttonYOffset={40} />
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} buttonYOffset={80} />
       
       {/* Game Canvas */}
       <canvas

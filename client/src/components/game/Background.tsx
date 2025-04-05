@@ -203,7 +203,7 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       const y = e.clientY - rect.top;
       
       // Check if click is within button bounds
-      const buttonSize = 60;
+      const buttonSize = 70; // Must match the size in drawPausePlayButton
       const buttonX = width - buttonSize - 15;
       const buttonY = buttonYOffset;
       
@@ -718,9 +718,15 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
     if ((!pauseLoaded.current || !pauseImgRef.current) || 
         (!playLoaded.current || !playImgRef.current)) return;
     
-    const buttonSize = 60;
+    const buttonSize = 70;
     const buttonX = width - buttonSize - 15; // 15px from right edge
     const buttonY = buttonYOffset; // Use the configurable offset
+    
+    // Draw a semi-transparent circular background for better visibility
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.arc(buttonX + buttonSize/2, buttonY + buttonSize/2, buttonSize/2, 0, Math.PI * 2);
+    ctx.fill();
     
     // Draw the appropriate button based on game state
     if (isPaused) {
@@ -731,12 +737,7 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       ctx.drawImage(pauseImgRef.current, buttonX, buttonY, buttonSize, buttonSize);
     }
     
-    // Draw button label text below the button
-    ctx.font = '14px Arial';
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    const text = isPaused ? 'RESUME' : 'PAUSE';
-    ctx.fillText(text, buttonX + buttonSize / 2, buttonY + buttonSize + 15);
+    // No label text needed
   };
   
   /**
@@ -776,7 +777,8 @@ export default function Background({ width, height, buttonYOffset = 15 }: Backgr
       ref={canvasRef}
       width={width}
       height={height}
-      className="absolute top-0 left-0 z-0"
+      className="absolute top-0 left-0 z-0 pointer-events-auto"
+      style={{cursor: "pointer"}}
     />
   );
 }
