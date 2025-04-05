@@ -126,10 +126,11 @@ export default function Background({ width, height }: BackgroundProps) {
     
     // Clouds using multi-layer approach with different sizes and speeds
     // Reduced cloud sizes significantly based on user feedback
+    // Further reduced cloud widths to make them narrower (additional 10% reduction)
     const cloudLayers = [
-      { y: 40, width: width * 0.6, height: height * 0.15, speed: 1.0, offsetMultiplier: 1.0 },
-      { y: 80, width: width * 0.4, height: height * 0.1, speed: 1.2, offsetMultiplier: 1.2 },
-      { y: 20, width: width * 0.5, height: height * 0.12, speed: 0.8, offsetMultiplier: 0.8 }
+      { y: 40, width: width * 0.27, height: height * 0.15, speed: 1.0, offsetMultiplier: 1.0 },
+      { y: 80, width: width * 0.18, height: height * 0.1, speed: 1.2, offsetMultiplier: 1.2 },
+      { y: 20, width: width * 0.22, height: height * 0.12, speed: 0.8, offsetMultiplier: 0.8 }
     ];
     
     // Draw each cloud layer with its own parameters
