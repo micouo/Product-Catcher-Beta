@@ -137,6 +137,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   });
   const [isPlayerDamaged, setIsPlayerDamaged] = useState(false); // Track damage state for red flash effect
   const [damageFlashTime, setDamageFlashTime] = useState(0); // Track time for the flash effect
+  const [damageFlashCount, setDamageFlashCount] = useState(0); // Track flash count for multiple flashes
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 20,
@@ -271,6 +272,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setCurrentSpawnRate(BASE_SPAWN_RATE);
     setSpeedMultiplier(1.0);
     setIsPlayerDamaged(false); // Reset damage effect
+    setDamageFlashCount(0); // Reset flash counter
     
     // Keep high score
   };
@@ -359,7 +361,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player, isPlayerDamaged, damageFlashTime]);
+  }, [isPlaying, isPaused, score, currentSpawnRate, speedMultiplier, gameObjects, player, isPlayerDamaged, damageFlashTime, damageFlashCount]);
   
   // Function to create game objects - defined outside the useEffect for access by gameLoop
   const createGameObject = (): GameObject => {
@@ -679,6 +681,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             // Activate the damage flash effect
             setIsPlayerDamaged(true);
             setDamageFlashTime(Date.now());
+            setDamageFlashCount(0); // Reset flash count to start flashing
             
             // If obstacle hits player, reduce lives
             setLives(prevLives => {
@@ -737,6 +740,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     setCurrentSpawnRate(BASE_SPAWN_RATE);
     setSpeedMultiplier(1.0);
     setIsPlayerDamaged(false); // Reset damage effect
+    setDamageFlashCount(0); // Reset flash counter
     
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
@@ -820,11 +824,29 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // Check if player is in damaged state (flashing red)
       const now = Date.now();
-      if (isPlayerDamaged && now - damageFlashTime < 500) { // Flash for 500ms
-        // Apply red tint effect by using globalCompositeOperation
+      
+      // Define flash constants
+      const MAX_FLASH_COUNT = 5; // Number of flashes
+      const FLASH_DURATION = 100; // Duration of each flash in ms
+      const TOTAL_FLASH_TIME = FLASH_DURATION * MAX_FLASH_COUNT * 2; // Total flash time (on + off)
+      
+      if (isPlayerDamaged && now - damageFlashTime < TOTAL_FLASH_TIME) {
+        // Calculate current flash phase
+        const elapsedTime = now - damageFlashTime;
+        const flashPhase = Math.floor(elapsedTime / FLASH_DURATION);
+        
+        // Flash is on for even phases, off for odd phases
+        const shouldFlash = flashPhase % 2 === 0;
+        
+        // Update flash count if we're at an odd phase (just finished a flash)
+        if (flashPhase % 2 === 1 && Math.floor(flashPhase / 2) > damageFlashCount) {
+          setDamageFlashCount(Math.floor(flashPhase / 2));
+        }
+        
+        // Draw the car
         ctx.save();
         
-        // Draw the car normally first
+        // Always draw the car first
         ctx.drawImage(
           currentCarImage, 
           -drawWidth / 2,
@@ -833,16 +855,20 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           drawHeight
         );
         
-        // Apply red overlay with alpha compositing
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
-        ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
+        // Apply red tint only during flash phases (even numbers)
+        if (shouldFlash) {
+          // Apply red overlay with source-atop to prevent affecting outside the car
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Semi-transparent red
+          ctx.fillRect(-drawWidth / 2, -drawHeight / 2 - 10, drawWidth, drawHeight);
+        }
         
         ctx.restore();
         
-        // Turn off damage effect after 500ms
-        if (now - damageFlashTime >= 500) {
+        // Turn off damage effect after all flashes complete
+        if (elapsedTime >= TOTAL_FLASH_TIME || damageFlashCount >= MAX_FLASH_COUNT) {
           setIsPlayerDamaged(false);
+          setDamageFlashCount(0);
         }
       } else {
         // Draw normally without red tint
@@ -854,9 +880,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           drawHeight
         );
         
-        // Reset damage state after flash time expires
-        if (isPlayerDamaged && now - damageFlashTime >= 500) {
+        // Reset damage state after all flash time expires
+        if (isPlayerDamaged) {
           setIsPlayerDamaged(false);
+          setDamageFlashCount(0);
         }
       }
     } else {
