@@ -291,9 +291,6 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       // Clear canvas
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       
-      // Draw player area border
-      drawPlayerArea(ctx);
-      
       // Only update game state if not paused
       if (!isPaused) {
         // Update player position based on direction
@@ -342,6 +339,10 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       gameObjects.forEach(obj => {
         drawObject(ctx, obj);
       });
+      
+      // Draw player area border after drawing player and objects
+      // so it won't be affected by red flash
+      drawPlayerArea(ctx);
       
       // Draw UI elements
       drawUI(ctx);
@@ -758,17 +759,26 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   
   // Draw player area border
   const drawPlayerArea = (ctx: CanvasRenderingContext2D) => {
+    // Save context state to prevent any effects from affecting the border
+    ctx.save();
+    
+    // Reset any composite operations
+    ctx.globalCompositeOperation = 'source-over';
+    
     const areaY = GAME_HEIGHT - PLAYER_AREA_HEIGHT;
     
     // Draw dashed line to show player area
     ctx.setLineDash([10, 5]);
-    ctx.strokeStyle = '#FFFFFF'; // White color with opacity
+    ctx.strokeStyle = '#FFFFFF'; // White color
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, areaY);
     ctx.lineTo(GAME_WIDTH, areaY);
     ctx.stroke();
     ctx.setLineDash([]);
+    
+    // Restore context state
+    ctx.restore();
     
     // No need for background fill as we're now using the sidewalk from the background
   };
@@ -827,7 +837,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
       
       // Define flash constants
       const MAX_FLASH_COUNT = 5; // Number of flashes
-      const FLASH_DURATION = 100; // Duration of each flash in ms
+      const FLASH_DURATION = 50; // Duration of each flash in ms (reduced to make it quicker)
       const TOTAL_FLASH_TIME = FLASH_DURATION * MAX_FLASH_COUNT * 2; // Total flash time (on + off)
       
       if (isPlayerDamaged && now - damageFlashTime < TOTAL_FLASH_TIME) {
