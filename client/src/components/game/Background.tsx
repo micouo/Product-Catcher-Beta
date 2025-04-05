@@ -525,13 +525,12 @@ export default function Background({ width, height }: BackgroundProps) {
     // Position the Calgary Tower in the background
     const sidewalkY = height * 0.6;
     
-    // Configurable size for the tower (easily adjustable)
-    const towerScale = 0.8; // Scale factor for the tower (adjust as needed)
-    const towerWidth = width * 0.1 * towerScale; // 10% of screen width by default
+    // EASILY CONFIGURABLE PROPERTIES FOR CALGARY TOWER
+    const towerScale = 2; // Scale factor for the tower (adjust as needed)
+    const towerWidth = width * 0.2 * towerScale; // 10% of screen width by default
     const towerHeight = height * 0.35 * towerScale; // 35% of screen height by default
-    
-    // Configurable vertical position (easily adjustable)
-    const towerYOffset = 40; // Adjust this to move the tower up (smaller value) or down (larger value)
+    const towerYOffset = 40; // Vertical position: smaller = higher, larger = lower
+    const towerXOffset = 0; // Horizontal position: positive = right, negative = left
     const towerY = sidewalkY - towerHeight + towerYOffset;
     
     // Use a much larger spacing to ensure the tower appears less frequently
@@ -550,7 +549,8 @@ export default function Background({ width, height }: BackgroundProps) {
     const numTowers = Math.ceil(patternWidth / towerSpacing) + 1;
     
     for (let i = 0; i < numTowers; i++) {
-      const x = x1 + i * towerSpacing;
+      // Apply the X offset to tower positioning
+      const x = x1 + i * towerSpacing + towerXOffset;
       
       // Only draw if within our visible area with buffer
       if (x > -towerWidth && x < width + towerWidth) {
@@ -571,13 +571,12 @@ export default function Background({ width, height }: BackgroundProps) {
     // Position the Blue Ring on the sidewalk between trees
     const sidewalkY = height * 0.6;
     
-    // Configurable size for the Blue Ring (easily adjustable)
+    // EASILY CONFIGURABLE PROPERTIES FOR BLUE RING
     const ringScale = 0.9; // Scale factor for the ring (adjust as needed)
     const ringWidth = width * 0.15 * ringScale; // 15% of screen width by default
     const ringHeight = height * 0.2 * ringScale; // 20% of screen height by default
-    
-    // Configurable vertical position (easily adjustable)
-    const ringYOffset = 30; // Adjust this to move the ring up (smaller value) or down (larger value)
+    const ringYOffset = 30; // Vertical position: smaller = higher, larger = lower
+    const ringXOffset = 0;  // Horizontal position: positive = right, negative = left
     const ringY = sidewalkY - ringHeight + ringYOffset;
     
     // Use a much larger spacing to ensure the ring appears less frequently
@@ -588,16 +587,17 @@ export default function Background({ width, height }: BackgroundProps) {
     const visibleWidth = width * 3;
     const patternWidth = Math.ceil(visibleWidth / ringSpacing) * ringSpacing;
     
-    // Use the Blue Ring position tracker with a speed multiplier
-    // that's between tree speed and building speed
-    let x1 = (blueRingPositionX.current * 0.8) % patternWidth;
+    // Anchor the Blue Ring to the sidewalk movement for consistency
+    // Use the sidewalk position tracker (same as used for trees)
+    let x1 = (treePositionX.current) % patternWidth;
     if (x1 > 0) x1 -= patternWidth;
     
     // Draw rings with very large spacing to avoid having multiple on screen at once
     const numRings = Math.ceil(patternWidth / ringSpacing) + 1;
     
     for (let i = 0; i < numRings; i++) {
-      const x = x1 + i * ringSpacing;
+      // Apply the X offset to ring positioning
+      const x = x1 + i * ringSpacing + ringXOffset;
       
       // Only draw if within our visible area with buffer
       if (x > -ringWidth && x < width + ringWidth) {
