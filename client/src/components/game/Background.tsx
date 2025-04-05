@@ -54,6 +54,10 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   const calgaryTowerLoaded = useRef(false);
   const blueRingLoaded = useRef(false);
   
+  // Store pre-generated world elements to prevent on-screen randomization
+  // This is crucial for preventing the randomization of assets during gameplay
+  const worldPatternsCache = useRef<Map<number, number[]>>(new Map());
+  
   // Layer speeds
   const CLOUD_SPEED = 0.3;  // Slowest (clouds in background)
   const BUILDING_SPEED = 0.6; // Medium-slow (buildings in background)
@@ -62,7 +66,38 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   const CALGARY_TOWER_SPEED = 0.4; // Slower than buildings to appear in distant background
   const BLUE_RING_SPEED = TREE_SPEED;     // Same as tree/sidewalk speed (anchored to sidewalk)
   
+  // Pre-generate world building patterns at the start
+  // This is the key to preventing on-screen randomization
+  const preGenerateWorldPatterns = () => {
+    console.log('Pre-generating world patterns to prevent on-screen randomization');
+    
+    // Define base building patterns
+    const buildingPatterns = [
+      [0, 1, 2], // Pattern 1: Building 1, 2, 3
+      [2, 0, 1], // Pattern 2: Building 3, 1, 2
+      [1, 2, 0]  // Pattern 3: Building 2, 3, 1
+    ];
+    
+    // Generate a wide range of world positions and assign fixed patterns
+    // This ensures all randomization happens at startup, not during gameplay
+    const worldRange = 10000; // Covers far more positions than we'll need
+    const worldSectionSize = 300; // Each section gets a fixed pattern
+    
+    // For each possible world position, pre-assign a fixed building pattern
+    for (let worldPos = -worldRange; worldPos < worldRange; worldPos += worldSectionSize) {
+      // Use a deterministic but seemingly random hash function
+      // This is based solely on worldPos and will always return the same value
+      const hash = Math.abs(((worldPos * 1327) + 2473) % buildingPatterns.length);
+      
+      // Store the pattern for this world position in our cache
+      worldPatternsCache.current.set(worldPos, [...buildingPatterns[hash]]);
+    }
+  };
+  
   useEffect(() => {
+    // Call this immediately to set up all patterns before first render
+    preGenerateWorldPatterns();
+    
     // Load cloud image
     const cloudImg = cloudImgRef.current;
     cloudImg.src = cloudImage;
@@ -523,12 +558,24 @@ export default function Background({ width, height, isPaused = false }: Backgrou
       
       // Calculate world position for this specific cluster
       // This ensures each world position always gets the same pattern regardless of scrolling
-      const worldPos = worldLeftmostPos + (clusterIndex * worldSectionSize);
+      const worldPos = Math.floor((worldLeftmostPos + (clusterIndex * worldSectionSize)) / 300) * 300;
       
-      // Use world position to derive a consistent pattern index
-      // Using a fixed hash function to get the same pattern every time for this world position
-      const hash = Math.abs(Math.floor(worldPos / 1000)) % buildingPatterns.length;
-      const buildingOrder = buildingPatterns[hash];
+      // Get the pre-generated pattern from our cache that was created at startup
+      // This is the key to preventing visible randomization during gameplay
+      let buildingOrder;
+      
+      if (worldPatternsCache.current.has(worldPos)) {
+        // Use the pre-generated pattern from our cache
+        buildingOrder = worldPatternsCache.current.get(worldPos)!;
+      } else {
+        // This should never happen since we pre-generated all patterns
+        // But just in case, fallback to a consistent pattern
+        const hash = Math.abs(((worldPos * 1327) + 2473) % buildingPatterns.length);
+        buildingOrder = buildingPatterns[hash];
+        
+        // Cache it for future use
+        worldPatternsCache.current.set(worldPos, [...buildingPatterns[hash]]);
+      }
       
       // Current x position within the cluster
       let currentX = clusterStartX;
