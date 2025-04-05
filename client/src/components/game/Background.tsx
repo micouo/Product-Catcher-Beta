@@ -13,13 +13,14 @@ import playImage from "../../assets/play.png";
 interface BackgroundProps {
   width: number;
   height: number;
+  buttonYOffset?: number; // Optional Y offset for the pause/play button
 }
 
 /**
  * A simple background component that renders a continuously scrolling background
  * using the two-image technique for perfect infinite scrolling.
  */
-export default function Background({ width, height }: BackgroundProps) {
+export default function Background({ width, height, buttonYOffset = 15 }: BackgroundProps) {
   // State for pausing animation
   const [isPaused, setIsPaused] = useState(false);
   
@@ -204,7 +205,7 @@ export default function Background({ width, height }: BackgroundProps) {
       // Check if click is within button bounds
       const buttonSize = 60;
       const buttonX = width - buttonSize - 15;
-      const buttonY = 15;
+      const buttonY = buttonYOffset;
       
       if (
         x >= buttonX && 
@@ -228,7 +229,7 @@ export default function Background({ width, height }: BackgroundProps) {
       // Remove click event listener
       canvas.removeEventListener('click', handleCanvasClick);
     };
-  }, [width, height, isPaused]);
+  }, [width, height, isPaused, buttonYOffset]);
   
   /**
    * Draw the sky background
@@ -719,7 +720,7 @@ export default function Background({ width, height }: BackgroundProps) {
     
     const buttonSize = 60;
     const buttonX = width - buttonSize - 15; // 15px from right edge
-    const buttonY = 15; // 15px from top edge
+    const buttonY = buttonYOffset; // Use the configurable offset
     
     // Draw the appropriate button based on game state
     if (isPaused) {
