@@ -633,7 +633,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
   
   /**
    * Draw grass on the sidewalk with the two-image infinite scrolling technique
-   * Grass is drawn on top of the sidewalk but behind the trees
+   * Grass is drawn as a single uniform row on top of the sidewalk but behind the trees
    */
   const drawGrass = (ctx: CanvasRenderingContext2D) => {
     if (!grassLoaded.current || !grassImgRef.current) return;
@@ -645,70 +645,46 @@ export default function Background({ width, height, isPaused = false }: Backgrou
     // You can adjust these values to change appearance and placement
     
     // APPEARANCE
-    const GRASS_WIDTH = width * 0.2;        // Width of each grass patch
+    const GRASS_WIDTH = width * 0.25;       // Width of each grass patch
     const GRASS_HEIGHT = height * 0.08;     // Height of each grass patch
     
     // POSITIONING
     const GRASS_Y_OFFSET = 20;              // Vertical position: smaller = higher, larger = lower
-                                           // Adjust this value to move all grass rows up or down together
+                                           // Adjust this single value to move grass up or down
     
     // GENERATION SETTINGS
-    const GRASS_OVERLAP = 0.75;            // How much each grass patch overlaps (0.5 = 50% overlap)
-                                           // Higher values create more dense coverage with no gaps
-    
-    const BUFFER_MULTIPLIER = 6;           // Increase this to prevent gaps at the edges
-                                           // Higher values ensure consistent grass appearance
-    
-    // ROWS CONFIGURATION
-    // Each row has same width but can be configured with different heights and offsets  
-    const GRASS_ROWS = [
-      { yOffset: 0,   heightScale: 1.0 },  // Bottom row (no offset)
-      { yOffset: -4,  heightScale: 1.0 },  // Middle row (slightly higher)
-      { yOffset: -8,  heightScale: 1.0 }   // Top row (highest)
-    ];
+    const GRASS_OVERLAP = 0.3;             // How much each grass patch overlaps (0.3 = 30% overlap)
+                                           // Lower values create a more consistent texture
     
     // END OF CONFIGURATION SECTION
     // ============================================
     
-    // Base Y position for all grass (sidewalk with offset adjustment)
-    const baseGrassY = sidewalkY - GRASS_HEIGHT + GRASS_Y_OFFSET;
+    // Calculate the exact Y position for the grass
+    const grassY = sidewalkY - GRASS_HEIGHT + GRASS_Y_OFFSET;
     
-    // Create extremely dense grass coverage with minimal spacing
-    // Using aggressive overlap to ensure no gaps appear
-    const grassSpacing = GRASS_WIDTH * (1 - GRASS_OVERLAP); // e.g., 75% overlap = 25% spacing
+    // Calculate spacing based on overlap to create a uniform appearance
+    const grassSpacing = GRASS_WIDTH * (1 - GRASS_OVERLAP);
     
-    // Extra-wide visible width with substantial buffer to prevent any gaps
-    const visibleWidth = width * BUFFER_MULTIPLIER; 
+    // Create an extra-wide pattern to prevent any gaps
+    const visibleWidth = width * 5; // 5x screen width for extensive coverage
     const patternWidth = Math.ceil(visibleWidth / grassSpacing) * grassSpacing;
     
-    // Use the same exact synchronization as trees for grass movement (perfect sync)
+    // Use the exact same synchronization as trees for seamless movement
     let x1 = (treePositionX.current) % patternWidth; 
     if (x1 > 0) x1 -= patternWidth;
     
-    // Calculate a very large number of patches to ensure complete coverage
-    const numPatches = Math.ceil(patternWidth / grassSpacing) + 10; // Extra patches for safety
+    // Calculate plenty of patches to ensure complete coverage
+    const numPatches = Math.ceil(patternWidth / grassSpacing) + 5;
     
-    // Extended buffer for off-screen drawing to prevent any possible gaps
-    const bufferWidth = GRASS_WIDTH * BUFFER_MULTIPLIER;
-    
-    // Draw multiple rows of grass with consistent positioning
-    GRASS_ROWS.forEach((row) => {
-      // Calculate this row's Y position based on base position and row-specific offset
-      const rowY = baseGrassY + row.yOffset;
+    // Draw a single row of grass patches with consistent spacing
+    for (let i = 0; i < numPatches; i++) {
+      const x = x1 + (i * grassSpacing);
       
-      // Calculate this row's height with any scaling
-      const rowHeight = GRASS_HEIGHT * row.heightScale;
-      
-      // Draw all patches for this row
-      for (let i = 0; i < numPatches; i++) {
-        const x = x1 + (i * grassSpacing);
-        
-        // Only draw if within our extended visible area (with large buffer)
-        if (x > -bufferWidth && x < width + bufferWidth) {
-          ctx.drawImage(grassImg, x, rowY, GRASS_WIDTH, rowHeight);
-        }
+      // Use a very large buffer to ensure we never see edges
+      if (x > -GRASS_WIDTH * 2 && x < width + GRASS_WIDTH * 2) {
+        ctx.drawImage(grassImg, x, grassY, GRASS_WIDTH, GRASS_HEIGHT);
       }
-    });
+    }
   };
 
   /**
