@@ -51,9 +51,7 @@ export function useSound() {
   
   // Ref hooks must be in consistent order on every render
   const audioContextRef = useRef<AudioContext | null>(null);
-  const musicOscillatorRef = useRef<OscillatorNode | null>(null);
-  const musicGainRef = useRef<GainNode | null>(null);
-  const interactionRef = useRef<boolean>(false);
+  const musicIntervalRef = useRef<number | null>(null); // Store interval ID instead of oscillator
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   
   // Initialize audio context on first user interaction
@@ -68,16 +66,8 @@ export function useSound() {
       // Mark that we've had user interaction
       interactionRef.current = true;
       
-      // Create audio elements if they don't exist yet
-      if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.mp3');
-        backgroundMusicElement.loop = true;
-        backgroundMusicElement.volume = 0.3;
-        // Preload the audio
-        backgroundMusicElement.preload = 'auto';
-        // Add to audio elements map so we can use the same play method
-        audioElements.music = backgroundMusicElement;
-      }
+      // We won't try to create a file-based music element anymore
+      // since we're using Web Audio API directly for music
       
       if (!hitSoundElement) {
         hitSoundElement = new Audio('/sounds/hit.wav');
@@ -111,24 +101,63 @@ export function useSound() {
     // Skip this check for sound effects when music is disabled
     if (type === 'music' && !musicEnabled) return;
     
-    // If we have a real audio element for this sound, play it
+    // Special case for music since we're having issues with file playback
+    if (type === 'music') {
+      // Very simple tone generation for background ambience
+      if (audioContextRef.current && musicEnabled) {
+        try {
+          // Simple cleanup of previous oscillator if exists
+          if (musicOscillatorRef.current) {
+            try {
+              musicOscillatorRef.current.stop();
+              musicOscillatorRef.current = null;
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+          
+          console.log('Creating simplified background music');
+          
+          // Create a basic oscillator with a simple sine wave
+          const ctx = audioContextRef.current;
+          
+          // Create a gain node for volume control
+          const gainNode = ctx.createGain();
+          gainNode.gain.value = 0.05; // Very quiet
+          gainNode.connect(ctx.destination);
+          
+          // Create a basic oscillator
+          const oscillator = ctx.createOscillator();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 220; // A3 note
+          oscillator.connect(gainNode);
+          oscillator.start();
+          
+          // Store for later reference
+          musicOscillatorRef.current = oscillator;
+          musicGainRef.current = gainNode;
+          
+          console.log('Successfully created background music with Web Audio API');
+        } catch (error) {
+          console.error('Error creating minimal background music:', error);
+        }
+      }
+      return;
+    }
+    
+    // Regular sound handling for non-music sounds
     if (audioElements[type]) {
       try {
         // Stop and reset the audio to allow replaying the sound immediately
         const audio = audioElements[type];
         if (audio) {
-          // Only reset the time for non-music sounds (to avoid restarting music from beginning)
-          if (type !== 'music') {
-            audio.currentTime = 0;
-          }
+          audio.currentTime = 0;
           
-          // Play the sound or music
+          // Play the sound
           audio.play().catch(err => {
             console.error(`Error playing ${type}:`, err);
-            // Fall back to generated sound on error, but only for non-music
-            if (type !== 'music') {
-              playGeneratedSound(type);
-            }
+            // Fall back to generated sound
+            playGeneratedSound(type);
           });
         }
         return;
@@ -137,10 +166,8 @@ export function useSound() {
       }
     }
     
-    // If no audio element or error, use the generated sound (only for non-music)
-    if (type !== 'music') {
-      playGeneratedSound(type);
-    }
+    // If no audio element or error, use the generated sound
+    playGeneratedSound(type);
   };
   
   // Play a generated sound (for sounds without files)
@@ -185,9 +212,10 @@ export function useSound() {
     try {
       // Create background music element if it doesn't exist
       if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.mp3');
+        backgroundMusicElement = new Audio('/background-music.wav');
         backgroundMusicElement.loop = true;
         backgroundMusicElement.preload = 'auto';
+        console.log('Created background music element in startBackgroundMusic (WAV)');
       }
       
       // Set volume before playing
@@ -285,9 +313,21 @@ export function useSound() {
   // Explicitly stop the background music
   const stopMusic = () => {
     try {
+      // Stop file-based music if it exists
       if (backgroundMusicElement) {
         backgroundMusicElement.pause();
         backgroundMusicElement.currentTime = 0;
+      }
+      
+      // Stop Web Audio API music if it exists
+      if (musicOscillatorRef.current) {
+        try {
+          musicOscillatorRef.current.stop();
+          musicOscillatorRef.current = null;
+        } catch (err) {
+          // Ignore errors from stopping oscillators
+          console.log('Stopped Web Audio background music');
+        }
       }
     } catch (error) {
       console.error('Error stopping background music:', error);
