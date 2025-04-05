@@ -1,6 +1,6 @@
 import { useSound } from '../hooks/use-sound';
 import { useEffect } from 'react';
-import { VolumeX, Volume2, Music, Music3 } from 'lucide-react';
+import { VolumeX, Volume2, Music, Music3, Play } from 'lucide-react';
 
 interface SoundControlsProps {
   className?: string;
@@ -12,7 +12,8 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
     musicEnabled, 
     toggleSound, 
     toggleMusic, 
-    initializeAudio 
+    initializeAudio,
+    playSound
   } = useSound();
 
   // Initialize audio on first user interaction
@@ -35,6 +36,14 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
       document.removeEventListener('touchstart', handleInitialInteraction);
     };
   }, [initializeAudio]);
+
+  // Force start audio on manual button click
+  const handleManualStart = () => {
+    // This is a direct user interaction, which ensures audio can play
+    initializeAudio();
+    // Try playing a test sound
+    playSound('collect');
+  };
 
   return (
     <div className={`flex items-center ${className}`}>
@@ -74,6 +83,16 @@ export default function SoundControls({ className = '' }: SoundControlsProps) {
             <span className="ml-1 text-sm text-gray-400">Music: OFF</span>
           </>
         )}
+      </button>
+      
+      <button
+        onClick={handleManualStart}
+        className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors focus:outline-none mx-1 flex items-center"
+        aria-label="Start Audio"
+        title="Click to enable sounds"
+      >
+        <Play className="w-5 h-5 text-white" />
+        <span className="ml-1 text-sm text-white">Start Audio</span>
       </button>
     </div>
   );

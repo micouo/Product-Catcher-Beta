@@ -2,15 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 
 type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
 
-// Create a separate audio element for background music
-const backgroundMusicElement = new Audio('/background-music.wav');
-backgroundMusicElement.loop = true; // Enable looping
+// Create audio elements lazily when needed
+let backgroundMusicElement: HTMLAudioElement | null = null;
+let hitSoundElement: HTMLAudioElement | null = null;
+let pickupSoundElement: HTMLAudioElement | null = null;
 
-// Audio elements for real sound files
-const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {
-  hit: new Audio('/sounds/hit.wav'),
-  collect: new Audio('/sounds/pickup.wav'),
-};
+// Audio elements for real sound files - will create these lazily
+const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {};
 
 // Sound generation parameters (for sounds without files)
 type SoundConfig = {
@@ -60,30 +58,49 @@ export function useSound() {
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
-    if (!interactionRef.current && !audioContextRef.current) {
-      try {
+    // This is a user-triggered action, so we can create audio elements now
+    try {
+      // Create the audio context if it doesn't exist
+      if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        interactionRef.current = true;
-        
-        // Start background music automatically
-        if (!musicInitialized) {
-          try {
-            // Set volume before playing
-            backgroundMusicElement.volume = 0.3;
-            
-            // Play the music file (it's set to loop automatically)
-            backgroundMusicElement.play().catch(err => {
-              console.error('Error playing background music:', err);
-            });
-            
-            setMusicInitialized(true);
-          } catch (error) {
-            console.error('Error starting background music:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Web Audio API not supported', error);
       }
+      
+      // Mark that we've had user interaction
+      interactionRef.current = true;
+      
+      // Create audio elements if they don't exist yet
+      if (!backgroundMusicElement) {
+        backgroundMusicElement = new Audio('/background-music.wav');
+        backgroundMusicElement.loop = true;
+        backgroundMusicElement.volume = 0.3;
+      }
+      
+      if (!hitSoundElement) {
+        hitSoundElement = new Audio('/sounds/hit.wav');
+        hitSoundElement.volume = 0.45; // 45% volume
+        audioElements.hit = hitSoundElement;
+      }
+      
+      if (!pickupSoundElement) {
+        pickupSoundElement = new Audio('/sounds/pickup.wav');
+        pickupSoundElement.volume = 1.0;
+        audioElements.collect = pickupSoundElement;
+      }
+      
+      // Start background music in response to user interaction
+      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
+        // Play the music (must be in response to a user action)
+        backgroundMusicElement.play()
+          .then(() => {
+            console.log('Background music started successfully');
+            setMusicInitialized(true);
+          })
+          .catch(err => {
+            console.error('Error playing background music:', err);
+          });
+      }
+    } catch (error) {
+      console.error('Error initializing audio:', error);
     }
   };
   
@@ -154,13 +171,21 @@ export function useSound() {
     if (!musicEnabled) return;
     
     try {
-      // Set volume before playing
-      backgroundMusicElement.volume = 0.3;
+      // Create background music element if it doesn't exist
+      if (!backgroundMusicElement) {
+        backgroundMusicElement = new Audio('/background-music.wav');
+        backgroundMusicElement.loop = true;
+      }
       
-      // Play the music file (it's set to loop automatically)
-      backgroundMusicElement.play().catch(err => {
-        console.error('Error playing background music:', err);
-      });
+      // Set volume before playing
+      if (backgroundMusicElement) {
+        backgroundMusicElement.volume = 0.3;
+        
+        // Play the music file (it's set to loop automatically)
+        backgroundMusicElement.play().catch(err => {
+          console.error('Error playing background music:', err);
+        });
+      }
     } catch (error) {
       console.error('Error starting background music:', error);
     }
@@ -182,7 +207,9 @@ export function useSound() {
       } else {
         // Turn music off
         try {
-          backgroundMusicElement.pause();
+          if (backgroundMusicElement) {
+            backgroundMusicElement.pause();
+          }
         } catch (error) {
           console.error('Error pausing background music:', error);
         }
@@ -196,7 +223,9 @@ export function useSound() {
   const setMusicVolume = (volume: number) => {
     // Set the volume of the real audio element
     try {
-      backgroundMusicElement.volume = Math.max(0, Math.min(1, volume));
+      if (backgroundMusicElement) {
+        backgroundMusicElement.volume = Math.max(0, Math.min(1, volume));
+      }
     } catch (error) {
       console.error('Error setting music volume:', error);
     }
@@ -212,8 +241,10 @@ export function useSound() {
     return () => {
       // Stop the background music
       try {
-        backgroundMusicElement.pause();
-        backgroundMusicElement.currentTime = 0;
+        if (backgroundMusicElement) {
+          backgroundMusicElement.pause();
+          backgroundMusicElement.currentTime = 0;
+        }
       } catch (error) {
         console.error('Error stopping background music:', error);
       }
@@ -240,8 +271,10 @@ export function useSound() {
   // Explicitly stop the background music
   const stopMusic = () => {
     try {
-      backgroundMusicElement.pause();
-      backgroundMusicElement.currentTime = 0;
+      if (backgroundMusicElement) {
+        backgroundMusicElement.pause();
+        backgroundMusicElement.currentTime = 0;
+      }
     } catch (error) {
       console.error('Error stopping background music:', error);
     }
