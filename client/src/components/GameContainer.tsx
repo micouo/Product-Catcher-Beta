@@ -1,23 +1,33 @@
 import { useState, useEffect } from "react";
 import LoadingState from "./LoadingState";
 import DropGame from "./game/DropGame";
+import { useSound } from "../hooks/use-sound";
 
 export default function GameContainer() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentScore, setCurrentScore] = useState(0);
   const [gameActive, setGameActive] = useState(false);
+  const { initializeAudio, startMusic } = useSound();
 
   // Simulate loading time for game assets
   useEffect(() => {
     // In a real app, this would load assets, sounds, etc.
     const timer = setTimeout(() => {
       setIsLoading(false);
+      
+      // Initialize audio after loading completes
+      initializeAudio();
+      
+      // Small delay to ensure audio context is ready
+      setTimeout(() => {
+        startMusic();
+      }, 100);
     }, 1500);
     
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  }, [initializeAudio, startMusic]);
 
   // Handle score updates from the game
   const handleScoreUpdate = (score: number) => {
@@ -28,6 +38,32 @@ export default function GameContainer() {
   const handleGameOver = () => {
     setGameActive(false);
   };
+  
+  // Add an event listener for the first user interaction
+  useEffect(() => {
+    const startAudioOnInteraction = () => {
+      // Initialize audio and start music on first user interaction
+      initializeAudio();
+      startMusic();
+      
+      // Remove the event listeners after first interaction
+      document.removeEventListener('click', startAudioOnInteraction);
+      document.removeEventListener('keydown', startAudioOnInteraction);
+      document.removeEventListener('touchstart', startAudioOnInteraction);
+    };
+    
+    // Add event listeners for user interaction
+    document.addEventListener('click', startAudioOnInteraction);
+    document.addEventListener('keydown', startAudioOnInteraction);
+    document.addEventListener('touchstart', startAudioOnInteraction);
+    
+    return () => {
+      // Clean up event listeners
+      document.removeEventListener('click', startAudioOnInteraction);
+      document.removeEventListener('keydown', startAudioOnInteraction);
+      document.removeEventListener('touchstart', startAudioOnInteraction);
+    };
+  }, [initializeAudio, startMusic]);
 
   return (
     <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden mb-8">
