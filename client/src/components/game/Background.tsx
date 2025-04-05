@@ -405,12 +405,12 @@ export default function Background({ width, height }: BackgroundProps) {
     const buildingScale = width * 0.25; // Dramatically increased base scale for buildings (more than 2x)
     const buildingSizes = [
       { img: building1Img, width: buildingScale * 0.92 * 1.2, height: height * 0.42}, // Width increased by 20%
-      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.5, height: height * 0.44 * 1.5 }, // Building 2 increased by another 20%
+      { img: building2Img, width: buildingScale * 1.02 * 1.2 * 1.5, height: height * 0.5 * 1.2 }, // Building 2 increased by another 20%
       { img: building3Img, width: buildingScale * 0.96 * 1.2, height: height * 0.43 }  // Width increased by 20%
     ];
     
     // Create building clusters with specific spacing
-    const betweenBuildingGap = 2; // 2px between buildings in a cluster
+    const betweenBuildingGap = 0.1; // 2px between buildings in a cluster
     const betweenClusterGap = 30; // 30px between clusters
     
     // Calculate the width of a single cluster (3 buildings + gaps between them)
@@ -455,10 +455,15 @@ export default function Background({ width, height }: BackgroundProps) {
         const building = buildingSizes[buildingIndex];
         
         // Draw the building
+        // Special case for building 2 - position it to touch the sidewalk
+        const yPosition = (buildingIndex === 1) 
+          ? sidewalkY - building.height + 40 // Building 2 positioned to touch the sidewalk
+          : buildingY - building.height;
+            
         ctx.drawImage(
           building.img,
           currentX,
-          buildingY - building.height,
+          yPosition,
           building.width,
           building.height
         );
