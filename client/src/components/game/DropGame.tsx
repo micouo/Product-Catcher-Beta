@@ -35,13 +35,13 @@ interface Player {
 }
 
 // Game constants
-const GAME_WIDTH = 400;
-const GAME_HEIGHT = 600;
+const GAME_WIDTH = 480;
+const GAME_HEIGHT = 720;
 const PLAYER_WIDTH = 40;
 const PLAYER_HEIGHT = 40;
 const PLAYER_SPEED = 5;
 const BOOST_MULTIPLIER = 1.5;
-const PLAYER_AREA_HEIGHT = 200; // Area at the bottom where player can move
+const PLAYER_AREA_HEIGHT = 240; // Area at the bottom where player can move
 const BASE_OBJECT_SPEED = 3;
 const MAX_OBJECT_SPEED = 8;
 const OBJECT_WIDTH = 40;
@@ -748,7 +748,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
   return (
     <div className="game-container relative">
       {/* Background Layer */}
-      <Background width={GAME_WIDTH} height={GAME_HEIGHT} />
+      <Background width={GAME_WIDTH} height={GAME_HEIGHT} isPaused={isPaused} />
       
       {/* Game Canvas */}
       <canvas
