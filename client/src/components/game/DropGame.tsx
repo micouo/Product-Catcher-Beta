@@ -1181,108 +1181,192 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
         className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
       />
 
+      {/* Game Start Screen or Game Over Screen */}
       {!isPlaying && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
             {score > 0 ? "Game Over!" : "District Driver"}
           </h2>
 
+          {/* GAME OVER SCREEN CONTENT */}
           {score > 0 && (
-            <p className="text-2xl text-white mb-4">Your Score: {score}</p>
-          )}
-
-          {/* Game menu content with flex layout for instructions and car selector */}
-          <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
-            {/* Instructions on the left */}
-            <div className="flex-1 text-gray-300 text-left">
-              <p className="text-xl font-semibold mb-2 text-blue-400">
-                How to Play:
-              </p>
-              <p className="mb-1">
-                • Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳,
-                ☕, 🍦)
-              </p>
-              <p className="mb-1">• Avoid the red spiky obstacles</p>
-              <p className="mb-1">
-                • Use arrow keys or WASD to move freely in any direction
-              </p>
-              <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
-              <p className="mb-1">
-                • Press ESC key or click the pause button to pause/unpause the
-                game
-              </p>
-              <p className="mb-1">
-                • On mobile, tap different screen areas to move in that
-                direction
-              </p>
-              <p className="mb-1">
-                • Your car will automatically face the direction you're moving
-              </p>
-              <p className="mb-1">
-                • As your score increases, objects move faster and more
-                obstacles appear!
-              </p>
-            </div>
-
-            {/* Car selection on the right */}
-            <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
-              <p className="text-xl font-semibold mb-4 text-blue-400">
-                Choose Your Car:
-              </p>
-
-              {/* Car preview area */}
-              <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
-                {/* Current selected car display */}
-                <div className="w-40 h-32 relative flex justify-center items-center">
-                  <img
-                    src={carImages[selectedCar]?.src}
-                    alt={selectedCar}
-                    className="w-full h-full object-contain"
-                  />
+            <div className="w-full max-w-4xl px-4">
+              {/* Special reward message for scores over 200 */}
+              {score >= 200 ? (
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-lg mb-6">
+                  <h3 className="text-2xl text-yellow-300 font-bold mb-2">🎉 Congratulations! 🎉</h3>
+                  <p className="text-white text-lg mb-3">
+                    You won a 5% discount on your next purchase!
+                  </p>
+                  <p className="text-white text-md mb-4">
+                    Please scan this QR Code at a store of your choice located within our partners in the University District
+                  </p>
+                  
+                  {/* QR Code placeholder (square) */}
+                  <div className="bg-white p-2 rounded-md w-48 h-48 mx-auto mb-3 flex items-center justify-center">
+                    {/* This would be a real QR code in production */}
+                    <div className="text-5xl">🏆</div>
+                  </div>
+                  
+                  <p className="text-yellow-200 text-sm">
+                    Code valid until: April 30, 2025
+                  </p>
                 </div>
-
-                {/* Car selection arrows */}
-                <div className="absolute inset-x-0 flex justify-between items-center px-2">
-                  <button
-                    onClick={() => {
-                      const cars = Object.keys(carImages);
-                      const currentIndex = cars.indexOf(selectedCar);
-                      const prevIndex =
-                        currentIndex <= 0 ? cars.length - 1 : currentIndex - 1;
-                      setSelectedCar(cars[prevIndex]);
-                    }}
-                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
-                  >
-                    ←
-                  </button>
-                  <button
-                    onClick={() => {
-                      const cars = Object.keys(carImages);
-                      const currentIndex = cars.indexOf(selectedCar);
-                      const nextIndex = (currentIndex + 1) % cars.length;
-                      setSelectedCar(cars[nextIndex]);
-                    }}
-                    className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
-                  >
-                    →
-                  </button>
+              ) : (
+                <p className="text-yellow-300 text-xl mb-6">
+                  Score 200+ points to win a special discount!
+                </p>
+              )}
+              
+              {/* Your score */}
+              <p className="text-2xl text-white mb-4">Your Score: {score}</p>
+            
+              {/* Leaderboard */}
+              <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4">
+                  <h3 className="text-xl text-white font-bold">Leaderboard</h3>
+                </div>
+                
+                <div className="p-4">
+                  <div className="grid grid-cols-12 gap-2 mb-2 text-gray-400 px-2">
+                    <div className="col-span-2 font-semibold">Rank</div>
+                    <div className="col-span-4 font-semibold">Car</div>
+                    <div className="col-span-3 font-semibold">Score</div>
+                    <div className="col-span-3 font-semibold">Date</div>
+                  </div>
+                  
+                  {/* Current score highlighted */}
+                  <div className="bg-blue-900 bg-opacity-50 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-white">
+                    <div className="col-span-2 font-bold">YOU</div>
+                    <div className="col-span-4 capitalize">{selectedCar}</div>
+                    <div className="col-span-3 font-bold">{score}</div>
+                    <div className="col-span-3">Today</div>
+                  </div>
+                  
+                  {/* High score entry */}
+                  <div className="bg-gray-700 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-gray-200">
+                    <div className="col-span-2">1</div>
+                    <div className="col-span-4 capitalize">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
+                    <div className="col-span-3">{highScore}</div>
+                    <div className="col-span-3">Today</div>
+                  </div>
+                  
+                  {/* Additional leaderboard entries */}
+                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-gray-300">
+                    <div className="col-span-2">2</div>
+                    <div className="col-span-4">Turbo</div>
+                    <div className="col-span-3">{Math.max(160, Math.floor(highScore * 0.8))}</div>
+                    <div className="col-span-3">Yesterday</div>
+                  </div>
+                  
+                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-2 grid grid-cols-12 gap-2 text-gray-300">
+                    <div className="col-span-2">3</div>
+                    <div className="col-span-4">Drift</div>
+                    <div className="col-span-3">{Math.max(120, Math.floor(highScore * 0.6))}</div>
+                    <div className="col-span-3">04/05/25</div>
+                  </div>
                 </div>
               </div>
-
-              {/* Display car name */}
-              <p className="text-lg text-white mb-2 capitalize">
-                {selectedCar}
-              </p>
-
-              {/* Display car description */}
-              <p className="text-sm text-gray-300 mb-4 text-center px-2">
-                {carConfigs[selectedCar]?.description ||
-                  "Choose your car wisely"}
-              </p>
             </div>
-          </div>
+          )}
 
-          {/* Start button */}
+          {/* GAME START SCREEN CONTENT */}
+          {score === 0 && (
+            <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
+              {/* Instructions on the left */}
+              <div className="flex-1 text-gray-300 text-left">
+                <p className="text-xl font-semibold mb-2 text-blue-400">
+                  How to Play:
+                </p>
+                <p className="mb-1">
+                  • Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳,
+                  ☕, 🍦)
+                </p>
+                <p className="mb-1">• Avoid the red spiky obstacles</p>
+                <p className="mb-1">
+                  • Use arrow keys or WASD to move freely in any direction
+                </p>
+                <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
+                <p className="mb-1">
+                  • Press ESC key or click the pause button to pause/unpause the
+                  game
+                </p>
+                <p className="mb-1">
+                  • On mobile, tap different screen areas to move in that
+                  direction
+                </p>
+                <p className="mb-1">
+                  • Your car will automatically face the direction you're moving
+                </p>
+                <p className="mb-1">
+                  • As your score increases, objects move faster and more
+                  obstacles appear!
+                </p>
+                <p className="mb-1">
+                  • Reach 200 points to win a special discount!
+                </p>
+              </div>
+
+              {/* Car selection on the right */}
+              <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+                <p className="text-xl font-semibold mb-4 text-blue-400">
+                  Choose Your Car:
+                </p>
+
+                {/* Car preview area */}
+                <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
+                  {/* Current selected car display */}
+                  <div className="w-40 h-32 relative flex justify-center items-center">
+                    <img
+                      src={carImages[selectedCar]?.src}
+                      alt={selectedCar}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+
+                  {/* Car selection arrows */}
+                  <div className="absolute inset-x-0 flex justify-between items-center px-2">
+                    <button
+                      onClick={() => {
+                        const cars = Object.keys(carImages);
+                        const currentIndex = cars.indexOf(selectedCar);
+                        const prevIndex =
+                          currentIndex <= 0 ? cars.length - 1 : currentIndex - 1;
+                        setSelectedCar(cars[prevIndex]);
+                      }}
+                      className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => {
+                        const cars = Object.keys(carImages);
+                        const currentIndex = cars.indexOf(selectedCar);
+                        const nextIndex = (currentIndex + 1) % cars.length;
+                        setSelectedCar(cars[nextIndex]);
+                      }}
+                      className="bg-blue-500 hover:bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+
+                {/* Display car name */}
+                <p className="text-lg text-white mb-2 capitalize">
+                  {selectedCar}
+                </p>
+
+                {/* Display car description */}
+                <p className="text-sm text-gray-300 mb-4 text-center px-2">
+                  {carConfigs[selectedCar]?.description ||
+                    "Choose your car wisely"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Start/Play Again button */}
           <button
             onClick={startGame}
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
