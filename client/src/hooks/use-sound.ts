@@ -19,60 +19,170 @@ type SoundConfig = {
   notes: number[];
 };
 
-// Music generation - Extended 8-bit funky-jazz patterns with multiple sections
-// F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
-// Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
-// C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
+// ROAD TRIP ADVENTURE MUSIC - A complete musical journey with multiple sections
+// Major scales for reference:
+// C major: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
+// F major: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
+// G major: G(392.00), A(440.00), B(493.88), C(523.25), D(587.33), E(659.25), F#(739.99)
 
-// Bass patterns (3 different patterns for variety)
-const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
-const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
-const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
-
-// Melody patterns (4 different patterns for variety)
-const MELODY_PATTERN_A = [
-  0, 523.25, 587.33, 659.25, 
-  523.25, 0, 0, 0, 
-  466.16, 523.25, 466.16, 0, 
-  440.00, 0, 392.00, 0
-];
-const MELODY_PATTERN_B = [
-  659.25, 587.33, 523.25, 0, 
-  587.33, 523.25, 466.16, 0,
-  523.25, 466.16, 440.00, 0,
-  466.16, 440.00, 392.00, 0
-];
-const MELODY_PATTERN_C = [
-  523.25, 0, 587.33, 0,
-  523.25, 587.33, 659.25, 0,
-  587.33, 659.25, 783.99, 0,
-  659.25, 0, 587.33, 0
-];
-const MELODY_PATTERN_D = [
-  0, 0, 392.00, 440.00,
-  466.16, 523.25, 466.16, 440.00,
-  392.00, 349.23, 0, 0,
-  392.00, 440.00, 466.16, 523.25
+// === MAIN THEME (INTRO) - "Road Trip Adventure" [G major] ===
+// This is THE memorable, singable main melody that establishes the theme
+const MAIN_THEME_MELODY = [
+  392.00, 0, 493.88, 0, 587.33, 587.33, 493.88, 0, // G - B - D - D - B
+  440.00, 0, 392.00, 0, 493.88, 0, 0, 0,          // A - G - B
+  392.00, 0, 493.88, 0, 587.33, 587.33, 659.25, 0, // G - B - D - D - E
+  739.99, 739.99, 659.25, 0, 587.33, 0, 0, 0,     // F# - F# - E - D
 ];
 
-// Jazz chord fills (played occasionally for harmonic depth)
-const JAZZ_CHORD_PATTERN_A = [
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
-  0, 0, 0, 0,
-  [415.30, 523.25, 622.25], 0, 0, 0,  // Ab major
-  0, 0, 0, 0
-];
-const JAZZ_CHORD_PATTERN_B = [
-  0, 0, 0, 0,
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
-  0, 0, 0, 0,
-  [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
+const MAIN_THEME_BASS = [
+  392.00, 0, 392.00, 0, 392.00, 0, 392.00, 0,     // G bass
+  440.00, 0, 440.00, 0, 493.88, 0, 493.88, 0,     // A - B bass
+  392.00, 0, 392.00, 0, 392.00, 0, 392.00, 0,     // G bass
+  293.66, 0, 329.63, 0, 392.00, 0, 392.00, 0,     // D - E - G bass
 ];
 
-// Varied drum patterns
-const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
-const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0];
-const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5];
+const MAIN_THEME_CHORDS = [
+  [392.00, 493.88, 587.33], 0, 0, 0, 0, 0, 0, 0,  // G major
+  [440.00, 523.25, 659.25], 0, 0, 0, [493.88, 587.33, 739.99], 0, 0, 0, // A minor - B major
+  [392.00, 493.88, 587.33], 0, 0, 0, 0, 0, 0, 0,  // G major
+  [293.66, 392.00, 587.33], 0, 0, 0, [392.00, 493.88, 587.33], 0, 0, 0, // D major - G major
+];
+
+// === VERSE SECTION - "Cruising Down the Highway" [C major] ===
+// More relaxed, groove-based section with a funky feel
+const VERSE_MELODY_A = [
+  523.25, 0, 523.25, 493.88, 523.25, 0, 587.33, 0,  // C - C - B - C - D
+  523.25, 493.88, 440.00, 0, 392.00, 440.00, 392.00, 0, // C - B - A - G - A - G
+  349.23, 0, 392.00, 0, 440.00, 0, 493.88, 0,      // F - G - A - B 
+  523.25, 523.25, 587.33, 523.25, 493.88, 0, 0, 0  // C - C - D - C - B
+];
+
+const VERSE_MELODY_B = [
+  523.25, 0, 587.33, 659.25, 587.33, 523.25, 493.88, 0, // C - D - E - D - C - B
+  440.00, 493.88, 523.25, 0, 493.88, 440.00, 392.00, 0, // A - B - C - B - A - G
+  349.23, 392.00, 440.00, 493.88, 523.25, 0, 493.88, 0, // F - G - A - B - C - B
+  440.00, 392.00, 349.23, 392.00, 440.00, 0, 0, 0       // A - G - F - G - A
+];
+
+const VERSE_BASS_A = [
+  261.63, 0, 261.63, 0, 261.63, 0, 261.63, 0,     // C bass
+  261.63, 0, 261.63, 0, 392.00, 0, 392.00, 0,     // C - G bass
+  349.23, 0, 349.23, 0, 293.66, 0, 293.66, 0,     // F - D bass
+  261.63, 0, 261.63, 0, 392.00, 0, 392.00, 0,     // C - G bass
+];
+
+const VERSE_BASS_B = [
+  261.63, 0, 261.63, 0, 392.00, 0, 392.00, 0,     // C - G bass
+  349.23, 0, 349.23, 0, 293.66, 0, 293.66, 0,     // F - D bass
+  349.23, 0, 349.23, 0, 392.00, 0, 329.63, 0,     // F - G - E bass
+  349.23, 0, 293.66, 0, 261.63, 0, 261.63, 0,     // F - D - C bass
+];
+
+const VERSE_CHORDS = [
+  [261.63, 329.63, 392.00], 0, 0, 0, [261.63, 329.63, 523.25], 0, 0, 0, // C - C7
+  [261.63, 329.63, 392.00], 0, 0, 0, [349.23, 440.00, 523.25], 0, 0, 0, // C - F
+  [349.23, 440.00, 523.25], 0, 0, 0, [293.66, 349.23, 440.00], 0, 0, 0, // F - D7
+  [261.63, 329.63, 392.00], 0, 0, 0, [392.00, 493.88, 587.33], 0, 0, 0, // C - G
+];
+
+// === BRIDGE SECTION - "Scenic Overlook" [F major] ===
+// More atmospheric, dreamy section with suspended chords
+const BRIDGE_MELODY_A = [
+  523.25, 0, 587.33, 0, 659.25, 0, 523.25, 0,     // C - D - E - C
+  523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 0, // C - D - E - G - E - D - C
+  466.16, 0, 523.25, 0, 587.33, 0, 466.16, 0,     // Bb - C - D - Bb
+  466.16, 523.25, 466.16, 440.00, 392.00, 349.23, 392.00, 0, // Bb - C - Bb - A - G - F - G
+];
+
+const BRIDGE_MELODY_B = [
+  659.25, 0, 587.33, 0, 523.25, 0, 466.16, 0,     // E - D - C - Bb
+  440.00, 466.16, 523.25, 0, 466.16, 440.00, 392.00, 0, // A - Bb - C - Bb - A - G
+  349.23, 0, 440.00, 0, 523.25, 0, 466.16, 0,     // F - A - C - Bb
+  440.00, 392.00, 349.23, 0, 0, 0, 0, 0          // A - G - F
+];
+
+const BRIDGE_BASS = [
+  349.23, 0, 349.23, 0, 349.23, 0, 349.23, 0,     // F bass
+  349.23, 0, 349.23, 0, 349.23, 0, 440.00, 0,     // F - A bass
+  466.16, 0, 466.16, 0, 466.16, 0, 523.25, 0,     // Bb - C bass
+  349.23, 0, 261.63, 0, 293.66, 0, 349.23, 0,     // F - C - D - F bass
+];
+
+const BRIDGE_CHORDS = [
+  [349.23, 440.00, 523.25], 0, 0, 0, [349.23, 440.00, 587.33], 0, 0, 0, // F - F9
+  [349.23, 523.25, 659.25], 0, 0, 0, [349.23, 440.00, 659.25], 0, 0, 0, // Fmaj7 - F6
+  [466.16, 587.33, 698.46], 0, 0, 0, [349.23, 523.25, 698.46], 0, 0, 0, // Bb - F/C
+  [349.23, 466.16, 587.33], 0, 0, 0, [349.23, 440.00, 523.25], 0, 0, 0, // F7 - F
+];
+
+// === CHORUS SECTION - "Open Road Freedom" [G major] ===
+// Triumphant, uplifting section with the catchiest melody
+const CHORUS_MELODY_A = [
+  392.00, 440.00, 493.88, 587.33, 659.25, 587.33, 493.88, 0, // G - A - B - D - E - D - B
+  440.00, 493.88, 587.33, 659.25, 739.99, 0, 0, 0,         // A - B - D - E - F#
+  587.33, 659.25, 587.33, 493.88, 440.00, 493.88, 440.00, 392.00, // D - E - D - B - A - B - A - G
+  493.88, 440.00, 392.00, 0, 392.00, 0, 0, 0               // B - A - G - G
+];
+
+const CHORUS_MELODY_B = [
+  587.33, 659.25, 739.99, 659.25, 587.33, 493.88, 587.33, 0, // D - E - F# - E - D - B - D
+  659.25, 739.99, 880.00, 0, 739.99, 659.25, 587.33, 0,    // E - F# - G - F# - E - D
+  440.00, 493.88, 587.33, 493.88, 440.00, 392.00, 440.00, 0, // A - B - D - B - A - G - A
+  587.33, 493.88, 440.00, 392.00, 392.00, 0, 0, 0          // D - B - A - G - G
+];
+
+const CHORUS_BASS = [
+  392.00, 0, 392.00, 0, 392.00, 0, 392.00, 0,     // G bass
+  293.66, 0, 293.66, 0, 293.66, 0, 329.63, 0,     // D - E bass
+  392.00, 0, 392.00, 0, 440.00, 0, 493.88, 0,     // G - A - B bass
+  261.63, 0, 293.66, 0, 392.00, 0, 0, 0,          // C - D - G bass
+];
+
+const CHORUS_CHORDS = [
+  [392.00, 493.88, 587.33], 0, 0, 0, [392.00, 493.88, 659.25], 0, 0, 0, // G - G/E
+  [293.66, 440.00, 587.33], 0, 0, 0, [293.66, 392.00, 493.88], 0, 0, 0, // D7 - D
+  [392.00, 493.88, 587.33], 0, 0, 0, [440.00, 523.25, 659.25], 0, 0, 0, // G - Am
+  [261.63, 329.63, 392.00], 0, 0, 0, [392.00, 493.88, 587.33], 0, 0, 0, // C - G
+];
+
+// === OUTRO SECTION - "Journey's End" [G major] ===
+// Final section that brings back main theme elements with a conclusive feel
+const OUTRO_MELODY = [
+  392.00, 0, 493.88, 0, 587.33, 0, 659.25, 0,     // G - B - D - E
+  739.99, 659.25, 587.33, 493.88, 587.33, 493.88, 440.00, 392.00, // F# - E - D - B - D - B - A - G
+  392.00, 493.88, 587.33, 659.25, 587.33, 493.88, 440.00, 392.00, // G - B - D - E - D - B - A - G
+  392.00, 440.00, 493.88, 392.00, 392.00, 392.00, 0, 0    // G - A - B - G - G - G
+];
+
+const OUTRO_BASS = [
+  392.00, 0, 392.00, 0, 392.00, 0, 392.00, 0,     // G bass
+  293.66, 0, 329.63, 0, 349.23, 0, 392.00, 0,     // D - E - F - G bass
+  392.00, 0, 349.23, 0, 329.63, 0, 293.66, 0,     // G - F - E - D bass
+  261.63, 0, 293.66, 0, 392.00, 0, 392.00, 0,     // C - D - G - G bass
+];
+
+const OUTRO_CHORDS = [
+  [392.00, 493.88, 587.33], 0, 0, 0, [392.00, 493.88, 659.25], 0, 0, 0, // G - G/E
+  [293.66, 440.00, 587.33], 0, 0, 0, [349.23, 440.00, 587.33], 0, 0, 0, // D7 - F
+  [392.00, 587.33, 739.99], 0, 0, 0, [293.66, 440.00, 587.33], 0, 0, 0, // G7 - D
+  [261.63, 392.00, 523.25], 0, 0, 0, [392.00, 493.88, 587.33], 0, 0, 0, // C - G
+];
+
+// === DRUM PATTERNS ===
+// Basic driving beat pattern for main sections
+const DRUM_PATTERN_MAIN = [1, 0, 0.6, 0, 1, 0, 0.6, 0, 1, 0, 0.6, 0, 1, 0.3, 0.3, 0.6];
+
+// Funky groove pattern for verse sections
+const DRUM_PATTERN_VERSE = [1, 0, 0.4, 0, 1, 0, 0.4, 0.6, 1, 0, 0.4, 0, 1, 0.6, 0.4, 0.3];
+
+// Atmospheric, lighter pattern for bridge
+const DRUM_PATTERN_BRIDGE = [0.7, 0, 0.3, 0, 0.5, 0, 0.3, 0, 0.7, 0, 0.3, 0, 0.5, 0, 0.2, 0.2];
+
+// Energetic pattern for chorus
+const DRUM_PATTERN_CHORUS = [1, 0, 0.4, 0.4, 1, 0.3, 0.6, 0, 1, 0, 0.4, 0.4, 1, 0.6, 0.3, 0.6];
+
+// Fill pattern for transitions between sections
+const DRUM_PATTERN_FILL = [1, 0.5, 0.7, 0.5, 0.7, 0.5, 0.7, 0.5, 0.7, 0.5, 0.7, 0.5, 0.7, 0.8, 0.9, 1];
 
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
@@ -254,46 +364,103 @@ export function useSound() {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
   
-  // Choose a specific pattern sequence based on current time
-  // This ensures the music has longer, more varied sequences
-  const getPatternForSection = (patternType: string, sectionIndex: number) => {
+  // Get musical patterns based on the musical section and pattern type
+  // Creates a complete musical journey with defined sections
+  const getPatternForSection = (patternType: string, sectionIndex: number): any[] => {
+    // Determine which musical section we're in
+    // The song structure follows: INTRO → VERSE → CHORUS → BRIDGE → CHORUS → OUTRO
+    const normalizedIndex = sectionIndex % 20; // Complete song cycle is 20 sections
+    
+    // Map the section index to a musical section
+    let musicalSection: string;
+    if (normalizedIndex < 3) {
+      musicalSection = 'intro'; // First 3 sections are intro
+    } else if (normalizedIndex < 7) {
+      musicalSection = 'verse'; // Next 4 sections are verse
+    } else if (normalizedIndex < 10) {
+      musicalSection = 'chorus'; // Next 3 sections are chorus
+    } else if (normalizedIndex < 14) {
+      musicalSection = 'bridge'; // Next 4 sections are bridge
+    } else if (normalizedIndex < 17) {
+      musicalSection = 'chorus'; // Next 3 sections are chorus again
+    } else {
+      musicalSection = 'outro'; // Last 3 sections are outro
+    }
+    
+    // Now return the appropriate pattern for the current musical section and pattern type
     switch (patternType) {
-      case 'bass':
-        // Alternate between different bass patterns in a more complex sequence
-        if (sectionIndex % 4 === 0) return BASS_PATTERN_A; 
-        if (sectionIndex % 4 === 1) return BASS_PATTERN_B;
-        if (sectionIndex % 4 === 2) return BASS_PATTERN_C;
-        return BASS_PATTERN_A;
-      
       case 'melody':
-        // Create more varied melody sequences
-        if (sectionIndex % 8 === 0) return MELODY_PATTERN_A;
-        if (sectionIndex % 8 === 1) return MELODY_PATTERN_B;
-        if (sectionIndex % 8 === 2) return MELODY_PATTERN_C;
-        if (sectionIndex % 8 === 3) return MELODY_PATTERN_D;
-        if (sectionIndex % 8 === 4) return MELODY_PATTERN_B;
-        if (sectionIndex % 8 === 5) return MELODY_PATTERN_A;
-        if (sectionIndex % 8 === 6) return MELODY_PATTERN_D;
-        return MELODY_PATTERN_C;
+        switch (musicalSection) {
+          case 'intro':
+            return MAIN_THEME_MELODY;
+          case 'verse':
+            return normalizedIndex % 2 === 0 ? VERSE_MELODY_A : VERSE_MELODY_B;
+          case 'bridge':
+            return normalizedIndex % 2 === 0 ? BRIDGE_MELODY_A : BRIDGE_MELODY_B;
+          case 'chorus':
+            return normalizedIndex % 2 === 0 ? CHORUS_MELODY_A : CHORUS_MELODY_B;
+          case 'outro':
+            return OUTRO_MELODY;
+          default:
+            return MAIN_THEME_MELODY; // Fallback to main theme
+        }
+        
+      case 'bass':
+        switch (musicalSection) {
+          case 'intro':
+            return MAIN_THEME_BASS;
+          case 'verse':
+            return normalizedIndex % 2 === 0 ? VERSE_BASS_A : VERSE_BASS_B;
+          case 'bridge':
+            return BRIDGE_BASS;
+          case 'chorus':
+            return CHORUS_BASS;
+          case 'outro':
+            return OUTRO_BASS;
+          default:
+            return MAIN_THEME_BASS; // Fallback to main theme
+        }
         
       case 'chord':
-        // Add occasional jazz chords for harmonic interest
-        if (sectionIndex % 4 === 0) return JAZZ_CHORD_PATTERN_A;
-        if (sectionIndex % 4 === 2) return JAZZ_CHORD_PATTERN_B;
-        return []; // No chords in other sections
-      
+        switch (musicalSection) {
+          case 'intro':
+            return MAIN_THEME_CHORDS;
+          case 'verse':
+            return VERSE_CHORDS;
+          case 'bridge':
+            return BRIDGE_CHORDS;
+          case 'chorus':
+            return CHORUS_CHORDS;
+          case 'outro':
+            return OUTRO_CHORDS;
+          default:
+            return MAIN_THEME_CHORDS; // Fallback to main theme
+        }
+        
       case 'drums':
-        // Alternate drum patterns for rhythmic variety
-        if (sectionIndex % 3 === 0) return DRUM_PATTERN_A;
-        if (sectionIndex % 3 === 1) return DRUM_PATTERN_B;
-        return DRUM_PATTERN_C;
-      
+        // Choose drum pattern based on musical section for rhythmic variation
+        switch (musicalSection) {
+          case 'intro':
+            return DRUM_PATTERN_MAIN;
+          case 'verse':
+            return DRUM_PATTERN_VERSE;
+          case 'bridge':
+            return DRUM_PATTERN_BRIDGE;
+          case 'chorus':
+            return DRUM_PATTERN_CHORUS;
+          case 'outro':
+            // Alternate between main pattern and fill pattern in outro
+            return normalizedIndex % 2 === 0 ? DRUM_PATTERN_MAIN : DRUM_PATTERN_FILL;
+          default:
+            return DRUM_PATTERN_MAIN; // Fallback to main pattern
+        }
+        
       default:
         return [];
     }
   };
   
-  // Generate 8-bit music using Web Audio API
+  // Generate 8-bit music using Web Audio API with our Road Trip Adventure theme
   const startBackgroundMusic = () => {
     if (!musicEnabled) return;
     
@@ -311,7 +478,7 @@ export function useSound() {
       
       const context = audioContextRef.current;
       
-      // Setup parameters for our 8-bit music
+      // Setup parameters for our Road Trip Adventure music
       const bpm = 120; // Beats per minute
       const noteDuration = 60 / bpm / 2; // Duration of a single 8th note in seconds
       const now = context.currentTime;
@@ -321,34 +488,45 @@ export function useSound() {
       masterGain.gain.value = 0.2; // Master volume
       masterGain.connect(context.destination);
       
-      // Generate a random starting section to add variety
-      const startingSection = randomInt(0, 15);
+      // Generate a random starting point in our song structure
+      // This adds variety each time the player starts the game
+      const startingSection = randomInt(0, 19); // Our total song cycle is 20 sections
       
-      // Define how many sections to play before looping (creates a longer, more varied piece)
-      const sectionsToPlay = 4; // This creates a 4x longer composition before looping
+      // Define how many sections to play before looping (creates a longer composition)
+      // This will create a ~2 minute song before looping
+      const sectionsToPlay = 10; // Play 10 sections = roughly 2 minutes of music
       
-      // Schedule multiple sections of music to create a longer, more varied composition
+      // Schedule multiple sections of music to create a complete musical composition
       for (let section = 0; section < sectionsToPlay; section++) {
-        const currentSection = (startingSection + section) % 16; // Cycle through 16 different pattern combinations
-        const sectionTime = now + section * (noteDuration * 16); // Each section is 16 notes long
+        // Calculate the current musical section, preserving our song structure
+        const currentSection = (startingSection + section) % 20; // Cycle through our 20-section song structure
+        const sectionTime = now + section * (noteDuration * 32); // Each section is 32 notes long (doubled for more space)
         
-        // Get appropriate patterns for this section
+        // Get patterns for the current musical section
+        // Our getPatternForSection function returns the appropriate pattern based on 
+        // the section index and the song structure (INTRO → VERSE → CHORUS → BRIDGE → CHORUS → OUTRO)
         const bassPattern = getPatternForSection('bass', currentSection);
         const melodyPattern = getPatternForSection('melody', currentSection);
         const chordPattern = getPatternForSection('chord', currentSection);
         const drumPattern = getPatternForSection('drums', currentSection);
         
-        // Schedule the bass pattern for this section
-        bassPattern.forEach((frequency, index) => {
-          if (frequency === 0) return; // Skip rests
+        // Schedule the bass pattern for this section 
+        bassPattern.forEach((value: number | number[], index: number) => {
+          // Skip rests and non-numeric values
+          if (value === 0 || Array.isArray(value)) return;
           
+          const frequency = value as number;
           const noteTime = sectionTime + index * noteDuration;
           const oscillator = context.createOscillator();
           const gainNode = context.createGain();
           
+          // Bass sounds better with a square wave for 8-bit music
           oscillator.type = 'square';
-          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency / 2 : 0, noteTime); // Lower octave for bass
           
+          // Lower octave for bass
+          oscillator.frequency.setValueAtTime(frequency / 2, noteTime);
+          
+          // Envelope for the bass note
           gainNode.gain.setValueAtTime(0.25, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
           
@@ -363,17 +541,44 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((frequency, index) => {
-          if (frequency === 0) return; // Skip rests
+        melodyPattern.forEach((value: number | number[], index: number) => {
+          // Skip rests and non-numeric values
+          if (value === 0 || Array.isArray(value)) return;
           
+          const frequency = value as number;
           const noteTime = sectionTime + index * noteDuration;
           const oscillator = context.createOscillator();
           const gainNode = context.createGain();
           
-          // Use different oscillator types for variety
-          oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
+          // Vary the oscillator type based on the musical section for tonal variety
+          // Determine which musical section we're in for oscillator type choice
+          const normalizedIndex = currentSection % 20;
+          let oscillatorType: OscillatorType = 'triangle'; // Default type
           
+          if (normalizedIndex < 3) {
+            // Intro - brighter sound
+            oscillatorType = 'triangle';
+          } else if (normalizedIndex < 7) {
+            // Verse - smoother sound
+            oscillatorType = 'sine';
+          } else if (normalizedIndex < 10) {
+            // Chorus - more pronounced sound
+            oscillatorType = 'square';
+          } else if (normalizedIndex < 14) {
+            // Bridge - dreamier sound
+            oscillatorType = 'sine';
+          } else if (normalizedIndex < 17) {
+            // Chorus again - more pronounced sound
+            oscillatorType = 'square';
+          } else {
+            // Outro - memorable triangle sound
+            oscillatorType = 'triangle';
+          }
+          
+          oscillator.type = oscillatorType;
+          oscillator.frequency.setValueAtTime(frequency, noteTime);
+          
+          // Different envelope for melody notes
           gainNode.gain.setValueAtTime(0.15, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
           
@@ -387,22 +592,24 @@ export function useSound() {
           oscillator.stop(noteTime + noteDuration);
         });
         
-        // Schedule the jazz chord patterns for harmonic depth
-        chordPattern.forEach((chord, index) => {
-          if (chord === 0) return; // Skip rests
+        // Schedule the chord patterns for harmonic depth
+        chordPattern.forEach((value: number | number[], index: number) => {
+          if (value === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
           
           // Each chord is an array of frequencies to play simultaneously
-          if (Array.isArray(chord)) {
-            chord.forEach(frequency => {
+          if (Array.isArray(value)) {
+            value.forEach(frequency => {
               const oscillator = context.createOscillator();
               const gainNode = context.createGain();
               
+              // Chords sound better with sine waves for a smoother harmonic blend
               oscillator.type = 'sine';
               oscillator.frequency.setValueAtTime(frequency, noteTime);
               
-              gainNode.gain.setValueAtTime(0.08, noteTime); // Lower volume for chords
+              // Lower volume for chords to prevent overwhelming the mix
+              gainNode.gain.setValueAtTime(0.08, noteTime);
               gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 1.5);
               
               oscillator.connect(gainNode);
@@ -417,14 +624,18 @@ export function useSound() {
           }
         });
         
-        // Schedule drum sounds for this section
-        drumPattern.forEach((hit, index) => {
+        // Schedule enhanced drum sounds for this section
+        drumPattern.forEach((value: number | number[], index: number) => {
+          // Skip rests and non-numeric values
+          if (value === 0 || Array.isArray(value)) return;
+          
+          const hit = value as number;
           if (hit === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
           
-          // Create kick drum
-          if (hit === 1) {
+          // Create kick drum for primary beats
+          if (hit >= 0.9) {
             const kickOsc = context.createOscillator();
             const kickGain = context.createGain();
             
@@ -445,8 +656,43 @@ export function useSound() {
             kickOsc.stop(noteTime + 0.1);
           }
           
-          // Create hi-hat for smaller hit values (adding more complex rhythm)
-          if (hit === 0.5) {
+          // Create snare drum for secondary beats
+          if (hit >= 0.5 && hit < 0.9) {
+            const snareOsc = context.createOscillator();
+            const snareNoise = context.createOscillator(); // For the noise component
+            const snareGain = context.createGain();
+            const snareFilter = context.createBiquadFilter();
+            
+            snareOsc.type = 'triangle';
+            snareOsc.frequency.setValueAtTime(180, noteTime);
+            
+            snareNoise.type = 'square';
+            snareNoise.frequency.setValueAtTime(randomInt(150, 250), noteTime);
+            
+            snareFilter.type = 'bandpass';
+            snareFilter.frequency.value = 1000;
+            snareFilter.Q.value = 0.8;
+            
+            snareGain.gain.setValueAtTime(0.3, noteTime);
+            snareGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
+            
+            snareOsc.connect(snareGain);
+            snareNoise.connect(snareFilter);
+            snareFilter.connect(snareGain);
+            snareGain.connect(masterGain);
+            
+            // Track the oscillators for clean shutdown
+            activeOscillators.current.push(snareOsc);
+            activeOscillators.current.push(snareNoise);
+            
+            snareOsc.start(noteTime);
+            snareOsc.stop(noteTime + 0.1);
+            snareNoise.start(noteTime);
+            snareNoise.stop(noteTime + 0.1);
+          }
+          
+          // Create hi-hat for lighter accents (adding more complex rhythm)
+          if (hit > 0 && hit < 0.5) {
             const hihatOsc = context.createOscillator();
             const hihatGain = context.createGain();
             const hihatFilter = context.createBiquadFilter();
@@ -457,7 +703,7 @@ export function useSound() {
             hihatFilter.type = 'highpass';
             hihatFilter.frequency.value = 7000;
             
-            hihatGain.gain.setValueAtTime(0.2, noteTime);
+            hihatGain.gain.setValueAtTime(0.2 * hit, noteTime); // Scale volume by hit intensity
             hihatGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.03);
             
             hihatOsc.connect(hihatFilter);
@@ -475,7 +721,7 @@ export function useSound() {
       
       // Schedule the next batch of patterns after all sections finish
       // This creates an extended musical structure before repeating
-      const totalDuration = sectionsToPlay * 16 * noteDuration;
+      const totalDuration = sectionsToPlay * 32 * noteDuration;
       const timerId = setTimeout(() => {
         if (musicEnabled) {
           startBackgroundMusic();
