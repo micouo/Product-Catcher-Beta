@@ -780,17 +780,83 @@ export function useSound() {
         });
       }
       
-      // Schedule the next batch of patterns after all sections finish
-      // This creates an extended musical structure before repeating
+      // Calculate the total duration of the music sequence
       const totalDuration = sectionsToPlay * 32 * noteDuration;
-      const timerId = setTimeout(() => {
-        if (musicEnabled) {
-          startBackgroundMusic();
-        }
-      }, totalDuration * 1000);
       
-      // Track the timer ID for clean shutdown
-      audioNodesTimers.current.push(timerId);
+      // Set up a timer just before the expected end of the music
+      const timeUntilCheck = (totalDuration * 1000) - 5000; // Check 5 seconds before expected end
+      
+      // Primary looping mechanism - timer that fires once near the end 
+      const mainLoopTimer = setTimeout(() => {
+        console.log('Music loop timer fired, checking if music needs to restart');
+        
+        // Setup a polling interval that checks more frequently as we approach
+        // the expected end of the song
+        let checkCount = 0;
+        const maxChecks = 10;
+        const endMonitorInterval = setInterval(() => {
+          checkCount++;
+          console.log(`Music loop check #${checkCount} of ${maxChecks}`);
+          
+          // If we've exceeded our check limit, force a restart to prevent endless
+          // polling when something's wrong
+          if (checkCount >= maxChecks) {
+            console.log('Music loop max checks reached, forcing restart');
+            clearInterval(endMonitorInterval);
+            
+            if (musicEnabled) {
+              stopMusic();
+              setTimeout(() => startBackgroundMusic(), 200);
+            }
+            return;
+          }
+          
+          // Check if music has stopped or if we're past the expected end time
+          const currentTime = Date.now();
+          const expectedEndTime = (now + totalDuration) * 1000;
+          const timeRemaining = expectedEndTime - currentTime;
+          
+          console.log(`Music remaining time: ${Math.round(timeRemaining / 1000)}s`);
+          
+          if (musicEnabled && (
+              activeOscillators.current.length === 0 || 
+              currentTime > expectedEndTime
+          )) {
+            console.log('Music loop detected end of song, restarting fresh music sequence');
+            clearInterval(endMonitorInterval);
+            
+            // Stagger the restart to avoid stuttering
+            stopMusic();
+            setTimeout(() => {
+              try {
+                // Only restart if still enabled
+                if (musicEnabled) {
+                  startBackgroundMusic();
+                }
+              } catch (error) {
+                console.error('Error restarting music loop:', error);
+              }
+            }, 200);
+          }
+        }, 1000); // Check every second
+        
+        // Store the interval so we can clear it if needed
+        audioNodesTimers.current.push(endMonitorInterval);
+        
+      }, timeUntilCheck);
+      
+      // Backup timer that will definitely restart at the expected end time plus a buffer
+      const backupTimer = setTimeout(() => {
+        console.log('Music backup loop timer fired, ensuring music continues');
+        if (musicEnabled) {
+          stopMusic();
+          setTimeout(() => startBackgroundMusic(), 200);
+        }
+      }, totalDuration * 1000 + 2000); // 2 second buffer after expected end
+      
+      // Store timers for cleanup
+      audioNodesTimers.current.push(mainLoopTimer);
+      audioNodesTimers.current.push(backupTimer);
       
       // Store this for volume control
       musicGainRef.current = masterGain;
@@ -869,7 +935,9 @@ export function useSound() {
       
       // Clear any pending timers
       audioNodesTimers.current.forEach(timer => {
+        // Clear both timeout and interval timers
         clearTimeout(timer);
+        clearInterval(timer);
       });
       
       // Clean up Web Audio API resources
@@ -914,7 +982,9 @@ export function useSound() {
       
       // Clean up any pending timers
       audioNodesTimers.current.forEach(timer => {
+        // Clear both timeout and interval timers
         clearTimeout(timer);
+        clearInterval(timer);
       });
       
       // Clear timer array
