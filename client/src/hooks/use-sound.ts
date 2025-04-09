@@ -181,18 +181,38 @@ export function useSound() {
   const playSound = (type: SoundType) => {
     if (!soundEnabled) return;
     
+    // Make sure audio context is initialized
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        interactionRef.current = true;
+      } catch (error) {
+        console.error('Error initializing audio context:', error);
+      }
+    }
+    
     // If we have a real audio element for this sound, play it
     if (audioElements[type]) {
       try {
         // Stop and reset the audio to allow replaying the sound immediately
         const audio = audioElements[type];
         if (audio) {
+          audio.pause(); // Make sure it's not playing
           audio.currentTime = 0;
-          audio.play().catch(err => {
-            console.error('Error playing audio:', err);
-            // Fall back to generated sound on error
-            playGeneratedSound(type);
-          });
+          
+          // Create a new audio element to avoid browser limitations with multiple plays
+          const tempAudio = new Audio(audio.src);
+          tempAudio.volume = audio.volume;
+          
+          const playPromise = tempAudio.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.error('Error playing audio:', err);
+              // Fall back to generated sound on error
+              playGeneratedSound(type);
+            });
+          }
         }
         return;
       } catch (error) {
@@ -390,7 +410,8 @@ export function useSound() {
         const drumPattern = getPatternForSection('drums', currentSection);
         
         // Schedule the bass pattern for this section
-        bassPattern.forEach((frequency: number, index) => {
+        bassPattern.forEach((note, index) => {
+          const frequency = typeof note === 'number' ? note : 0;
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -414,7 +435,8 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((frequency: number, index) => {
+        melodyPattern.forEach((note, index) => {
+          const frequency = typeof note === 'number' ? note : 0;
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;

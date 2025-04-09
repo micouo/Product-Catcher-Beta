@@ -728,8 +728,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
             setLastBoostSoundTime(currentTime);
             
             // Add visual feedback with an extra engine shake to simulate drifting
-            const boostShakeAmount = selectedCar === 3 ? 2.0 : 1.5; // Drift car gets more shake
-            setEngineShakeOffset(boostShakeAmount);
+            setEngineShakeOffset(2.0); // Same shake amount for all cars
             
             // Reset shake after drift is complete
             setTimeout(() => {
