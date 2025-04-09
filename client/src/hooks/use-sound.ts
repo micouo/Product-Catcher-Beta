@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'boost';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
 let hitSoundElement: HTMLAudioElement | null = null;
 let pickupSoundElement: HTMLAudioElement | null = null;
+let boostSoundElement: HTMLAudioElement | null = null;
 
 // Audio elements for real sound files - will create these lazily
 const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {};
@@ -95,6 +96,13 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
     duration: 0.3,
     ramp: 'down',
     notes: [200, 150]
+  },
+  boost: {
+    type: 'sawtooth',
+    frequency: 300,
+    duration: 0.2,
+    ramp: 'up',
+    notes: [300, 400, 500, 450, 350]
   }
 };
 
@@ -144,6 +152,12 @@ export function useSound() {
         pickupSoundElement = new Audio('/sounds/pickup.wav');
         pickupSoundElement.volume = 1.0;
         audioElements.collect = pickupSoundElement;
+      }
+      
+      if (!boostSoundElement) {
+        boostSoundElement = new Audio('/attached_assets/boost.wav');
+        boostSoundElement.volume = 0.6; // 60% volume
+        audioElements.boost = boostSoundElement;
       }
       
       // Start background music in response to user interaction
@@ -315,7 +329,7 @@ export function useSound() {
         const drumPattern = getPatternForSection('drums', currentSection);
         
         // Schedule the bass pattern for this section
-        bassPattern.forEach((frequency, index) => {
+        bassPattern.forEach((frequency: number, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -339,7 +353,7 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((frequency, index) => {
+        melodyPattern.forEach((frequency: number, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
