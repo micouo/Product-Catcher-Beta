@@ -285,17 +285,18 @@ export function useSound() {
       }
       
       // Start background music in response to user interaction
-      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
+      if (musicEnabled && !musicInitialized) {
+        console.log('Initializing music on first user interaction');
+        
         // Try to play the music (must be in response to a user action)
         try {
-          // Use the generateBackgroundMusic method instead of playing the audio file
-          // This won't interrupt already playing sound if it's working
-          startBackgroundMusic();
-          setMusicInitialized(true);
+          // Use the startMusic function which handles stopping first
+          startMusic();
         } catch (err) {
           console.error('Error starting background music:', err);
-          // Try the regular audio element as a fallback
-          backgroundMusicElement.play()
+          // Try the regular audio element as a fallback if available
+          if (backgroundMusicElement) {
+            backgroundMusicElement.play()
             .then(() => {
               console.log('Background music started successfully via HTML Audio element');
               setMusicInitialized(true);
@@ -304,6 +305,7 @@ export function useSound() {
               console.error('Error playing background music via HTML Audio element:', err);
               // Game can continue without music
             });
+          }
         }
       }
     } catch (error) {
@@ -517,20 +519,17 @@ export function useSound() {
   
   // Generate 8-bit music using Web Audio API with our Road Trip Adventure theme
   const startBackgroundMusic = () => {
+    console.log('startBackgroundMusic called');
     if (!musicEnabled) return;
     
     try {
-      // Check if music is already playing to avoid restarting it
-      if (musicGainRef.current && activeOscillators.current.length > 0) {
-        console.log('Background music already playing, not restarting');
-        return;
-      }
-      
-      // Clean up any previous music if none is currently playing
+      // IMPORTANT: Always stop any existing music first to prevent overlapping songs
+      // This is critical to fix the issue of multiple songs playing at once
       stopMusic();
       
-      // Use Web Audio API for procedural music generation
-      console.log('Starting 8-bit funky background music');
+      // Clean up any previous music if none is currently playing
+      // Note: We've already called stopMusic() at the start of this function,
+      // but let's make 100% certain we don't have multiple audio streams playing
       
       // Make sure we have an audio context
       if (!audioContextRef.current) {
@@ -883,8 +882,9 @@ export function useSound() {
       console.log("Music toggled to:", newState);
       
       if (newState) {
-        // Turn music on
-        startBackgroundMusic();
+        // Turn music on using our new staggered function
+        // This ensures we stop first and then start with a delay
+        startMusic();
       } else {
         // Turn music off - use stopMusic to clean up all audio resources
         stopMusic();
@@ -952,10 +952,13 @@ export function useSound() {
     };
   }, []);
 
-  // Explicitly start the background music
+  // Explicitly start the background music with clean stop first
   const startMusic = () => {
     if (musicEnabled) {
-      startBackgroundMusic();
+      // Always stop first to prevent multiple songs playing
+      stopMusic();
+      // Use a slight delay to ensure clean transition
+      setTimeout(() => startBackgroundMusic(), 100);
     }
   };
   
