@@ -1293,15 +1293,24 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       const startX = GAME_WIDTH - 20 - (heartSize * 3) - (heartSpacing * 2); // Position for 3 hearts
       const heartY = 10; // Vertical position
       
-      // Draw empty placeholder hearts first (gray silhouettes)
-      ctx.globalAlpha = 0.3;
-      for (let i = 0; i < 3; i++) {
-        const x = startX + (i * (heartSize + heartSpacing));
-        ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
-      }
-      
-      // Only draw active hearts if game is not over
-      if (lives > 0) {
+      // Game Over state - all hearts should be faded
+      if (lives <= 0) {
+        // All hearts faded with consistent opacity
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < 3; i++) {
+          const x = startX + (i * (heartSize + heartSpacing));
+          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+        }
+      } else {
+        // Normal gameplay state
+        
+        // Draw empty placeholder hearts first (gray silhouettes)
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < 3; i++) {
+          const x = startX + (i * (heartSize + heartSpacing));
+          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+        }
+        
         // Draw active hearts with proper animation
         ctx.globalAlpha = 1.0;
         
