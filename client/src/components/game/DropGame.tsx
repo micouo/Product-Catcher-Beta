@@ -1442,14 +1442,8 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       {showFullLeaderboard && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 z-30">
           <div className="w-full max-w-4xl bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4">
               <h3 className="text-xl text-white font-bold">Full Leaderboard</h3>
-              <button 
-                onClick={() => setShowFullLeaderboard(false)}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1 rounded-md transition-colors"
-              >
-                ← Back
-              </button>
             </div>
             
             <div className="p-4">
