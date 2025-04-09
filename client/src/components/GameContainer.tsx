@@ -75,20 +75,22 @@ export default function GameContainer() {
     };
   }, [initializeAudio, startMusic]);
   
-  // Prevent arrow keys from scrolling the page globally
+  // Prevent arrow keys from scrolling the page
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Always prevent default scrolling behavior for arrow keys
+      // Prevent default scrolling behavior for arrow keys
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.key)) {
         e.preventDefault();
       }
     };
     
-    // Add global event listener regardless of game state
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Update game focus state
-    setIsGameFocused(!isLoading && gameActive);
+    // Add global event listener when game is active
+    if (!isLoading && gameActive) {
+      document.addEventListener('keydown', handleKeyDown);
+      setIsGameFocused(true);
+    } else {
+      setIsGameFocused(false);
+    }
     
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
