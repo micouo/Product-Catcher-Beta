@@ -260,6 +260,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   // Car selection state
   const [selectedCar, setSelectedCar] = useState<string>("peppy");
   const [playerName, setPlayerName] = useState<string>("Player");
+  const [showMoreInstructions, setShowMoreInstructions] = useState(false);
   const [carImagesLoaded, setCarImagesLoaded] = useState<{
     [key: string]: boolean;
   }>({
@@ -1384,30 +1385,50 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   <p className="text-xl font-semibold mb-3 text-blue-400">
                     How to Play:
                   </p>
+                  {/* Essential instructions in larger font */}
                   <p className="text-lg font-medium mb-2">
                     Move with arrow keys or WASD
                   </p>
                   <p className="text-lg font-medium mb-3">
                     Hold SHIFT to boost speed
                   </p>
-                  <p className="text-sm mb-1">
-                    Catch products from the University District in your basket! Each product is worth 10 points.
-                  </p>
-                  <p className="text-sm mb-1">
+                  
+                  {/* Key goal in smaller but emphasized font */}
+                  <p className="text-sm mb-3 font-medium text-yellow-300">
                     Hit 200 points to unlock a special discount!
                   </p>
-                  <p className="text-sm mb-1">
-                    Avoid the red spiky obstacles... each hit will cost a life. You start with 3 lives.
-                  </p>
-                  <p className="text-sm mb-1">
-                    As your score increases, objects move faster and more obstacles appear!
-                  </p>
-                  <p className="text-sm mb-1">
-                    Click the Pause/Play Button to pause/unpause, or press ESC
-                  </p>
-                  <p className="text-sm mb-1">
-                    Click the Replay Button to restart, or press R
-                  </p>
+                  
+                  {/* Collapsible section for more instructions */}
+                  <div className="mb-2">
+                    <button 
+                      onClick={() => setShowMoreInstructions(!showMoreInstructions)}
+                      className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center focus:outline-none"
+                    >
+                      {showMoreInstructions ? 'Hide Instructions' : 'More Instructions'} 
+                      <span className="ml-1">{showMoreInstructions ? '▲' : '▼'}</span>
+                    </button>
+                  </div>
+                  
+                  {/* Collapsible instructions */}
+                  {showMoreInstructions && (
+                    <div className="bg-gray-800 bg-opacity-60 p-2 rounded-md mt-1 mb-2">
+                      <p className="text-sm mb-1">
+                        Catch products from the University District in your basket! Each product is worth 10 points.
+                      </p>
+                      <p className="text-sm mb-1">
+                        Avoid the red spiky obstacles... each hit will cost a life. You start with 3 lives.
+                      </p>
+                      <p className="text-sm mb-1">
+                        As your score increases, objects move faster and more obstacles appear!
+                      </p>
+                      <p className="text-sm mb-1">
+                        Click the Pause/Play Button to pause/unpause, or press ESC
+                      </p>
+                      <p className="text-sm mb-1">
+                        Click the Replay Button to restart, or press R
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Car selection on the right */}
