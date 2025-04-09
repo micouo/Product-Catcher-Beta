@@ -1192,22 +1192,22 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
           {/* GAME OVER SCREEN CONTENT */}
           {score > 0 && (
             <div className="w-full max-w-4xl px-4">
-              {/* Special reward message for scores over 200 */}
+              {/* Special reward message for scores over 200 - more compact */}
               {score >= 200 ? (
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-lg mb-4">
-                  <div className="flex flex-col md:flex-row items-center gap-4">
-                    {/* QR Code */}
-                    <div className="bg-white p-2 rounded-md w-36 h-36 flex items-center justify-center flex-shrink-0">
-                      <div className="text-4xl">🏆</div>
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-3 rounded-lg mb-3">
+                  <div className="flex items-center gap-3">
+                    {/* QR Code - smaller */}
+                    <div className="bg-white p-2 rounded-md w-24 h-24 flex items-center justify-center flex-shrink-0">
+                      <div className="text-3xl">🏆</div>
                     </div>
                     
-                    {/* Reward text */}
+                    {/* Reward text - more compact */}
                     <div className="flex-1">
-                      <h3 className="text-xl text-yellow-300 font-bold mb-2">🎉 Congratulations! 🎉</h3>
-                      <p className="text-white text-base mb-2">
+                      <h3 className="text-lg text-yellow-300 font-bold">🎉 Congratulations! 🎉</h3>
+                      <p className="text-white text-sm">
                         You won a 5% discount on your next purchase!
                       </p>
-                      <p className="text-white text-sm mb-2">
+                      <p className="text-white text-xs mt-1">
                         Scan this QR Code at any participating shop in the University District
                       </p>
                       <p className="text-yellow-200 text-xs">
@@ -1217,77 +1217,77 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-yellow-300 text-xl mb-4">
+                <p className="text-yellow-300 text-lg mb-3">
                   Score 200+ points to win a special discount!
                 </p>
               )}
               
-              {/* Name Input and Your Score */}
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
+              {/* Even more compact layout with name input and score side by side */}
+              <div className="flex gap-3 mb-2">
                 <div className="flex-1">
-                  <label className="block text-sm text-gray-300 mb-1">Your Name:</label>
+                  <label className="block text-xs text-gray-300">Your Name:</label>
                   <input 
                     type="text" 
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    className="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-700 text-white p-1 text-sm rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                     placeholder="Enter your name"
                     maxLength={12}
                   />
                 </div>
-                <div className="flex-1">
-                  <p className="text-xl text-white mb-1">Your Score:</p>
-                  <p className="text-3xl font-bold text-blue-400">{score}</p>
+                <div className="w-1/3 text-right">
+                  <label className="block text-xs text-gray-300">Your Score:</label>
+                  <p className="text-2xl font-bold text-blue-400">{score}</p>
                 </div>
               </div>
               
-              {/* Compact Leaderboard */}
-              <div className="bg-gray-800 rounded-lg overflow-hidden mb-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-2 px-3">
-                  <h3 className="text-lg text-white font-bold">Leaderboard</h3>
+              {/* Super Compact Leaderboard */}
+              <div className="bg-gray-800 rounded-lg overflow-hidden mb-3">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-1 px-2">
+                  <h3 className="text-base text-white font-bold">Leaderboard</h3>
                 </div>
                 
-                <div className="p-3">
-                  <div className="grid grid-cols-12 gap-2 mb-1 text-gray-400 text-xs px-2">
-                    <div className="col-span-1 font-semibold">#</div>
-                    <div className="col-span-4 font-semibold">Name</div>
-                    <div className="col-span-3 font-semibold">Car</div>
-                    <div className="col-span-2 font-semibold">Score</div>
-                    <div className="col-span-2 font-semibold">Date</div>
+                <div className="p-2">
+                  <div className="grid grid-cols-16 gap-1 mb-1 text-gray-400 text-xs">
+                    <div className="col-span-1">#</div>
+                    <div className="col-span-5">Name</div>
+                    <div className="col-span-4">Car</div>
+                    <div className="col-span-3">Score</div>
+                    <div className="col-span-3">Date</div>
                   </div>
                   
                   {/* Current score highlighted */}
-                  <div className="bg-blue-900 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-white text-sm">
-                    <div className="col-span-1 font-bold">★</div>
-                    <div className="col-span-4 font-bold truncate">{playerName}</div>
-                    <div className="col-span-3 capitalize truncate">{selectedCar}</div>
-                    <div className="col-span-2 font-bold">{score}</div>
-                    <div className="col-span-2">Today</div>
+                  <div className="bg-blue-900 bg-opacity-50 rounded p-1 mb-1 grid grid-cols-16 gap-1 text-white text-xs">
+                    <div className="col-span-1">★</div>
+                    <div className="col-span-5 truncate">{playerName}</div>
+                    <div className="col-span-4 capitalize truncate">{selectedCar}</div>
+                    <div className="col-span-3 font-bold">{score}</div>
+                    <div className="col-span-3">Today</div>
                   </div>
                   
-                  {/* High score entries */}
-                  <div className="bg-gray-700 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-200 text-sm">
+                  {/* High score entries - more compact */}
+                  <div className="bg-gray-700 rounded p-1 mb-1 grid grid-cols-16 gap-1 text-gray-200 text-xs">
                     <div className="col-span-1">1</div>
-                    <div className="col-span-4 truncate">Champion</div>
-                    <div className="col-span-3 capitalize truncate">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
-                    <div className="col-span-2">{highScore}</div>
-                    <div className="col-span-2">Today</div>
+                    <div className="col-span-5 truncate">Champion</div>
+                    <div className="col-span-4 capitalize truncate">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
+                    <div className="col-span-3">{highScore}</div>
+                    <div className="col-span-3">Today</div>
                   </div>
                   
-                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                  <div className="bg-gray-700 bg-opacity-50 rounded p-1 mb-1 grid grid-cols-16 gap-1 text-gray-300 text-xs">
                     <div className="col-span-1">2</div>
-                    <div className="col-span-4 truncate">Speedster</div>
-                    <div className="col-span-3 truncate">Turbo</div>
-                    <div className="col-span-2">{Math.max(160, Math.floor(highScore * 0.8))}</div>
-                    <div className="col-span-2">Yesterday</div>
+                    <div className="col-span-5 truncate">Speedster</div>
+                    <div className="col-span-4 truncate">Turbo</div>
+                    <div className="col-span-3">{Math.max(160, Math.floor(highScore * 0.8))}</div>
+                    <div className="col-span-3">Yesterday</div>
                   </div>
                   
-                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                  <div className="bg-gray-700 bg-opacity-50 rounded p-1 grid grid-cols-16 gap-1 text-gray-300 text-xs">
                     <div className="col-span-1">3</div>
-                    <div className="col-span-4 truncate">Racer99</div>
-                    <div className="col-span-3 truncate">Drift</div>
-                    <div className="col-span-2">{Math.max(120, Math.floor(highScore * 0.6))}</div>
-                    <div className="col-span-2">04/05/25</div>
+                    <div className="col-span-5 truncate">Racer99</div>
+                    <div className="col-span-4 truncate">Drift</div>
+                    <div className="col-span-3">{Math.max(120, Math.floor(highScore * 0.6))}</div>
+                    <div className="col-span-3">04/05/25</div>
                   </div>
                 </div>
               </div>
