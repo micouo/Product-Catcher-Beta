@@ -24,7 +24,7 @@ export default function InstructionsSection() {
             <h3 className="font-bold text-white">Drive Your Car</h3>
           </div>
           <p className="text-gray-400">
-            Use arrow keys or WASD keys to move freely in any direction.
+            Use arrow keys or WASD keys to move freely in any direction. Press SHIFT for a speed boost.
           </p>
         </div>
         
