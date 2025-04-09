@@ -21,10 +21,10 @@ export default function InstructionsSection() {
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
               1
             </div>
-            <h3 className="font-bold text-white">Move Your Basket</h3>
+            <h3 className="font-bold text-white">Drive Your Car</h3>
           </div>
           <p className="text-gray-400">
-            Use arrow keys or WASD keys to move freely in any direction. On mobile, tap different areas of the screen to move in that direction.
+            Use arrow keys or WASD keys to move freely in any direction.
           </p>
         </div>
         
@@ -36,7 +36,7 @@ export default function InstructionsSection() {
             <h3 className="font-bold text-white">Catch Products</h3>
           </div>
           <p className="text-gray-400">
-            Catch the green star-shaped products in your basket to earn points. Each product is worth 10 points!
+            Catch products from the University District in your basket to earn points. Each product is worth 10 points!
           </p>
         </div>
         
@@ -60,10 +60,10 @@ export default function InstructionsSection() {
               <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mr-3">
                 4
               </div>
-              <h3 className="font-bold text-white">Watch Your Lives</h3>
+              <h3 className="font-bold text-white">Win Rewards</h3>
             </div>
             <p className="text-gray-400">
-              Missing a product will also cost you a life! The game ends when you run out of lives. Try to get the highest score possible!
+              Hit 200 points to unlock a special discount! You can earn a 5% discount on your next purchase at participating stores in the University District.
             </p>
           </div>
           
@@ -72,10 +72,10 @@ export default function InstructionsSection() {
               <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold mr-3">
                 5
               </div>
-              <h3 className="font-bold text-white">Beat Your High Score</h3>
+              <h3 className="font-bold text-white">Special Controls</h3>
             </div>
             <p className="text-gray-400">
-              Your high score is saved during your session. Challenge yourself to beat your own records each time you play!
+              Hold SHIFT key to boost your speed! Press ESC to pause/unpause the game, and press R to restart at any time.
             </p>
           </div>
         </div>

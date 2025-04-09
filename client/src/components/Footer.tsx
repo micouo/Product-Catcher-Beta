@@ -11,10 +11,10 @@ export default function Footer() {
               <span className="bg-blue-500 p-1 rounded-md mr-2">
                 <i className="ri-gamepad-line text-white text-sm"></i>
               </span>
-              <span className="font-bold text-white">ProductCatcher</span>
+              <span className="font-bold text-white">District Driver</span>
             </div>
             <p className="text-gray-400 text-sm mt-2">
-              &copy; {currentYear} ProductCatcher Game. All rights reserved.
+              &copy; {currentYear} District Driver Game. All rights reserved.
             </p>
           </div>
           

@@ -16,7 +16,7 @@ export default function Home() {
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
             Race through the busy streets of the University District in this addictive driving game! 
-            Control your car to collect delicious food items while avoiding obstacles. 
+            Control your car to collect University District products while avoiding obstacles. 
             Score 200 points to earn a 5% discount on your next purchase at participating stores in the University District!
           </p>
         </div>

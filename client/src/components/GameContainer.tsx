@@ -125,7 +125,7 @@ export default function GameContainer() {
         
         {/* Info text */}
         <p className="text-gray-400 text-sm text-center mb-4">
-          Move freely in any direction with keyboard or touch to catch products and avoid obstacles!
+          Drive your car to catch University District products! Score 200+ points for a 5% discount reward!
         </p>
         
         {/* Responsive control explanation */}
@@ -136,8 +136,8 @@ export default function GameContainer() {
           <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
             <i className="ri-keyboard-box-line mr-1"></i> WASD Keys
           </span>
-          <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mb-2">
-            <i className="ri-smartphone-line mr-1"></i> Tap Anywhere
+          <span className="inline-block px-3 py-1 bg-gray-700 text-sm text-gray-300 rounded-full mr-2 mb-2">
+            <i className="ri-speed-line mr-1"></i> SHIFT for Boost
           </span>
         </div>
       </div>

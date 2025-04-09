@@ -1381,35 +1381,32 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
               <div className="flex flex-col md:flex-row w-full max-w-5xl px-4 gap-8 mb-6">
                 {/* Instructions on the left */}
                 <div className="flex-1 text-gray-300 text-left">
-                  <p className="text-xl font-semibold mb-2 text-blue-400">
+                  <p className="text-xl font-semibold mb-3 text-blue-400">
                     How to Play:
                   </p>
-                  <p className="mb-1">
-                    • Drive your car to catch various items like toothbrushes, movie tickets, 
-                    coffees, tacos, and more
+                  <p className="text-lg font-medium mb-2">
+                    Move with arrow keys or WASD
                   </p>
-                  <p className="mb-1">• Avoid the red spiky obstacles</p>
-                  <p className="mb-1">
-                    • Use arrow keys or WASD to move freely in any direction
+                  <p className="text-lg font-medium mb-3">
+                    Hold SHIFT to boost speed
                   </p>
-                  <p className="mb-1">• Hold SHIFT key for a speed boost!</p>
-                  <p className="mb-1">
-                    • Press ESC key or click the pause button to pause/unpause the
-                    game
+                  <p className="text-sm mb-1">
+                    Catch products from the University District in your basket! Each product is worth 10 points.
                   </p>
-                  <p className="mb-1">
-                    • On mobile, tap different screen areas to move in that
-                    direction
+                  <p className="text-sm mb-1">
+                    Hit 200 points to unlock a special discount!
                   </p>
-                  <p className="mb-1">
-                    • Your car will automatically face the direction you're moving
+                  <p className="text-sm mb-1">
+                    Avoid the red spiky obstacles... each hit will cost a life. You start with 3 lives.
                   </p>
-                  <p className="mb-1">
-                    • As your score increases, objects move faster and more
-                    obstacles appear!
+                  <p className="text-sm mb-1">
+                    As your score increases, objects move faster and more obstacles appear!
                   </p>
-                  <p className="mb-1">
-                    • Reach 200 points to win a special discount!
+                  <p className="text-sm mb-1">
+                    Click the Pause/Play Button to pause/unpause, or press ESC
+                  </p>
+                  <p className="text-sm mb-1">
+                    Click the Replay Button to restart, or press R
                   </p>
                 </div>
 
