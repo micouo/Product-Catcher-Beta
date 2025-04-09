@@ -938,19 +938,9 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
               });
               
               if (newLives <= 0) {
-                // Activate the flash animation for the last heart
-                setHeartFlashState({
-                  active: true, 
-                  startTime: Date.now(),
-                  lifeLost: 1 // Always animate the last heart
-                });
-                
-                // Wait for the heart animation to complete before ending the game
-                setTimeout(() => {
-                  playSound("gameOver");
-                  endGame();
-                  if (onGameOver) onGameOver();
-                }, 800); // Match the FLASH_DURATION
+                playSound("gameOver");
+                endGame();
+                if (onGameOver) onGameOver();
               }
               return newLives;
             });
