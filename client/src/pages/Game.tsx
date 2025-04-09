@@ -1,33 +1,26 @@
-import { useEffect, useRef } from "react";
-import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import GameContainer from "@/components/GameContainer";
 import InstructionsSection from "@/components/InstructionsSection";
 import FeaturePreview from "@/components/FeaturePreview";
 import Footer from "@/components/Footer";
+import { useEffect } from "react";
 
 export default function Game() {
-  const [location] = useLocation();
-  const instructionsRef = useRef<HTMLDivElement>(null);
-  const upcomingFeaturesRef = useRef<HTMLDivElement>(null);
-  
-  // Handle scrolling to sections based on hash
+  // Handle initial hash navigation on page load
   useEffect(() => {
-    // Extract the hash from the location
-    const hash = location.includes('#') ? location.split('#')[1] : '';
+    // Check for hash in URL when component mounts
+    const hash = window.location.hash.substring(1); // Remove the # character
     
-    if (hash === 'instructions' && instructionsRef.current) {
-      // Scroll to instructions section with a small delay to ensure rendering is complete
+    if (hash) {
       setTimeout(() => {
-        instructionsRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else if (hash === 'upcoming-features' && upcomingFeaturesRef.current) {
-      // Scroll to upcoming features section
-      setTimeout(() => {
-        upcomingFeaturesRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+        // Scroll to the element with the matching ID
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100); // Small delay to ensure the DOM is ready
     }
-  }, [location]);
+  }, []);
 
   return (
     <div className="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
@@ -49,11 +42,11 @@ export default function Game() {
           <GameContainer />
         </div>
         
-        <div id="instructions" ref={instructionsRef}>
+        <div id="instructions">
           <InstructionsSection />
         </div>
         
-        <div id="upcoming-features" ref={upcomingFeaturesRef}>
+        <div id="upcoming-features">
           <FeaturePreview />
         </div>
       </main>

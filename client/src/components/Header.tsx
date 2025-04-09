@@ -33,14 +33,36 @@ export default function Header() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/game#instructions">
-                    <span className="text-white hover:text-blue-400 transition cursor-pointer">How to Play</span>
-                  </Link>
+                  <a 
+                    href="/game#instructions"
+                    className="text-white hover:text-blue-400 transition cursor-pointer"
+                    onClick={(e) => {
+                      // Check if already on the game page
+                      if (window.location.pathname === '/game') {
+                        e.preventDefault();
+                        // Scroll to the instructions section
+                        document.getElementById('instructions')?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    How to Play
+                  </a>
                 </li>
                 <li>
-                  <Link href="/game#upcoming-features">
-                    <span className="text-white hover:text-blue-400 transition cursor-pointer">Coming Soon</span>
-                  </Link>
+                  <a 
+                    href="/game#upcoming-features"
+                    className="text-white hover:text-blue-400 transition cursor-pointer"
+                    onClick={(e) => {
+                      // Check if already on the game page
+                      if (window.location.pathname === '/game') {
+                        e.preventDefault();
+                        // Scroll to the upcoming features section
+                        document.getElementById('upcoming-features')?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    Coming Soon
+                  </a>
                 </li>
               </ul>
             </nav>
