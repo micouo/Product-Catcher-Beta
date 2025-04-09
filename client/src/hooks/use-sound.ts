@@ -99,10 +99,10 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
   },
   boost: {
     type: 'sawtooth',
-    frequency: 300,
-    duration: 0.2,
-    ramp: 'up',
-    notes: [300, 400, 500, 450, 350]
+    frequency: 180,
+    duration: 0.8,
+    ramp: 'down',
+    notes: [220, 240, 260, 280, 300, 320, 340, 320, 300, 280, 260, 240]
   }
 };
 
@@ -215,7 +215,68 @@ export function useSound() {
     const config = SOUND_CONFIG[type];
     const now = context.currentTime;
     
-    // Play a sequence of notes for more interesting sounds
+    // For the boost sound, we need a special drifting car sound
+    if (type === 'boost') {
+      // Create a noise source for tire screech
+      const bufferSize = 2 * context.sampleRate;
+      const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      
+      // Fill the buffer with noise
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      
+      // Create a noise source from the buffer
+      const noise = context.createBufferSource();
+      noise.buffer = noiseBuffer;
+      
+      // Create a bandpass filter to make it sound like tire screeching
+      const bandpass = context.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = 800;
+      bandpass.Q.value = 1.5;
+      
+      // Create a gain node for volume envelope
+      const gainNode = context.createGain();
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1); // Quick ramp up
+      gainNode.gain.setValueAtTime(0.2, now + 0.2);
+      gainNode.gain.linearRampToValueAtTime(0.5, now + 0.4); // Pitch increase as the car speeds up
+      gainNode.gain.linearRampToValueAtTime(0.1, now + 0.9); // Gradual fade out
+      
+      // Connect everything
+      noise.connect(bandpass);
+      bandpass.connect(gainNode);
+      gainNode.connect(context.destination);
+      
+      // Play the noise for the duration of the drift sound
+      noise.start(now);
+      noise.stop(now + 1.0);
+      
+      // Add a low engine sound for the boost
+      const oscillator = context.createOscillator();
+      const engineGain = context.createGain();
+      
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(120, now);
+      oscillator.frequency.linearRampToValueAtTime(220, now + 0.5); // Rev up
+      oscillator.frequency.linearRampToValueAtTime(150, now + 0.9); // Rev down
+      
+      engineGain.gain.setValueAtTime(0.1, now);
+      engineGain.gain.linearRampToValueAtTime(0.3, now + 0.3);
+      engineGain.gain.linearRampToValueAtTime(0.1, now + 0.9);
+      
+      oscillator.connect(engineGain);
+      engineGain.connect(context.destination);
+      
+      oscillator.start(now);
+      oscillator.stop(now + 1.0);
+      
+      return;
+    }
+    
+    // For other sounds, use the regular pattern
     config.notes.forEach((note: number, index: number) => {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
