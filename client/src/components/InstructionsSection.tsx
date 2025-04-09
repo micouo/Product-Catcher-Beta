@@ -75,7 +75,7 @@ export default function InstructionsSection() {
               <h3 className="font-bold text-white">Special Controls</h3>
             </div>
             <p className="text-gray-400">
-              Hold SHIFT key to boost your speed! Press ESC to pause/unpause the game, and press R to restart at any time.
+              Press ESC to pause/unpause the game, and press R to restart at any time.
             </p>
           </div>
         </div>
