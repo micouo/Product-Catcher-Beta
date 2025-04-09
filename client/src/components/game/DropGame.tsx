@@ -1193,27 +1193,30 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             <div className="w-full max-w-4xl px-4">
               {/* Special reward message for scores over 200 */}
               {score >= 200 ? (
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-lg mb-6">
-                  <h3 className="text-2xl text-yellow-300 font-bold mb-2">🎉 Congratulations! 🎉</h3>
-                  <p className="text-white text-lg mb-3">
-                    You won a 5% discount on your next purchase!
-                  </p>
-                  <p className="text-white text-md mb-4">
-                    Please scan this QR Code at a store of your choice located within our partners in the University District
-                  </p>
-                  
-                  {/* QR Code placeholder (square) */}
-                  <div className="bg-white p-2 rounded-md w-48 h-48 mx-auto mb-3 flex items-center justify-center">
-                    {/* This would be a real QR code in production */}
-                    <div className="text-5xl">🏆</div>
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-lg mb-4">
+                  <div className="flex flex-col md:flex-row items-center gap-4">
+                    {/* QR Code */}
+                    <div className="bg-white p-2 rounded-md w-36 h-36 flex items-center justify-center flex-shrink-0">
+                      <div className="text-4xl">🏆</div>
+                    </div>
+                    
+                    {/* Reward text */}
+                    <div className="flex-1">
+                      <h3 className="text-xl text-yellow-300 font-bold mb-2">🎉 Congratulations! 🎉</h3>
+                      <p className="text-white text-base mb-2">
+                        You won a 5% discount on your next purchase!
+                      </p>
+                      <p className="text-white text-sm mb-2">
+                        Scan this QR Code at any participating shop in the University District
+                      </p>
+                      <p className="text-yellow-200 text-xs">
+                        Code valid until: April 30, 2025
+                      </p>
+                    </div>
                   </div>
-                  
-                  <p className="text-yellow-200 text-sm">
-                    Code valid until: April 30, 2025
-                  </p>
                 </div>
               ) : (
-                <p className="text-yellow-300 text-xl mb-6">
+                <p className="text-yellow-300 text-xl mb-4">
                   Score 200+ points to win a special discount!
                 </p>
               )}
@@ -1366,12 +1369,24 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
             </div>
           )}
 
-          {/* Start/Play Again button */}
+          {/* Start/Return to Title button */}
           <button
-            onClick={startGame}
+            onClick={() => {
+              if (score > 0) {
+                // Reset score but don't start game yet - return to title screen
+                // Update high score if current score is higher
+                if (score > highScore) {
+                  setHighScore(score);
+                }
+                setScore(0); // This will trigger the title screen to display
+              } else {
+                // We're on the title screen, so start the game
+                startGame();
+              }
+            }}
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
           >
-            {score > 0 ? "Play Again" : "Start Game"}
+            {score > 0 ? "Return to Title" : "Start Game"}
           </button>
         </div>
       )}
