@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
+export type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'drift';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
@@ -95,6 +95,13 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
     duration: 0.3,
     ramp: 'down',
     notes: [200, 150]
+  },
+  drift: {
+    type: 'sawtooth',
+    frequency: 120,
+    duration: 0.35,
+    ramp: 'down',
+    notes: [180, 160, 190, 150, 170, 130]
   }
 };
 
@@ -112,6 +119,7 @@ export function useSound() {
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   const activeOscillators = useRef<OscillatorNode[]>([]);
   const audioNodesTimers = useRef<any[]>([]);
+  const driftCooldownRef = useRef<boolean>(false); // Cooldown tracking for drift sound effect
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
@@ -166,6 +174,22 @@ export function useSound() {
   // Create and play a sound
   const playSound = (type: SoundType) => {
     if (!soundEnabled) return;
+    
+    // Special handling for drift sound with cooldown
+    if (type === 'drift') {
+      // If on cooldown, don't play the sound
+      if (driftCooldownRef.current) return;
+      
+      // Set cooldown flag
+      driftCooldownRef.current = true;
+      
+      // Remove cooldown after 5 seconds
+      setTimeout(() => {
+        driftCooldownRef.current = false;
+      }, 5000);
+      
+      console.log('Playing drift sound effect');
+    }
     
     // If we have a real audio element for this sound, play it
     if (audioElements[type]) {
@@ -323,7 +347,7 @@ export function useSound() {
           const gainNode = context.createGain();
           
           oscillator.type = 'square';
-          oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
+          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency / 2 : 0, noteTime); // Lower octave for bass
           
           gainNode.gain.setValueAtTime(0.25, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
@@ -348,7 +372,7 @@ export function useSound() {
           
           // Use different oscillator types for variety
           oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-          oscillator.frequency.setValueAtTime(frequency, noteTime);
+          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
           
           gainNode.gain.setValueAtTime(0.15, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);

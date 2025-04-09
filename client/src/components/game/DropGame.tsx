@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSound } from "../../hooks/use-sound-new";
+import { useSound } from "../../hooks/use-sound";
 import Background from "./Background";
 import car1Image from "@assets/car 1.png";
 import pauseImage from "@assets/pause.png";
@@ -717,7 +717,13 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
           restartGame();
           break;
         case "Shift":
-          setPlayer((prev) => ({ ...prev, boosting: true }));
+          setPlayer((prev) => {
+            // Only play the drift sound if we're just starting to boost
+            if (!prev.boosting) {
+              playSound('drift');
+            }
+            return { ...prev, boosting: true };
+          });
           break;
         case "ArrowLeft":
         case "a":
