@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'drift';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'drift';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
