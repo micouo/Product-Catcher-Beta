@@ -323,8 +323,7 @@ export function useSound() {
           const gainNode = context.createGain();
           
           oscillator.type = 'square';
-          // Ensure frequency is a number and divide by 2 for lower octave bass sound
-          oscillator.frequency.setValueAtTime(Number(frequency) / 2, noteTime);
+          oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
           
           gainNode.gain.setValueAtTime(0.25, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
@@ -340,8 +339,8 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((freq, index) => {
-          if (freq === 0) return; // Skip rests
+        melodyPattern.forEach((frequency, index) => {
+          if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
           const oscillator = context.createOscillator();
@@ -349,10 +348,7 @@ export function useSound() {
           
           // Use different oscillator types for variety
           oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-          
-          // Make sure we handle both individual frequencies and arrays of frequencies
-          const frequencyValue = Array.isArray(freq) ? freq[0] : freq;
-          oscillator.frequency.setValueAtTime(frequencyValue, noteTime);
+          oscillator.frequency.setValueAtTime(frequency, noteTime);
           
           gainNode.gain.setValueAtTime(0.15, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
@@ -380,8 +376,7 @@ export function useSound() {
               const gainNode = context.createGain();
               
               oscillator.type = 'sine';
-              // Ensure frequency is always treated as a number
-              oscillator.frequency.setValueAtTime(Number(frequency), noteTime);
+              oscillator.frequency.setValueAtTime(frequency, noteTime);
               
               gainNode.gain.setValueAtTime(0.08, noteTime); // Lower volume for chords
               gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 1.5);
@@ -479,32 +474,8 @@ export function useSound() {
   // Toggle sound effects on/off
   const toggleSound = () => {
     setSoundEnabled(prev => {
-      const newState = !prev;
-      console.log("Sound toggled to:", newState);
-      
-      // If turning off sound, make sure any currently playing sounds are stopped
-      if (!newState) {
-        // Stop all sound effects
-        if (hitSoundElement) {
-          hitSoundElement.pause();
-          hitSoundElement.currentTime = 0;
-        }
-        if (pickupSoundElement) {
-          pickupSoundElement.pause();
-          pickupSoundElement.currentTime = 0;
-        }
-        
-        // Also clean up any Web Audio API oscillators used for sound effects
-        const context = audioContextRef.current;
-        if (context) {
-          // Create a silent gain node to replace any playing sounds
-          const silentGain = context.createGain();
-          silentGain.gain.value = 0;
-          silentGain.connect(context.destination);
-        }
-      }
-      
-      return newState;
+      console.log("Sound toggled to:", !prev);
+      return !prev;
     });
   };
 
@@ -515,11 +486,8 @@ export function useSound() {
       console.log("Music toggled to:", newState);
       
       if (newState) {
-        // Turn music on - make sure it's properly started
-        if (interactionRef.current) {
-          // The browser requires user interaction to play audio
-          startBackgroundMusic();
-        }
+        // Turn music on
+        startBackgroundMusic();
       } else {
         // Turn music off - use stopMusic to clean up all audio resources
         stopMusic();
