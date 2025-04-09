@@ -19,81 +19,98 @@ type SoundConfig = {
   notes: number[];
 };
 
-// Music generation - Extended 8-bit funky-jazz patterns with multiple sections
-// F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
-// Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
-// C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
+// Electronic Dance Music constants
+// Music in key of A Minor: A(220.00), B(246.94), C(261.63), D(293.66), E(329.63), F(349.23), G(392.00)
+// Higher octave: A(440.00), B(493.88), C(523.25), D(587.33), E(659.25), F(698.46), G(783.99)
 
-// Bass patterns (4 different patterns for variety and more jazz feel)
-const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
-const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
-const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
-// New jazzy walking bass pattern
-const BASS_PATTERN_D = [349.23, 392.00, 440.00, 349.23, 311.13, 349.23, 392.00, 440.00, 392.00, 349.23, 329.63, 349.23, 392.00, 349.23, 311.13, 261.63];
+// BPM for the electronic dance track (Beauty and a Beat style)
+const EDM_BPM = 128;
 
-// Melody patterns (5 different patterns for variety including more jazzy phrasing)
-const MELODY_PATTERN_A = [
-  0, 523.25, 587.33, 659.25, 
-  523.25, 0, 0, 0, 
-  466.16, 523.25, 466.16, 0, 
-  440.00, 0, 392.00, 0
-];
-const MELODY_PATTERN_B = [
-  659.25, 587.33, 523.25, 0, 
-  587.33, 523.25, 466.16, 0,
-  523.25, 466.16, 440.00, 0,
-  466.16, 440.00, 392.00, 0
-];
-const MELODY_PATTERN_C = [
-  523.25, 0, 587.33, 0,
-  523.25, 587.33, 659.25, 0,
-  587.33, 659.25, 783.99, 0,
-  659.25, 0, 587.33, 0
-];
-const MELODY_PATTERN_D = [
-  0, 0, 392.00, 440.00,
-  466.16, 523.25, 466.16, 440.00,
-  392.00, 349.23, 0, 0,
-  392.00, 440.00, 466.16, 523.25
-];
-// New jazzy saxophone-like melody with blue notes
-const MELODY_PATTERN_E = [
-  523.25, 466.16, 440.00, 415.30, 
-  440.00, 466.16, 0, 0,
-  523.25, 587.33, 523.25, 466.16,
-  440.00, 466.16, 0, 0
+// Time signatures
+const BEAT_DURATION = 60 / EDM_BPM; // Duration of one beat in seconds
+const BAR_DURATION = BEAT_DURATION * 4; // 4/4 time signature
+const SIXTEENTH_NOTE = BEAT_DURATION / 4; // Duration of a sixteenth note
+
+// Lead melody pattern based on the provided hook
+// A - A - C - A - E - D - C - D
+// E - E - G - E - A - G - E - C
+const LEAD_HOOK_MELODY = [
+  // A - A - C - A - E - D - C - D
+  220.00, 220.00, 261.63, 220.00, 329.63, 293.66, 261.63, 293.66, 
+  // E - E - G - E - A - G - E - C
+  329.63, 329.63, 392.00, 329.63, 440.00, 392.00, 329.63, 261.63
 ];
 
-// Jazz chord fills (played occasionally for harmonic depth)
-const JAZZ_CHORD_PATTERN_A = [
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
-  0, 0, 0, 0,
-  [415.30, 523.25, 622.25], 0, 0, 0,  // Ab major
-  0, 0, 0, 0
-];
-const JAZZ_CHORD_PATTERN_B = [
-  0, 0, 0, 0,
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
-  0, 0, 0, 0,
-  [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
-];
-// New jazz seventh chord pattern
-const JAZZ_CHORD_PATTERN_C = [
-  [349.23, 440.00, 523.25, 622.25], 0, 0, 0,  // F major 7th
-  0, 0, [392.00, 493.88, 587.33, 698.46], 0,  // G dominant 7th
-  0, 0, 0, 0,
-  [349.23, 415.30, 523.25, 622.25], 0, 0, 0,  // F minor 7th
+// Higher octave version for chorus
+const LEAD_HOOK_MELODY_HIGH = LEAD_HOOK_MELODY.map(freq => freq * 2);
+
+// Four-on-the-floor kick drum pattern (16th notes)
+const KICK_PATTERN = [
+  1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, // basic pattern
 ];
 
-// Varied drum patterns with more complex rhythms including snare emphasis
-const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0]; // Basic pattern
-const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0]; // Hi-hat pattern
-const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5]; // Syncopated pattern
-// New pattern with snare on 2 and 4 (classic jazz pattern)
-const DRUM_PATTERN_D = [1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0.5];
-// Brushed snare jazz pattern
-const DRUM_PATTERN_E = [1, 2, 0.5, 2, 1, 2, 0.5, 2, 1, 2, 0.5, 2, 1, 2, 0.5, 2];
+// Snare/clap on beats 2 and 4
+const SNARE_PATTERN = [
+  0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+];
 
+// Hi-hat 16th notes with variations
+const HIHAT_PATTERN_BASIC = [
+  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+];
+
+// Hi-hat with roll variations
+const HIHAT_PATTERN_ROLLS = [
+  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5,
+];
+
+// Synth bass patterns - sidechained to the kick
+const BASS_PATTERN_VERSE = [
+  220.00, 0, 0, 0, 220.00, 0, 0, 0, 220.00, 0, 0, 0, 220.00, 0, 175.00, 196.00,
+];
+
+const BASS_PATTERN_CHORUS = [
+  220.00, 0, 0, 220.00, 293.66, 0, 0, 293.66, 196.00, 0, 0, 196.00, 246.94, 0, 261.63, 0,
+];
+
+// Arpeggiator patterns based on A minor chord progression
+const ARP_PATTERN_AM_EM = [
+  220.00, 261.63, 329.63, 440.00, 329.63, 261.63, 329.63, 440.00,
+  164.81, 196.00, 246.94, 329.63, 246.94, 196.00, 246.94, 329.63,
+];
+
+const ARP_PATTERN_F_G = [
+  174.61, 220.00, 261.63, 349.23, 261.63, 220.00, 261.63, 349.23,
+  196.00, 246.94, 293.66, 392.00, 293.66, 246.94, 293.66, 392.00,
+];
+
+// Chord progressions (A minor, F major, C major, G major)
+const CHORD_AM = [220.00, 261.63, 329.63]; // A minor (A, C, E)
+const CHORD_F = [174.61, 220.00, 261.63, 349.23]; // F major (F, A, C, F)
+const CHORD_C = [130.81, 196.00, 261.63, 329.63]; // C major (C, G, C, E)
+const CHORD_G = [196.00, 246.94, 293.66, 392.00]; // G major (G, B, D, G)
+
+// Chord progression patterns - AM - F - C - G (common in EDM pop)
+const CHORD_PROGRESSION_VERSE = [
+  CHORD_AM, 0, 0, 0, CHORD_F, 0, 0, 0, CHORD_C, 0, 0, 0, CHORD_G, 0, 0, 0,
+];
+
+const CHORD_PROGRESSION_CHORUS = [
+  CHORD_AM, 0, CHORD_AM, 0, CHORD_F, 0, CHORD_F, 0, 
+  CHORD_C, 0, CHORD_C, 0, CHORD_G, 0, CHORD_G, 0,
+];
+
+// Section durations in beats (4 beats per bar)
+const SECTION_DURATIONS = {
+  intro: 16, // 4 bars
+  verse: 32, // 8 bars
+  preChorus: 16, // 4 bars
+  chorus: 32, // 8 bars
+  bridge: 24, // 6 bars
+  finalChorus: 32, // 8 bars
+};
+
+// Sound effect configs
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
     type: 'triangle',
@@ -128,22 +145,21 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
 export function useSound() {
   // State hooks must come first
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [musicEnabled, setMusicEnabled] = useState<boolean>(true); // Set default to true for background music
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
   const [musicInitialized, setMusicInitialized] = useState<boolean>(false);
   
   // Ref hooks must be in consistent order on every render
   const audioContextRef = useRef<AudioContext | null>(null);
-  const musicOscillatorRef = useRef<OscillatorNode | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const interactionRef = useRef<boolean>(false);
   const soundBuffers = useRef<{[key: string]: AudioBuffer}>({}); // Sound buffers cache
   const activeOscillators = useRef<OscillatorNode[]>([]);
+  const activeAudioNodes = useRef<AudioNode[]>([]);
   const audioNodesTimers = useRef<any[]>([]);
   const driftCooldownRef = useRef<boolean>(false); // Cooldown tracking for drift sound effect
   
   // Initialize audio context on first user interaction
   const initializeAudio = () => {
-    // This is a user-triggered action, so we can create audio elements now
     try {
       // Create the audio context if it doesn't exist
       if (!audioContextRef.current) {
@@ -154,14 +170,6 @@ export function useSound() {
       interactionRef.current = true;
       
       // Create audio elements if they don't exist yet
-      if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.mp3');
-        backgroundMusicElement.loop = true;
-        backgroundMusicElement.volume = 0.3;
-        // Preload the audio
-        backgroundMusicElement.preload = 'auto';
-      }
-      
       if (!hitSoundElement) {
         hitSoundElement = new Audio('/sounds/hit.wav');
         hitSoundElement.volume = 0.45; // 45% volume
@@ -175,16 +183,8 @@ export function useSound() {
       }
       
       // Start background music in response to user interaction
-      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
-        // Play the music (must be in response to a user action)
-        backgroundMusicElement.play()
-          .then(() => {
-            console.log('Background music started successfully');
-            setMusicInitialized(true);
-          })
-          .catch(err => {
-            console.error('Error playing background music:', err);
-          });
+      if (musicEnabled && !musicInitialized) {
+        startBackgroundMusic();
       }
     } catch (error) {
       console.error('Error initializing audio:', error);
@@ -274,52 +274,374 @@ export function useSound() {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
   
-  // Choose a specific pattern sequence based on current time
-  // This ensures the music has longer, more varied sequences with jazz influence
-  const getPatternForSection = (patternType: string, sectionIndex: number) => {
-    switch (patternType) {
-      case 'bass':
-        // Alternate between different bass patterns in a more complex sequence
-        if (sectionIndex % 5 === 0) return BASS_PATTERN_A; 
-        if (sectionIndex % 5 === 1) return BASS_PATTERN_B;
-        if (sectionIndex % 5 === 2) return BASS_PATTERN_C;
-        if (sectionIndex % 5 === 3) return BASS_PATTERN_D; // New walking bass pattern
-        return BASS_PATTERN_A;
-      
-      case 'melody':
-        // Create more varied melody sequences with saxophone-like patterns
-        if (sectionIndex % 10 === 0) return MELODY_PATTERN_A;
-        if (sectionIndex % 10 === 1) return MELODY_PATTERN_B;
-        if (sectionIndex % 10 === 2) return MELODY_PATTERN_C;
-        if (sectionIndex % 10 === 3) return MELODY_PATTERN_D;
-        if (sectionIndex % 10 === 4) return MELODY_PATTERN_E; // New jazzy saxophone pattern
-        if (sectionIndex % 10 === 5) return MELODY_PATTERN_B;
-        if (sectionIndex % 10 === 6) return MELODY_PATTERN_E; // More saxophone
-        if (sectionIndex % 10 === 7) return MELODY_PATTERN_A;
-        if (sectionIndex % 10 === 8) return MELODY_PATTERN_D;
-        return MELODY_PATTERN_C;
-        
-      case 'chord':
-        // Add more jazz chords for harmonic depth
-        if (sectionIndex % 6 === 0) return JAZZ_CHORD_PATTERN_A;
-        if (sectionIndex % 6 === 2) return JAZZ_CHORD_PATTERN_B;
-        if (sectionIndex % 6 === 4) return JAZZ_CHORD_PATTERN_C; // New jazz 7th chords
-        return []; // No chords in other sections
-      
-      case 'drums':
-        // Alternate drum patterns for rhythmic variety including snare emphasis
-        if (sectionIndex % 5 === 0) return DRUM_PATTERN_A;
-        if (sectionIndex % 5 === 1) return DRUM_PATTERN_B;
-        if (sectionIndex % 5 === 2) return DRUM_PATTERN_C;
-        if (sectionIndex % 5 === 3) return DRUM_PATTERN_D; // Classic jazz snare pattern
-        return DRUM_PATTERN_E; // Brushed snare pattern
-      
-      default:
-        return [];
-    }
+  // Random float between min and max
+  const randomFloat = (min: number, max: number) => {
+    return min + Math.random() * (max - min);
   };
   
-  // Generate 8-bit music using Web Audio API
+  // Create a white noise buffer (for risers, sweeps, etc.)
+  const createNoiseBuffer = (context: AudioContext, duration: number) => {
+    const sampleRate = context.sampleRate;
+    const bufferSize = sampleRate * duration;
+    const buffer = context.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    
+    return buffer;
+  };
+  
+  // Create a frequency sweep (for risers and downlifters)
+  const createFrequencySweep = (
+    context: AudioContext, 
+    startFreq: number, 
+    endFreq: number,
+    startTime: number, 
+    duration: number,
+    type: OscillatorType = 'sawtooth'
+  ) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(startFreq, startTime);
+    oscillator.frequency.exponentialRampToValueAtTime(endFreq, startTime + duration);
+    
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, startTime + duration * 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+    
+    oscillator.connect(gainNode);
+    
+    return { oscillator, gainNode };
+  };
+  
+  // Create a synth pad with multiple oscillators for a rich sound
+  const createSynthPad = (
+    context: AudioContext,
+    chord: number[],
+    startTime: number,
+    duration: number
+  ) => {
+    const oscillators: OscillatorNode[] = [];
+    const gainNodes: GainNode[] = [];
+    
+    // Create 2 oscillators per note for richness
+    chord.forEach(note => {
+      // Main oscillator
+      const osc1 = context.createOscillator();
+      const gain1 = context.createGain();
+      
+      osc1.type = 'sine';
+      osc1.frequency.value = note;
+      
+      gain1.gain.setValueAtTime(0, startTime);
+      gain1.gain.linearRampToValueAtTime(0.1 / chord.length, startTime + 0.2);
+      gain1.gain.linearRampToValueAtTime(0.08 / chord.length, startTime + duration - 0.5);
+      gain1.gain.linearRampToValueAtTime(0, startTime + duration);
+      
+      osc1.connect(gain1);
+      
+      // Detune oscillator for richness
+      const osc2 = context.createOscillator();
+      const gain2 = context.createGain();
+      
+      osc2.type = 'triangle';
+      osc2.frequency.value = note;
+      osc2.detune.value = randomInt(-10, 10); // Slight detune for richness
+      
+      gain2.gain.setValueAtTime(0, startTime);
+      gain2.gain.linearRampToValueAtTime(0.05 / chord.length, startTime + 0.3);
+      gain2.gain.linearRampToValueAtTime(0.04 / chord.length, startTime + duration - 0.5);
+      gain2.gain.linearRampToValueAtTime(0, startTime + duration);
+      
+      osc2.connect(gain2);
+      
+      oscillators.push(osc1, osc2);
+      gainNodes.push(gain1, gain2);
+    });
+    
+    return { oscillators, gainNodes };
+  };
+  
+  // Create a kick drum sound
+  const createKick = (
+    context: AudioContext,
+    startTime: number,
+    volume: number = 0.8
+  ) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(150, startTime);
+    oscillator.frequency.exponentialRampToValueAtTime(40, startTime + 0.05);
+    
+    gainNode.gain.setValueAtTime(volume, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+    
+    oscillator.connect(gainNode);
+    
+    return { oscillator, gainNode };
+  };
+  
+  // Create a snare/clap sound
+  const createSnareClap = (
+    context: AudioContext,
+    startTime: number,
+    volume: number = 0.5
+  ) => {
+    // Noise component (body of the snare/clap)
+    const noiseBuffer = createNoiseBuffer(context, 0.2);
+    const noiseSource = context.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    
+    // Filter to shape the noise
+    const noiseFilter = context.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 2000;
+    noiseFilter.Q.value = 1;
+    
+    // Envelope for the noise
+    const noiseGain = context.createGain();
+    noiseGain.gain.setValueAtTime(0, startTime);
+    noiseGain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+    
+    // Connect the noise components
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    
+    // Body tone component
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.type = 'triangle';
+    oscillator.frequency.value = 250;
+    
+    gainNode.gain.setValueAtTime(volume * 0.7, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.08);
+    
+    oscillator.connect(gainNode);
+    
+    return { noiseSource, noiseGain, oscillator, gainNode };
+  };
+  
+  // Create a hi-hat sound
+  const createHiHat = (
+    context: AudioContext,
+    startTime: number,
+    volume: number = 0.2,
+    duration: number = 0.08
+  ) => {
+    // Noise source
+    const noiseBuffer = createNoiseBuffer(context, 0.2);
+    const noiseSource = context.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    
+    // High-pass filter for hi-hat tone
+    const filter = context.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 8000;
+    
+    // Envelope for short attack/decay
+    const gainNode = context.createGain();
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.005);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+    
+    noiseSource.connect(filter);
+    filter.connect(gainNode);
+    
+    return { noiseSource, gainNode };
+  };
+  
+  // Create a synth bass sound with sidechain effect
+  const createSidechainedBass = (
+    context: AudioContext,
+    frequency: number,
+    startTime: number,
+    duration: number,
+    volume: number = 0.4
+  ) => {
+    // Create oscillator for bass
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    // Rich saw-based sound
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.value = frequency;
+    
+    // Filter to shape the bass tone
+    const filter = context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 500;
+    filter.Q.value = 8;
+    
+    // Add slight resonance sweep
+    filter.frequency.setValueAtTime(100, startTime);
+    filter.frequency.exponentialRampToValueAtTime(500, startTime + 0.05);
+    filter.frequency.exponentialRampToValueAtTime(400, startTime + duration);
+    
+    // Sidechain envelope
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+    gainNode.gain.linearRampToValueAtTime(volume * 0.9, startTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.2);
+    
+    // Connect the components
+    oscillator.connect(filter);
+    filter.connect(gainNode);
+    
+    return { oscillator, filter, gainNode };
+  };
+  
+  // Create saw-based lead synth with glide effect
+  const createSynthLead = (
+    context: AudioContext,
+    noteFrequencies: number[],
+    startTime: number, 
+    noteDuration: number,
+    volume: number = 0.3
+  ) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    // Saw wave for bright sound
+    oscillator.type = 'sawtooth';
+    
+    // Set initial frequency and schedule note changes with glide
+    oscillator.frequency.setValueAtTime(noteFrequencies[0], startTime);
+    
+    // Schedule each note
+    noteFrequencies.forEach((freq, index) => {
+      const noteTime = startTime + index * noteDuration;
+      
+      // Start of note has a slight glide effect
+      if (index > 0) {
+        // Create portamento/glide effect
+        oscillator.frequency.setTargetAtTime(
+          freq, 
+          noteTime, 
+          0.03 // Time constant for glide
+        );
+      }
+      
+      // Volume envelope for each note
+      gainNode.gain.setValueAtTime(0, noteTime);
+      gainNode.gain.linearRampToValueAtTime(volume, noteTime + 0.02);
+      
+      // Slight decay within the note
+      gainNode.gain.linearRampToValueAtTime(
+        volume * 0.8, 
+        noteTime + noteDuration * 0.7
+      );
+      
+      // Release at end of note (if not the last note)
+      if (index < noteFrequencies.length - 1) {
+        gainNode.gain.linearRampToValueAtTime(0.1, noteTime + noteDuration * 0.9);
+      }
+    });
+    
+    // Final release
+    gainNode.gain.linearRampToValueAtTime(
+      0, 
+      startTime + noteFrequencies.length * noteDuration
+    );
+    
+    // Connect audio path
+    oscillator.connect(gainNode);
+    
+    return { oscillator, gainNode };
+  };
+  
+  // Create arpeggiator with pluck sound
+  const createArpeggiator = (
+    context: AudioContext,
+    noteFrequencies: number[],
+    startTime: number,
+    noteDuration: number,
+    volume: number = 0.15
+  ) => {
+    const nodes: { oscillator: OscillatorNode, gain: GainNode }[] = [];
+    
+    // Create a separate oscillator for each note to get the pluck effect
+    noteFrequencies.forEach((freq, index) => {
+      if (freq === 0) return; // Skip rests
+      
+      const noteTime = startTime + index * noteDuration;
+      
+      // Create oscillator and gain nodes
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+      
+      // Triangle wave for pluck base
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = freq;
+      
+      // Create a very quick attack and decay for pluck sound
+      gainNode.gain.setValueAtTime(0, noteTime);
+      gainNode.gain.linearRampToValueAtTime(volume, noteTime + 0.005);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, noteTime + noteDuration * 0.8);
+      
+      // Connect
+      oscillator.connect(gainNode);
+      
+      // Schedule playback
+      oscillator.start(noteTime);
+      oscillator.stop(noteTime + noteDuration);
+      
+      nodes.push({ oscillator, gain: gainNode });
+    });
+    
+    return nodes;
+  };
+  
+  // Create a percussion effect like a riser or downlifter
+  const createPercussionEffect = (
+    context: AudioContext,
+    effectType: 'riser' | 'downlifter',
+    startTime: number,
+    duration: number
+  ) => {
+    // Create a noise component
+    const noiseBuffer = createNoiseBuffer(context, duration);
+    const noiseSource = context.createBufferSource();
+    const noiseGain = context.createGain();
+    const filter = context.createBiquadFilter();
+    
+    noiseSource.buffer = noiseBuffer;
+    
+    // Filter settings depends on effect type
+    if (effectType === 'riser') {
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(300, startTime);
+      filter.frequency.exponentialRampToValueAtTime(15000, startTime + duration);
+      filter.Q.value = 3;
+      
+      noiseGain.gain.setValueAtTime(0, startTime);
+      noiseGain.gain.linearRampToValueAtTime(0.3, startTime + duration * 0.8);
+      noiseGain.gain.linearRampToValueAtTime(0.5, startTime + duration);
+    } else {
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(15000, startTime);
+      filter.frequency.exponentialRampToValueAtTime(300, startTime + duration);
+      filter.Q.value = 2;
+      
+      noiseGain.gain.setValueAtTime(0.5, startTime);
+      noiseGain.gain.linearRampToValueAtTime(0, startTime + duration);
+    }
+    
+    // Connect
+    noiseSource.connect(filter);
+    filter.connect(noiseGain);
+    
+    return { noiseSource, filter, noiseGain };
+  };
+  
+  // Generate a full electronic dance track using Web Audio API
   const startBackgroundMusic = () => {
     if (!musicEnabled) return;
     
@@ -327,8 +649,7 @@ export function useSound() {
       // Clean up any previous music first
       stopMusic();
       
-      // Use Web Audio API for procedural music generation
-      console.log('Starting 8-bit funky background music');
+      console.log('Starting high-energy electronic pop music');
       
       // Make sure we have an audio context
       if (!audioContextRef.current) {
@@ -336,294 +657,878 @@ export function useSound() {
       }
       
       const context = audioContextRef.current;
-      
-      // Setup parameters for our 8-bit music
-      const bpm = 120; // Beats per minute
-      const noteDuration = 60 / bpm / 2; // Duration of a single 8th note in seconds
       const now = context.currentTime;
       
       // Create master volume
       const masterGain = context.createGain();
-      masterGain.gain.value = 0.2; // Master volume
+      masterGain.gain.value = 0.25; // Master volume (moderate level)
       masterGain.connect(context.destination);
       
-      // Generate a random starting section to add variety
-      const startingSection = randomInt(0, 15);
+      // Store for volume control
+      musicGainRef.current = masterGain;
       
-      // Define how many sections to play before looping (creates a longer, more varied piece)
-      const sectionsToPlay = 8; // This creates an 8x longer composition before looping
+      // Calculate section timings
+      const sectionTimes = {
+        intro: now,
+        verse: now + SECTION_DURATIONS.intro * BEAT_DURATION,
+        preChorus: now + (SECTION_DURATIONS.intro + SECTION_DURATIONS.verse) * BEAT_DURATION,
+        chorus: now + (SECTION_DURATIONS.intro + SECTION_DURATIONS.verse + SECTION_DURATIONS.preChorus) * BEAT_DURATION,
+        bridge: now + (SECTION_DURATIONS.intro + SECTION_DURATIONS.verse + SECTION_DURATIONS.preChorus + 
+                     SECTION_DURATIONS.chorus) * BEAT_DURATION,
+        finalChorus: now + (SECTION_DURATIONS.intro + SECTION_DURATIONS.verse + SECTION_DURATIONS.preChorus + 
+                     SECTION_DURATIONS.chorus + SECTION_DURATIONS.bridge) * BEAT_DURATION,
+        end: now + (SECTION_DURATIONS.intro + SECTION_DURATIONS.verse + SECTION_DURATIONS.preChorus + 
+                  SECTION_DURATIONS.chorus + SECTION_DURATIONS.bridge + SECTION_DURATIONS.finalChorus) * BEAT_DURATION
+      };
       
-      // Schedule multiple sections of music to create a longer, more varied composition
-      for (let section = 0; section < sectionsToPlay; section++) {
-        const currentSection = (startingSection + section) % 16; // Cycle through 16 different pattern combinations
-        const sectionTime = now + section * (noteDuration * 16); // Each section is 16 notes long
+      // Total duration of the track in seconds
+      const totalDuration = (Object.values(SECTION_DURATIONS).reduce((sum, val) => sum + val, 0)) * BEAT_DURATION;
+      
+      // ===== 1. INTRO SECTION =====
+      // Filtered intro with reverb-heavy riser
+      {
+        // Intro soft lead melody - start with filtered version of the lead hook
+        const { oscillator, gainNode } = createSynthLead(
+          context, 
+          LEAD_HOOK_MELODY.slice(0, 8), // First half of hook
+          sectionTimes.intro + BEAT_DURATION * 4, // Start after a bar
+          BEAT_DURATION / 2, // Eighth notes
+          0.15 // Lower volume for intro
+        );
         
-        // Get appropriate patterns for this section
-        const bassPattern = getPatternForSection('bass', currentSection);
-        const melodyPattern = getPatternForSection('melody', currentSection);
-        const chordPattern = getPatternForSection('chord', currentSection);
-        const drumPattern = getPatternForSection('drums', currentSection);
+        // Add filter for that "filtered intro" sound
+        const filter = context.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(500, sectionTimes.intro);
+        filter.frequency.linearRampToValueAtTime(5000, sectionTimes.verse);
+        filter.Q.value = 2;
         
-        // Schedule the bass pattern for this section
-        bassPattern.forEach((frequency, index) => {
-          if (frequency === 0) return; // Skip rests
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        // Reverb effect for the intro
+        const convolver = context.createConvolver();
+        const reverbBuffer = context.createBuffer(2, context.sampleRate * 3, context.sampleRate);
+        for (let channel = 0; channel < 2; channel++) {
+          const data = reverbBuffer.getChannelData(channel);
+          for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 1.5));
+          }
+        }
+        convolver.buffer = reverbBuffer;
+        
+        // Connect some of the filtered sound to the reverb
+        const reverbSend = context.createGain();
+        reverbSend.gain.value = 0.4;
+        filter.connect(reverbSend);
+        reverbSend.connect(convolver);
+        convolver.connect(masterGain);
+        
+        // Start the oscillator
+        oscillator.start(sectionTimes.intro);
+        oscillator.stop(sectionTimes.verse);
+        
+        // Add a subtle kick to establish rhythm
+        for (let i = 0; i < 16; i++) {
+          const beat = i % 4;
+          if (beat === 0) { // Kick on beats 1, 5, 9, 13
+            const kickTime = sectionTimes.intro + i * BEAT_DURATION;
+            const { oscillator, gainNode } = createKick(context, kickTime, 0.4);
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start(kickTime);
+            oscillator.stop(kickTime + 0.2);
+            
+            activeOscillators.current.push(oscillator);
+          }
+        }
+        
+        // Add a riser effect leading to the verse
+        const riser = createPercussionEffect(
+          context, 
+          'riser', 
+          sectionTimes.intro + SECTION_DURATIONS.intro * BEAT_DURATION - 4 * BEAT_DURATION, // Start 4 beats before verse
+          4 * BEAT_DURATION // 4 beats long
+        );
+        
+        riser.noiseSource.connect(riser.filter);
+        riser.filter.connect(riser.noiseGain);
+        riser.noiseGain.connect(masterGain);
+        
+        riser.noiseSource.start(sectionTimes.intro + SECTION_DURATIONS.intro * BEAT_DURATION - 4 * BEAT_DURATION);
+        riser.noiseSource.stop(sectionTimes.verse);
+        
+        // Track for cleanup
+        activeOscillators.current.push(oscillator);
+        activeAudioNodes.current.push(gainNode, filter, convolver, reverbSend, riser.noiseGain, riser.filter);
+      }
+      
+      // ===== 2. VERSE SECTION =====
+      // Minimal synths, punchy kick, pluck arps
+      {
+        // Punchy kick pattern
+        for (let i = 0; i < SECTION_DURATIONS.verse; i++) {
+          const beat = i % 4;
+          if (beat === 0) { // Four-on-the-floor kick pattern
+            const kickTime = sectionTimes.verse + i * BEAT_DURATION;
+            const { oscillator, gainNode } = createKick(context, kickTime, 0.7);
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start(kickTime);
+            oscillator.stop(kickTime + 0.2);
+            
+            activeOscillators.current.push(oscillator);
+          }
+        }
+        
+        // Light hi-hats on 16th notes
+        for (let i = 0; i < SECTION_DURATIONS.verse * 4; i++) {
+          const hiHatTime = sectionTimes.verse + i * SIXTEENTH_NOTE;
+          const { noiseSource, gainNode } = createHiHat(
+            context, 
+            hiHatTime, 
+            i % 4 === 0 ? 0.2 : 0.1, // Accent on downbeats
+            0.05
+          );
           
-          const noteTime = sectionTime + index * noteDuration;
-          const oscillator = context.createOscillator();
-          const gainNode = context.createGain();
+          noiseSource.connect(gainNode);
+          gainNode.connect(masterGain);
           
-          oscillator.type = 'square';
-          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency / 2 : 0, noteTime); // Lower octave for bass
+          noiseSource.start(hiHatTime);
+          noiseSource.stop(hiHatTime + 0.1);
           
-          gainNode.gain.setValueAtTime(0.25, noteTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
+          activeAudioNodes.current.push(gainNode);
+        }
+        
+        // Minimal bass - create a sidechained bass pattern
+        for (let bar = 0; bar < SECTION_DURATIONS.verse / 4; bar++) {
+          for (let i = 0; i < 16; i++) {
+            const freq = BASS_PATTERN_VERSE[i];
+            if (freq === 0) continue; // Skip rests
+            
+            const noteTime = sectionTimes.verse + (bar * 4 * BEAT_DURATION) + (i * SIXTEENTH_NOTE);
+            const { oscillator, filter, gainNode } = createSidechainedBass(
+              context,
+              freq,
+              noteTime,
+              SIXTEENTH_NOTE * 3, // Note duration
+              0.3
+            );
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start(noteTime);
+            oscillator.stop(noteTime + SIXTEENTH_NOTE * 3.5);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(filter, gainNode);
+          }
+        }
+        
+        // Arpeggiator pattern (16th notes)
+        for (let bar = 0; bar < SECTION_DURATIONS.verse / 4; bar++) {
+          // Alternate between A minor/E minor and F/G arps
+          const arpPattern = bar % 2 === 0 ? ARP_PATTERN_AM_EM : ARP_PATTERN_F_G;
+          
+          const arpNodes = createArpeggiator(
+            context,
+            arpPattern,
+            sectionTimes.verse + (bar * 4 * BEAT_DURATION),
+            SIXTEENTH_NOTE,
+            0.1
+          );
+          
+          // Connect each node to master
+          arpNodes.forEach(({ oscillator, gain }) => {
+            gain.connect(masterGain);
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(gain);
+          });
+        }
+        
+        // Add occasional snare hits
+        for (let i = 0; i < SECTION_DURATIONS.verse; i++) {
+          const beat = i % 4;
+          if (beat === 2) { // Snare on beats 3, 7, 11, etc.
+            const snareTime = sectionTimes.verse + i * BEAT_DURATION;
+            const { noiseSource, noiseGain, oscillator, gainNode } = createSnareClap(context, snareTime, 0.3);
+            
+            noiseSource.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            noiseSource.start(snareTime);
+            noiseSource.stop(snareTime + 0.2);
+            oscillator.start(snareTime);
+            oscillator.stop(snareTime + 0.1);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(noiseGain, gainNode);
+          }
+        }
+      }
+      
+      // ===== 3. PRE-CHORUS SECTION =====
+      // Build tension with riser, filtered chords and gated effect
+      {
+        // Create a rising filter sweep for tension
+        const sweep = createFrequencySweep(
+          context,
+          200,
+          8000,
+          sectionTimes.preChorus,
+          SECTION_DURATIONS.preChorus * BEAT_DURATION * 0.9,
+          'sawtooth'
+        );
+        
+        sweep.oscillator.connect(sweep.gainNode);
+        sweep.gainNode.connect(masterGain);
+        
+        sweep.oscillator.start(sectionTimes.preChorus);
+        sweep.oscillator.stop(sectionTimes.chorus);
+        
+        activeOscillators.current.push(sweep.oscillator);
+        activeAudioNodes.current.push(sweep.gainNode);
+        
+        // Create filtered chord progression
+        for (let i = 0; i < 4; i++) {
+          const chordTime = sectionTimes.preChorus + i * 4 * BEAT_DURATION;
+          
+          // Alternate between Am and F chords
+          const chord = i % 2 === 0 ? CHORD_AM : CHORD_F;
+          
+          const { oscillators, gainNodes } = createSynthPad(
+            context,
+            chord,
+            chordTime,
+            4 * BEAT_DURATION,
+          );
+          
+          // Create a common filter for the chord
+          const filter = context.createBiquadFilter();
+          filter.type = 'lowpass';
+          
+          // Filter sweep increases as we approach the chorus
+          const startFreq = 500 + i * 500; // Each chord iteration gets brighter
+          filter.frequency.setValueAtTime(startFreq, chordTime);
+          filter.frequency.linearRampToValueAtTime(startFreq + 2000, chordTime + 4 * BEAT_DURATION);
+          filter.Q.value = 4;
+          
+          // Connect oscillators to gains, then to filter, then to master
+          gainNodes.forEach((gain, idx) => {
+            gain.connect(filter);
+            activeAudioNodes.current.push(gain);
+          });
+          
+          filter.connect(masterGain);
+          activeAudioNodes.current.push(filter);
+          
+          // Create volume gate effect for chord stabs (faster as we approach chorus)
+          const gateRate = 2 + i; // Increasing gate speed
+          for (let j = 0; j < 4 * gateRate; j++) {
+            const gateTime = chordTime + j * (BEAT_DURATION / gateRate);
+            const gateEndTime = gateTime + (BEAT_DURATION / gateRate) * 0.7;
+            
+            // Connect and start oscillators
+            oscillators.forEach((osc, idx) => {
+              osc.start(chordTime);
+              osc.stop(chordTime + 4 * BEAT_DURATION);
+              activeOscillators.current.push(osc);
+            });
+          }
+        }
+        
+        // Continuous kick drum build
+        for (let i = 0; i < SECTION_DURATIONS.preChorus; i++) {
+          const kickTime = sectionTimes.preChorus + i * BEAT_DURATION;
+          const { oscillator, gainNode } = createKick(context, kickTime, 0.6 + (i / SECTION_DURATIONS.preChorus) * 0.3);
           
           oscillator.connect(gainNode);
           gainNode.connect(masterGain);
           
-          // Track the oscillator for clean shutdown
+          oscillator.start(kickTime);
+          oscillator.stop(kickTime + 0.2);
+          
           activeOscillators.current.push(oscillator);
-          
-          oscillator.start(noteTime);
-          oscillator.stop(noteTime + noteDuration);
-        });
+          activeAudioNodes.current.push(gainNode);
+        }
         
-        // Schedule the melody pattern for this section
-        melodyPattern.forEach((frequency, index) => {
-          if (frequency === 0) return; // Skip rests
-          
-          const noteTime = sectionTime + index * noteDuration;
-          
-          // For pattern E (the saxophone pattern), use a more complex saxophone-like instrument
-          if (melodyPattern === MELODY_PATTERN_E) {
-            // Create a more complex saxophone-like sound with multiple oscillators
-            
-            // Main tone - a combination of sine and triangle for richness
-            const mainOsc = context.createOscillator();
-            mainOsc.type = 'sine';  
-            mainOsc.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
-            
-            // Envelope with jazz-like articulation
-            const mainGain = context.createGain();
-            mainGain.gain.setValueAtTime(0, noteTime);
-            mainGain.gain.linearRampToValueAtTime(0.2, noteTime + 0.03); // Slow attack
-            mainGain.gain.setValueAtTime(0.2, noteTime + noteDuration * 0.7);
-            mainGain.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration);
-            
-            // Add harmonics for saxophone-like tone
-            const harmonicOsc = context.createOscillator();
-            harmonicOsc.type = 'triangle';
-            // Fifth up from the fundamental frequency for saxophone-like timbre
-            harmonicOsc.frequency.setValueAtTime(typeof frequency === 'number' ? frequency * 1.5 : 0, noteTime); 
-            
-            const harmonicGain = context.createGain();
-            harmonicGain.gain.setValueAtTime(0, noteTime);
-            harmonicGain.gain.linearRampToValueAtTime(0.05, noteTime + 0.04);
-            harmonicGain.gain.setValueAtTime(0.05, noteTime + noteDuration * 0.6);
-            harmonicGain.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
-            
-            // Add subtle vibrato for expressiveness
-            const vibratoOsc = context.createOscillator();
-            vibratoOsc.type = 'sine';
-            vibratoOsc.frequency.value = 5 + Math.random() * 2; // 5-7 Hz vibrato
-            
-            const vibratoGain = context.createGain();
-            vibratoGain.gain.value = 3; // Vibrato depth
-            
-            // Connect modulation chain for vibrato
-            vibratoOsc.connect(vibratoGain);
-            vibratoGain.connect(mainOsc.frequency);
-            
-            // Connect audio chain
-            mainOsc.connect(mainGain);
-            harmonicOsc.connect(harmonicGain);
-            
-            mainGain.connect(masterGain);
-            harmonicGain.connect(masterGain);
-            
-            // Track oscillators for cleanup
-            activeOscillators.current.push(mainOsc);
-            activeOscillators.current.push(harmonicOsc);
-            activeOscillators.current.push(vibratoOsc);
-            
-            // Start and stop oscillators
-            const startTime = noteTime;
-            const stopTime = noteTime + noteDuration * 1.1; // Slightly longer for natural decay
-            
-            mainOsc.start(startTime);
-            mainOsc.stop(stopTime);
-            
-            harmonicOsc.start(startTime);
-            harmonicOsc.stop(stopTime);
-            
-            vibratoOsc.start(startTime);
-            vibratoOsc.stop(stopTime);
-          } else {
-            // Regular melody sound
-            const oscillator = context.createOscillator();
-            const gainNode = context.createGain();
-            
-            // Use different oscillator types for variety
-            oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-            oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
-            
-            gainNode.gain.setValueAtTime(0.15, noteTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
+        // Add rising white noise sweep
+        const riser = createPercussionEffect(
+          context,
+          'riser',
+          sectionTimes.preChorus + SECTION_DURATIONS.preChorus * BEAT_DURATION * 0.5, // Start halfway through
+          SECTION_DURATIONS.preChorus * BEAT_DURATION * 0.5 // Last until chorus
+        );
+        
+        riser.noiseSource.connect(riser.filter);
+        riser.filter.connect(riser.noiseGain);
+        riser.noiseGain.connect(masterGain);
+        
+        riser.noiseSource.start(sectionTimes.preChorus + SECTION_DURATIONS.preChorus * BEAT_DURATION * 0.5);
+        riser.noiseSource.stop(sectionTimes.chorus);
+        
+        activeAudioNodes.current.push(riser.filter, riser.noiseGain);
+      }
+      
+      // ===== 4. CHORUS DROP SECTION =====
+      // Full synth lead melody, sidechained bass, full drums
+      {
+        // Full energy lead synth with the main hook melody
+        const { oscillator, gainNode } = createSynthLead(
+          context,
+          LEAD_HOOK_MELODY.concat(LEAD_HOOK_MELODY), // Double the hook for the full chorus
+          sectionTimes.chorus,
+          BEAT_DURATION / 2, // Eighth notes for chorus lead
+          0.4 // Full volume for chorus
+        );
+        
+        // Add slight distortion for edge
+        const waveshaper = context.createWaveShaper();
+        const curve = new Float32Array(2);
+        curve[0] = -1;
+        curve[1] = 1;
+        waveshaper.curve = curve;
+        waveshaper.oversample = '4x';
+        
+        oscillator.connect(waveshaper);
+        waveshaper.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        oscillator.start(sectionTimes.chorus);
+        oscillator.stop(sectionTimes.bridge);
+        
+        activeOscillators.current.push(oscillator);
+        activeAudioNodes.current.push(gainNode, waveshaper);
+        
+        // Full rhythm section - kick
+        for (let i = 0; i < SECTION_DURATIONS.chorus; i++) {
+          const beat = i % 4;
+          if (beat === 0) { // Four-on-the-floor
+            const kickTime = sectionTimes.chorus + i * BEAT_DURATION;
+            const { oscillator, gainNode } = createKick(context, kickTime, 0.9);
             
             oscillator.connect(gainNode);
             gainNode.connect(masterGain);
             
-            // Track the oscillator for clean shutdown
+            oscillator.start(kickTime);
+            oscillator.stop(kickTime + 0.2);
+            
             activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(gainNode);
+          }
+        }
+        
+        // Snare/clap on beats 2 and 4
+        for (let i = 0; i < SECTION_DURATIONS.chorus; i++) {
+          const beat = i % 4;
+          if (beat === 1 || beat === 3) { // Beats 2 and 4
+            const snareTime = sectionTimes.chorus + i * BEAT_DURATION;
+            const { noiseSource, noiseGain, oscillator, gainNode } = createSnareClap(context, snareTime, 0.5);
+            
+            noiseSource.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            noiseSource.start(snareTime);
+            noiseSource.stop(snareTime + 0.2);
+            oscillator.start(snareTime);
+            oscillator.stop(snareTime + 0.1);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(noiseGain, gainNode);
+          }
+        }
+        
+        // Hi-hats with rolls (16th notes)
+        for (let bar = 0; bar < SECTION_DURATIONS.chorus / 4; bar++) {
+          // Use roll pattern toward end of each 2-bar section
+          const patternToUse = bar % 2 === 1 ? HIHAT_PATTERN_ROLLS : HIHAT_PATTERN_BASIC;
+          
+          for (let i = 0; i < 16; i++) {
+            const hiHatTime = sectionTimes.chorus + (bar * 4 * BEAT_DURATION) + (i * SIXTEENTH_NOTE);
+            
+            // Use different volumes for accent patterns
+            const volume = patternToUse[i] || 0;
+            if (volume === 0) continue;
+            
+            const { noiseSource, gainNode } = createHiHat(context, hiHatTime, volume, 0.04);
+            
+            noiseSource.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            noiseSource.start(hiHatTime);
+            noiseSource.stop(hiHatTime + 0.1);
+            
+            activeAudioNodes.current.push(gainNode);
+          }
+        }
+        
+        // Heavy sidechained bass for chorus
+        for (let bar = 0; bar < SECTION_DURATIONS.chorus / 4; bar++) {
+          for (let i = 0; i < 16; i++) {
+            const freq = BASS_PATTERN_CHORUS[i];
+            if (freq === 0) continue; // Skip rests
+            
+            const noteTime = sectionTimes.chorus + (bar * 4 * BEAT_DURATION) + (i * SIXTEENTH_NOTE);
+            const { oscillator, filter, gainNode } = createSidechainedBass(
+              context,
+              freq,
+              noteTime,
+              SIXTEENTH_NOTE * 3.5, // Longer sustain for chorus
+              0.5 // Louder bass for chorus
+            );
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(masterGain);
             
             oscillator.start(noteTime);
-            oscillator.stop(noteTime + noteDuration);
+            oscillator.stop(noteTime + SIXTEENTH_NOTE * 4);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(filter, gainNode);
           }
-        });
+        }
         
-        // Schedule the jazz chord patterns for harmonic depth
-        chordPattern.forEach((chord, index) => {
-          if (chord === 0) return; // Skip rests
+        // Add chorus chord stabs
+        for (let i = 0; i < SECTION_DURATIONS.chorus / 4; i++) {
+          const chordStartTime = sectionTimes.chorus + i * 4 * BEAT_DURATION;
           
-          const noteTime = sectionTime + index * noteDuration;
-          
-          // Each chord is an array of frequencies to play simultaneously
-          if (Array.isArray(chord)) {
-            chord.forEach(frequency => {
-              const oscillator = context.createOscillator();
-              const gainNode = context.createGain();
-              
-              oscillator.type = 'sine';
-              oscillator.frequency.setValueAtTime(frequency, noteTime);
-              
-              gainNode.gain.setValueAtTime(0.08, noteTime); // Lower volume for chords
-              gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 1.5);
-              
-              oscillator.connect(gainNode);
-              gainNode.connect(masterGain);
-              
-              // Track the oscillator for clean shutdown
-              activeOscillators.current.push(oscillator);
-              
-              oscillator.start(noteTime);
-              oscillator.stop(noteTime + noteDuration * 1.5);
+          // Use the chorus chord progression (AM - F - C - G)
+          for (let j = 0; j < 4; j++) {
+            const chord = [CHORD_AM, CHORD_F, CHORD_C, CHORD_G][j];
+            const chordTime = chordStartTime + j * BEAT_DURATION;
+            
+            // Create a short chord stab
+            const { oscillators, gainNodes } = createSynthPad(
+              context,
+              chord,
+              chordTime,
+              BEAT_DURATION * 0.7, // Short stab
+            );
+            
+            // Add a filter for tonal shaping
+            const filter = context.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 2000;
+            filter.Q.value = 1;
+            
+            // Connect oscillators through gain nodes to filter to master
+            gainNodes.forEach(gain => {
+              gain.connect(filter);
+              activeAudioNodes.current.push(gain);
+            });
+            
+            filter.connect(masterGain);
+            activeAudioNodes.current.push(filter);
+            
+            // Start oscillators
+            oscillators.forEach(osc => {
+              osc.start(chordTime);
+              osc.stop(chordTime + BEAT_DURATION * 0.8);
+              activeOscillators.current.push(osc);
             });
           }
-        });
-        
-        // Schedule drum sounds for this section
-        drumPattern.forEach((hit, index) => {
-          if (hit === 0) return; // Skip rests
-          
-          const noteTime = sectionTime + index * noteDuration;
-          
-          // Create kick drum
-          if (hit === 1) {
-            const kickOsc = context.createOscillator();
-            const kickGain = context.createGain();
-            
-            kickOsc.type = 'sine';
-            kickOsc.frequency.setValueAtTime(120, noteTime);
-            kickOsc.frequency.exponentialRampToValueAtTime(40, noteTime + 0.05);
-            
-            kickGain.gain.setValueAtTime(0.5, noteTime);
-            kickGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
-            
-            kickOsc.connect(kickGain);
-            kickGain.connect(masterGain);
-            
-            // Track the oscillator for clean shutdown
-            activeOscillators.current.push(kickOsc);
-            
-            kickOsc.start(noteTime);
-            kickOsc.stop(noteTime + 0.1);
-          }
-          
-          // Create snare drum for jazz feel (value 2)
-          if (hit === 2) {
-            // Snare body - noise component
-            const noiseBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
-            const noiseData = noiseBuffer.getChannelData(0);
-            
-            // Fill buffer with noise
-            for (let i = 0; i < noiseBuffer.length; i++) {
-              noiseData[i] = Math.random() * 2 - 1;
-            }
-            
-            // Noise source for snare
-            const snareNoise = context.createBufferSource();
-            snareNoise.buffer = noiseBuffer;
-            
-            // Filter for snare tone
-            const snareFilter = context.createBiquadFilter();
-            snareFilter.type = 'bandpass';
-            snareFilter.frequency.value = 1800;
-            snareFilter.Q.value = 0.5;
-            
-            // Envelope for snare
-            const snareGain = context.createGain();
-            snareGain.gain.setValueAtTime(0.3, noteTime);
-            snareGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.15);
-            
-            // Snare tonal component (for jazz feel)
-            const snareTone = context.createOscillator();
-            snareTone.type = 'triangle';
-            snareTone.frequency.value = 180;
-            
-            const snareToneGain = context.createGain();
-            snareToneGain.gain.setValueAtTime(0.2, noteTime);
-            snareToneGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.05);
-            
-            // Connect the components
-            snareNoise.connect(snareFilter);
-            snareFilter.connect(snareGain);
-            snareGain.connect(masterGain);
-            
-            snareTone.connect(snareToneGain);
-            snareToneGain.connect(masterGain);
-            
-            // Track for cleanup
-            activeOscillators.current.push(snareTone);
-            
-            // Start and stop the components
-            snareNoise.start(noteTime);
-            snareNoise.stop(noteTime + 0.15);
-            
-            snareTone.start(noteTime);
-            snareTone.stop(noteTime + 0.05);
-          }
-          
-          // Create hi-hat for smaller hit values (adding more complex rhythm)
-          if (hit === 0.5) {
-            const hihatOsc = context.createOscillator();
-            const hihatGain = context.createGain();
-            const hihatFilter = context.createBiquadFilter();
-            
-            hihatOsc.type = 'square';
-            hihatOsc.frequency.setValueAtTime(800, noteTime);
-            
-            hihatFilter.type = 'highpass';
-            hihatFilter.frequency.value = 7000;
-            
-            hihatGain.gain.setValueAtTime(0.2, noteTime);
-            hihatGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.03);
-            
-            hihatOsc.connect(hihatFilter);
-            hihatFilter.connect(hihatGain);
-            hihatGain.connect(masterGain);
-            
-            // Track the oscillator for clean shutdown
-            activeOscillators.current.push(hihatOsc);
-            
-            hihatOsc.start(noteTime);
-            hihatOsc.stop(noteTime + 0.03);
-          }
-        });
+        }
       }
       
-      // Schedule the next batch of patterns after all sections finish
-      // This creates an extended musical structure before repeating
-      const totalDuration = sectionsToPlay * 16 * noteDuration;
+      // ===== 5. BRIDGE SECTION =====
+      // Strip back to pads and arp, reintroduce melody slowly
+      {
+        // Atmospheric pad chords
+        for (let i = 0; i < 3; i++) { // 3 chord changes in bridge
+          const chordStartTime = sectionTimes.bridge + i * 8 * BEAT_DURATION;
+          
+          // Alternate between Fm and C chords for bridge
+          const chord = i % 2 === 0 ? [349.23, 415.30, 523.25] : [261.63, 329.63, 392.00]; // F minor and C major
+          
+          const { oscillators, gainNodes } = createSynthPad(
+            context,
+            chord,
+            chordStartTime,
+            8 * BEAT_DURATION, // Long pad
+            // Longer durations for bridge pads
+          );
+          
+          // Add a filter
+          const filter = context.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(500, chordStartTime);
+          filter.frequency.linearRampToValueAtTime(2000, chordStartTime + 8 * BEAT_DURATION);
+          
+          // Connect
+          gainNodes.forEach(gain => {
+            gain.connect(filter);
+            activeAudioNodes.current.push(gain);
+          });
+          
+          filter.connect(masterGain);
+          activeAudioNodes.current.push(filter);
+          
+          // Start oscillators
+          oscillators.forEach(osc => {
+            osc.start(chordStartTime);
+            osc.stop(chordStartTime + 8 * BEAT_DURATION);
+            activeOscillators.current.push(osc);
+          });
+        }
+        
+        // Sparse arpeggiator that gradually gets more complex
+        for (let bar = 0; bar < SECTION_DURATIONS.bridge / 4; bar++) {
+          // As bridge progresses, arp gets more notes
+          let arpNotes;
+          if (bar < 2) {
+            // Sparse in beginning
+            arpNotes = [ARP_PATTERN_AM_EM[0], 0, ARP_PATTERN_AM_EM[2], 0, 
+                        ARP_PATTERN_AM_EM[4], 0, ARP_PATTERN_AM_EM[6], 0];
+          } else if (bar < 4) {
+            // More notes in middle
+            arpNotes = ARP_PATTERN_AM_EM.slice(0, 8);
+          } else {
+            // Full pattern at end
+            arpNotes = ARP_PATTERN_AM_EM;
+          }
+          
+          const arpStartTime = sectionTimes.bridge + bar * 4 * BEAT_DURATION;
+          
+          const arpNodes = createArpeggiator(
+            context,
+            arpNotes,
+            arpStartTime,
+            SIXTEENTH_NOTE,
+            0.1 + (bar / (SECTION_DURATIONS.bridge / 4)) * 0.2 // Gets louder
+          );
+          
+          // Connect
+          arpNodes.forEach(({ oscillator, gain }) => {
+            gain.connect(masterGain);
+            activeAudioNodes.current.push(gain);
+          });
+        }
+        
+        // Gradual reintroduction of beat elements
+        for (let i = 0; i < SECTION_DURATIONS.bridge; i++) {
+          const beatTime = sectionTimes.bridge + i * BEAT_DURATION;
+          const progressionRatio = i / SECTION_DURATIONS.bridge; // 0 to 1 as bridge progresses
+          
+          // Start with just occasional kicks, then build up
+          if (i % 4 === 0 || (progressionRatio > 0.5 && i % 2 === 0)) {
+            const { oscillator, gainNode } = createKick(
+              context, 
+              beatTime, 
+              0.3 + progressionRatio * 0.6 // Volume increases
+            );
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start(beatTime);
+            oscillator.stop(beatTime + 0.2);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(gainNode);
+          }
+          
+          // Add snares in second half
+          if (progressionRatio > 0.5 && (i % 4 === 2)) {
+            const { noiseSource, noiseGain, oscillator, gainNode } = createSnareClap(
+              context, 
+              beatTime, 
+              0.3 + (progressionRatio - 0.5) * 0.6 // Gradually increase volume
+            );
+            
+            noiseSource.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            noiseSource.start(beatTime);
+            noiseSource.stop(beatTime + 0.2);
+            oscillator.start(beatTime);
+            oscillator.stop(beatTime + 0.1);
+            
+            activeOscillators.current.push(oscillator);
+            activeAudioNodes.current.push(noiseGain, gainNode);
+          }
+        }
+        
+        // Melody returns in second half of bridge
+        const bridgeHalfway = sectionTimes.bridge + SECTION_DURATIONS.bridge * BEAT_DURATION * 0.5;
+        const { oscillator, gainNode } = createSynthLead(
+          context,
+          LEAD_HOOK_MELODY_HIGH.slice(0, 8), // Just first half of melody
+          bridgeHalfway,
+          BEAT_DURATION / 2, // Eighth notes
+          0.2 // Lower volume than chorus
+        );
+        
+        // Add filter for tonal variation
+        const filter = context.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 3000;
+        filter.Q.value = 3;
+        
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        oscillator.start(bridgeHalfway);
+        oscillator.stop(sectionTimes.finalChorus);
+        
+        activeOscillators.current.push(oscillator);
+        activeAudioNodes.current.push(gainNode, filter);
+        
+        // Add rising riser towards end of bridge
+        const riser = createPercussionEffect(
+          context,
+          'riser',
+          sectionTimes.finalChorus - 4 * BEAT_DURATION, // 4 beats before final chorus
+          4 * BEAT_DURATION
+        );
+        
+        riser.noiseSource.connect(riser.filter);
+        riser.filter.connect(riser.noiseGain);
+        riser.noiseGain.connect(masterGain);
+        
+        riser.noiseSource.start(sectionTimes.finalChorus - 4 * BEAT_DURATION);
+        riser.noiseSource.stop(sectionTimes.finalChorus);
+        
+        activeAudioNodes.current.push(riser.filter, riser.noiseGain);
+      }
+      
+      // ===== 6. FINAL CHORUS SECTION =====
+      // Similar to first chorus but with extra energy and effects
+      {
+        // Full energy lead synth with the main hook melody but higher octave
+        const { oscillator, gainNode } = createSynthLead(
+          context,
+          LEAD_HOOK_MELODY_HIGH.concat(LEAD_HOOK_MELODY_HIGH), // Higher octave for climax
+          sectionTimes.finalChorus,
+          BEAT_DURATION / 2, // Eighth notes
+          0.5 // Full volume for final chorus
+        );
+        
+        // Add distortion for final chorus intensity
+        const waveshaper = context.createWaveShaper();
+        const distortionAmount = 10;
+        const curve = new Float32Array(context.sampleRate);
+        for (let i = 0; i < curve.length; i++) {
+          const x = (i * 2) / curve.length - 1;
+          curve[i] = Math.sign(x) * (1 - Math.exp(-3 * Math.abs(x)));
+        }
+        waveshaper.curve = curve;
+        waveshaper.oversample = '4x';
+        
+        // Create a blend of clean and distorted signals
+        const cleanGain = context.createGain();
+        cleanGain.gain.value = 0.6;
+        
+        const distortGain = context.createGain();
+        distortGain.gain.value = 0.4;
+        
+        oscillator.connect(cleanGain);
+        oscillator.connect(waveshaper);
+        waveshaper.connect(distortGain);
+        
+        cleanGain.connect(gainNode);
+        distortGain.connect(gainNode);
+        gainNode.connect(masterGain);
+        
+        oscillator.start(sectionTimes.finalChorus);
+        oscillator.stop(sectionTimes.end);
+        
+        activeOscillators.current.push(oscillator);
+        activeAudioNodes.current.push(gainNode, waveshaper, cleanGain, distortGain);
+        
+        // Full rhythm section with more energy
+        for (let i = 0; i < SECTION_DURATIONS.finalChorus; i++) {
+          const beatTime = sectionTimes.finalChorus + i * BEAT_DURATION;
+          
+          // Every beat gets a kick
+          const { oscillator, gainNode } = createKick(context, beatTime, 1.0);
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(masterGain);
+          
+          oscillator.start(beatTime);
+          oscillator.stop(beatTime + 0.2);
+          
+          activeOscillators.current.push(oscillator);
+          activeAudioNodes.current.push(gainNode);
+          
+          // Beats 2 and 4 get snare
+          if (i % 4 === 1 || i % 4 === 3) {
+            const { noiseSource, noiseGain, oscillator: snareOsc, gainNode: snareGain } = createSnareClap(
+              context,
+              beatTime,
+              0.7
+            );
+            
+            noiseSource.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            snareOsc.connect(snareGain);
+            snareGain.connect(masterGain);
+            
+            noiseSource.start(beatTime);
+            noiseSource.stop(beatTime + 0.2);
+            snareOsc.start(beatTime);
+            snareOsc.stop(beatTime + 0.1);
+            
+            activeOscillators.current.push(snareOsc);
+            activeAudioNodes.current.push(noiseGain, snareGain);
+          }
+        }
+        
+        // Intense hi-hats with rolls throughout
+        for (let bar = 0; bar < SECTION_DURATIONS.finalChorus / 4; bar++) {
+          for (let i = 0; i < 16; i++) {
+            // Use different volumes and patterns for more energy
+            let volume = 0.3;
+            
+            // Create more rolls and variations
+            if (i % 4 === 0) volume = 0.4; // Accent on main beats
+            if (bar % 2 === 1 && i >= 8 && i < 12) volume = 0.15; // Quieter for tension
+            if (bar % 4 === 3 && i >= 12) volume = 0.5; // Louder for climax
+            
+            const hiHatTime = sectionTimes.finalChorus + (bar * 4 * BEAT_DURATION) + (i * SIXTEENTH_NOTE);
+            
+            const { noiseSource, gainNode } = createHiHat(
+              context,
+              hiHatTime,
+              volume,
+              0.03 // Shorter for more intensity
+            );
+            
+            noiseSource.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            noiseSource.start(hiHatTime);
+            noiseSource.stop(hiHatTime + 0.08);
+            
+            activeAudioNodes.current.push(gainNode);
+          }
+        }
+        
+        // Maximum energy bass pattern
+        for (let bar = 0; bar < SECTION_DURATIONS.finalChorus / 4; bar++) {
+          for (let i = 0; i < 16; i++) {
+            // Use same pattern as first chorus but with more energy
+            const freq = BASS_PATTERN_CHORUS[i];
+            if (freq === 0) continue; // Skip rests
+            
+            const noteTime = sectionTimes.finalChorus + (bar * 4 * BEAT_DURATION) + (i * SIXTEENTH_NOTE);
+            
+            // Create a more aggressive bass sound for the final chorus
+            const { oscillator, filter, gainNode } = createSidechainedBass(
+              context,
+              freq,
+              noteTime,
+              SIXTEENTH_NOTE * 3.5,
+              0.7 // Maximum volume
+            );
+            
+            // Add a second oscillator for extra thickness
+            const oscillator2 = context.createOscillator();
+            oscillator2.type = 'square';
+            oscillator2.frequency.value = freq * 0.5; // One octave down
+            
+            const gainNode2 = context.createGain();
+            gainNode2.gain.setValueAtTime(0, noteTime);
+            gainNode2.gain.linearRampToValueAtTime(0.2, noteTime + 0.02);
+            gainNode2.gain.linearRampToValueAtTime(0.1, noteTime + SIXTEENTH_NOTE * 2);
+            gainNode2.gain.linearRampToValueAtTime(0, noteTime + SIXTEENTH_NOTE * 3.5);
+            
+            oscillator.connect(filter);
+            oscillator2.connect(filter); // Both oscillators through same filter
+            filter.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            oscillator.start(noteTime);
+            oscillator.stop(noteTime + SIXTEENTH_NOTE * 4);
+            oscillator2.start(noteTime);
+            oscillator2.stop(noteTime + SIXTEENTH_NOTE * 4);
+            
+            activeOscillators.current.push(oscillator, oscillator2);
+            activeAudioNodes.current.push(filter, gainNode, gainNode2);
+          }
+        }
+        
+        // Add chord progression but with more aggressive stabs
+        for (let i = 0; i < SECTION_DURATIONS.finalChorus / 4; i++) {
+          const chordStartTime = sectionTimes.finalChorus + i * 4 * BEAT_DURATION;
+          
+          // Faster chord changes - every half beat
+          for (let j = 0; j < 8; j++) {
+            const chordIndex = j % 4;
+            const chord = [CHORD_AM, CHORD_F, CHORD_C, CHORD_G][chordIndex];
+            const chordTime = chordStartTime + j * BEAT_DURATION / 2;
+            
+            // Create a very short stab
+            const { oscillators, gainNodes } = createSynthPad(
+              context,
+              chord,
+              chordTime,
+              BEAT_DURATION * 0.3, // Very short stab
+            );
+            
+            // Add a bandpass filter for tonal shaping
+            const filter = context.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 2500;
+            filter.Q.value = 2;
+            
+            // Connect
+            gainNodes.forEach(gain => {
+              gain.connect(filter);
+              activeAudioNodes.current.push(gain);
+            });
+            
+            filter.connect(masterGain);
+            activeAudioNodes.current.push(filter);
+            
+            // Start oscillators
+            oscillators.forEach(osc => {
+              osc.start(chordTime);
+              osc.stop(chordTime + BEAT_DURATION * 0.4);
+              activeOscillators.current.push(osc);
+            });
+          }
+        }
+        
+        // Add some risers and FX throughout
+        for (let i = 0; i < 4; i++) {
+          const riserStartTime = sectionTimes.finalChorus + i * 8 * BEAT_DURATION;
+          
+          // Create an upward or downward sweep based on position
+          const direction = i % 2 === 0 ? 'riser' : 'downlifter';
+          
+          const effect = createPercussionEffect(
+            context,
+            direction as 'riser' | 'downlifter',
+            riserStartTime,
+            4 * BEAT_DURATION
+          );
+          
+          effect.noiseSource.connect(effect.filter);
+          effect.filter.connect(effect.noiseGain);
+          effect.noiseGain.connect(masterGain);
+          
+          effect.noiseSource.start(riserStartTime);
+          effect.noiseSource.stop(riserStartTime + 4 * BEAT_DURATION);
+          
+          activeAudioNodes.current.push(effect.filter, effect.noiseGain);
+        }
+      }
+      
+      // Schedule the track to loop seamlessly
       const timerId = setTimeout(() => {
         if (musicEnabled) {
           startBackgroundMusic();
@@ -633,13 +1538,10 @@ export function useSound() {
       // Track the timer ID for clean shutdown
       audioNodesTimers.current.push(timerId);
       
-      // Store this for volume control
-      musicGainRef.current = masterGain;
-      
       setMusicInitialized(true);
       
     } catch (error) {
-      console.error('Error starting 8-bit background music:', error);
+      console.error('Error creating electronic pop music:', error);
     }
   };
 
@@ -671,54 +1573,18 @@ export function useSound() {
 
   // Set volume for music
   const setMusicVolume = (volume: number) => {
-    // Set the volume of the real audio element
-    try {
-      if (backgroundMusicElement) {
-        backgroundMusicElement.volume = Math.max(0, Math.min(1, volume));
-      }
-    } catch (error) {
-      console.error('Error setting music volume:', error);
-    }
-    
-    // Also set the volume for the web audio API (fallback)
+    // Set the volume for the web audio API
     if (musicGainRef.current) {
-      musicGainRef.current.gain.value = volume;
+      musicGainRef.current.gain.value = Math.max(0, Math.min(1, volume)) * 0.25;
     }
   };
   
   // Clean up when the component unmounts
   useEffect(() => {
     return () => {
-      // Stop the background music
-      try {
-        if (backgroundMusicElement) {
-          backgroundMusicElement.pause();
-          backgroundMusicElement.currentTime = 0;
-        }
-      } catch (error) {
-        console.error('Error stopping background music:', error);
-      }
-      
-      // Clean up active oscillators
-      activeOscillators.current.forEach(osc => {
-        try {
-          osc.stop();
-        } catch (e) {
-          // Ignore already stopped oscillators
-        }
-      });
-      
-      // Clear any pending timers
-      audioNodesTimers.current.forEach(timer => {
-        clearTimeout(timer);
-      });
+      stopMusic();
       
       // Clean up Web Audio API resources
-      if (musicOscillatorRef.current) {
-        musicOscillatorRef.current.stop();
-        musicOscillatorRef.current = null;
-      }
-      
       if (audioContextRef.current) {
         audioContextRef.current.close().catch(console.error);
       }
@@ -735,12 +1601,6 @@ export function useSound() {
   // Explicitly stop the background music
   const stopMusic = () => {
     try {
-      // Stop HTML audio element if it exists
-      if (backgroundMusicElement) {
-        backgroundMusicElement.pause();
-        backgroundMusicElement.currentTime = 0;
-      }
-      
       // Clean up Web Audio API oscillators
       activeOscillators.current.forEach(osc => {
         try {
@@ -750,7 +1610,10 @@ export function useSound() {
         }
       });
       
-      // Clear oscillator array
+      // Clean up audio nodes
+      activeAudioNodes.current = [];
+      
+      // Clean up oscillators array
       activeOscillators.current = [];
       
       // Clean up any pending timers
@@ -763,7 +1626,7 @@ export function useSound() {
       
       console.log('Stopped all audio');
     } catch (error) {
-      console.error('Error stopping background music:', error);
+      console.error('Error stopping electronic pop music:', error);
     }
   };
 
