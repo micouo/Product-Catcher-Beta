@@ -48,7 +48,7 @@ export default function InstructionsSection() {
             <h3 className="font-bold text-white">Avoid Obstacles</h3>
           </div>
           <p className="text-gray-400">
-            Avoid the red spiky obstacles. Hitting them will cost you a life! You start with 3 lives.
+            Avoid the obstacles. Hitting them will cost you a life! You start with 3 lives.
           </p>
         </div>
       </div>

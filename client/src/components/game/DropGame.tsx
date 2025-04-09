@@ -29,6 +29,10 @@ import pizzaImage from "@assets/pizza.png";
 import icecreamImage from "@assets/icecream.png";
 import phoImage from "@assets/pho.png";
 
+// Import obstacle images
+import obstacleHailImage from "@assets/obstaclehail.png";
+import obstacleSpikeBallImage from "@assets/obstaclespikeball.png";
+
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
   onGameOver?: () => void;
@@ -223,6 +227,8 @@ let playerImage: HTMLImageElement | null = null;
 let pauseButtonImage: HTMLImageElement | null = null;
 let playButtonImage: HTMLImageElement | null = null;
 let replayButtonImage: HTMLImageElement | null = null;
+let obstacleHailImg: HTMLImageElement | null = null;
+let obstacleSpikeBallImg: HTMLImageElement | null = null;
 
 // Define button constants - these can be easily adjusted
 const BUTTON_SIZE = 50; // Size of the pause button (width and height)
@@ -376,6 +382,23 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       img.onload = () => {
         replayButtonImage = img;
         setReplayButtonLoaded(true);
+      };
+    }
+    
+    // Load obstacle images
+    if (!obstacleHailImg) {
+      const img = new Image();
+      img.src = obstacleHailImage;
+      img.onload = () => {
+        obstacleHailImg = img;
+      };
+    }
+    
+    if (!obstacleSpikeBallImg) {
+      const img = new Image();
+      img.src = obstacleSpikeBallImage;
+      img.onload = () => {
+        obstacleSpikeBallImg = img;
       };
     }
   }, []);
@@ -1181,30 +1204,38 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
         ctx.restore();
       }
     } else {
-      // Draw obstacle as a spiky circle
-      ctx.fillStyle = "#EF4444"; // Red color for obstacles
-      const centerX = obj.x + obj.width / 2;
-      const centerY = obj.y + obj.height / 2;
-      const spikes = 8;
-      const outerRadius = obj.width / 2;
-      const innerRadius = obj.width / 3;
-
-      ctx.beginPath();
-      for (let i = 0; i < spikes * 2; i++) {
-        const radius = i % 2 === 0 ? outerRadius : innerRadius;
-        const angle = (Math.PI / spikes) * i;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.fill();
-
-      // Add glow effect
+      // Draw obstacle using our new obstacle images
+      ctx.save();
+      
+      // Add subtle glow effect for the obstacle
       ctx.shadowBlur = 10;
-      ctx.shadowColor = "#EF4444";
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.shadowColor = "rgba(255, 0, 0, 0.6)";
+      
+      // Randomly choose between the two obstacle images
+      // Use Math.round() on the object's id to make the choice consistent for each object
+      const obstacleImage = Math.round(obj.id * 10) % 2 === 0 
+        ? obstacleHailImg 
+        : obstacleSpikeBallImg;
+      
+      // Draw slightly larger for visibility and impact
+      const scale = 1.6;
+      const drawWidth = obj.width * scale;
+      const drawHeight = obj.height * scale;
+      const x = obj.x + (obj.width - drawWidth) / 2;
+      const y = obj.y + (obj.height - drawHeight) / 2;
+      
+      // Only draw the image if it's loaded, otherwise draw a fallback shape
+      if (obstacleImage) {
+        ctx.drawImage(obstacleImage, x, y, drawWidth, drawHeight);
+      } else {
+        // Fallback to a colored circle if image is not loaded yet
+        ctx.fillStyle = "#EF4444"; // Red color for obstacles
+        ctx.beginPath();
+        ctx.arc(x + drawWidth/2, y + drawHeight/2, Math.min(drawWidth, drawHeight)/2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.restore();
     }
   };
 
@@ -1416,7 +1447,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                         Catch products from the University District in your basket! Each product is worth 10 points.
                       </p>
                       <p className="text-sm mb-1">
-                        Avoid the red spiky obstacles... each hit will cost a life. You start with 3 lives.
+                        Avoid the obstacles... each hit will cost a life. You start with 3 lives.
                       </p>
                       <p className="text-sm mb-1">
                         As your score increases, objects move faster and more obstacles appear!
