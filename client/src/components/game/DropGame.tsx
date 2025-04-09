@@ -1293,59 +1293,47 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       const startX = GAME_WIDTH - 20 - (heartSize * 3) - (heartSpacing * 2); // Position for 3 hearts
       const heartY = 10; // Vertical position
       
-      // Game Over state - all hearts should be faded
-      if (lives <= 0) {
-        // All hearts faded with consistent opacity
-        ctx.globalAlpha = 0.3;
-        for (let i = 0; i < 3; i++) {
-          const x = startX + (i * (heartSize + heartSpacing));
-          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
-        }
-      } else {
-        // Normal gameplay state
+      // Draw empty placeholder hearts first (gray silhouettes)
+      ctx.globalAlpha = 0.3;
+      for (let i = 0; i < 3; i++) {
+        const x = startX + (i * (heartSize + heartSpacing));
+        ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+      }
+      
+      // Draw active hearts with proper animation
+      ctx.globalAlpha = 1.0;
+      
+      // Flash animation constants
+      const FLASH_DURATION = 800; // Total flash animation time in ms
+      const FLASH_FREQUENCY = 50; // Time between flashes in ms
+      
+      for (let i = 0; i < lives; i++) {
+        const x = startX + (i * (heartSize + heartSpacing));
         
-        // Draw empty placeholder hearts first (gray silhouettes)
-        ctx.globalAlpha = 0.3;
-        for (let i = 0; i < 3; i++) {
-          const x = startX + (i * (heartSize + heartSpacing));
-          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
-        }
-        
-        // Draw active hearts with proper animation
-        ctx.globalAlpha = 1.0;
-        
-        // Flash animation constants
-        const FLASH_DURATION = 800; // Total flash animation time in ms
-        const FLASH_FREQUENCY = 50; // Time between flashes in ms
-        
-        for (let i = 0; i < lives; i++) {
-          const x = startX + (i * (heartSize + heartSpacing));
+        // Apply flashing animation to the heart that's being lost
+        if (heartFlashState.active && heartFlashState.lifeLost === i + 1) {
+          const elapsed = Date.now() - heartFlashState.startTime;
           
-          // Apply flashing animation to the heart that's being lost
-          if (heartFlashState.active && heartFlashState.lifeLost === i + 1) {
-            const elapsed = Date.now() - heartFlashState.startTime;
+          // Flash the heart rapidly
+          if (elapsed < FLASH_DURATION) {
+            // Toggle visibility based on time to create rapid flashing
+            const isVisible = Math.floor(elapsed / FLASH_FREQUENCY) % 2 === 0;
             
-            // Flash the heart rapidly
-            if (elapsed < FLASH_DURATION) {
-              // Toggle visibility based on time to create rapid flashing
-              const isVisible = Math.floor(elapsed / FLASH_FREQUENCY) % 2 === 0;
-              
-              if (isVisible) {
-                ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
-              }
-              
-              // If animation is complete, reset the flash state
-              if (elapsed >= FLASH_DURATION) {
-                setHeartFlashState({active: false, startTime: 0, lifeLost: 0});
-              }
-            } else {
-              // Animation complete, don't draw this heart anymore
+            if (isVisible) {
+              ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+            }
+            
+            // If animation is complete, reset the flash state
+            if (elapsed >= FLASH_DURATION) {
               setHeartFlashState({active: false, startTime: 0, lifeLost: 0});
             }
           } else {
-            // Normal heart rendering (no animation)
-            ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+            // Animation complete, don't draw this heart anymore
+            setHeartFlashState({active: false, startTime: 0, lifeLost: 0});
           }
+        } else {
+          // Normal heart rendering (no animation)
+          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
         }
       }
       
