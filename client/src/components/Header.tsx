@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import SoundControls from './SoundControls';
+import carIconImage from "@assets/image_1744163026077.png";
 
 export default function Header() {
   return (
@@ -10,8 +11,8 @@ export default function Header() {
           <div className="flex items-center">
             <Link href="/">
               <div className="flex items-center cursor-pointer">
-                <span className="bg-blue-500 p-2 rounded-md mr-3">
-                  <i className="ri-gamepad-line text-white text-xl"></i>
+                <span className="mr-3 flex items-center">
+                  <img src={carIconImage} alt="Car icon" className="h-10 w-auto" />
                 </span>
                 <span className="font-bold text-xl text-white">District Driver</span>
               </div>

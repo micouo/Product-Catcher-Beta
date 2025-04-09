@@ -1,3 +1,5 @@
+import carIconImage from "@assets/image_1744163026077.png";
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   
@@ -8,8 +10,8 @@ export default function Footer() {
           {/* Logo and copyright */}
           <div className="mb-4 md:mb-0">
             <div className="flex items-center">
-              <span className="bg-blue-500 p-1 rounded-md mr-2">
-                <i className="ri-gamepad-line text-white text-sm"></i>
+              <span className="mr-2 flex items-center">
+                <img src={carIconImage} alt="Car icon" className="h-7 w-auto" />
               </span>
               <span className="font-bold text-white">District Driver</span>
             </div>
