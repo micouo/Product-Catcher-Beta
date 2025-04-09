@@ -250,7 +250,22 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => {
+    // Initialize high score from localStorage if available
+    const savedHighScore = localStorage.getItem('districtDriverHighScore');
+    return savedHighScore ? parseInt(savedHighScore, 10) : 0;
+  });
+  
+  // Initialize saved scores from localStorage
+  const [savedScores, setSavedScores] = useState<Array<{
+    name: string;
+    car: string;
+    score: number;
+    date: string;
+  }>>(() => {
+    const saved = localStorage.getItem('districtDriverScores');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [lives, setLives] = useState(3);
   const [gameObjects, setGameObjects] = useState<GameObject[]>([]);
   const [currentSpawnRate, setCurrentSpawnRate] = useState(BASE_SPAWN_RATE);
@@ -452,6 +467,47 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     setHeartFlashState({active: false, startTime: 0, lifeLost: 0}); // Reset heart flash state
 
     // Keep high score
+  };
+  
+  // Function to save score to local storage
+  const saveScore = () => {
+    if (score <= 0) return; // Don't save zero or negative scores
+    
+    // Format current date
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getMonth() + 1}/${currentDate.getDate()}/${currentDate.getFullYear().toString().substr(-2)}`;
+    
+    // Create new score entry
+    const newScore = {
+      name: playerName,
+      car: selectedCar,
+      score: score,
+      date: formattedDate
+    };
+    
+    // Add to saved scores
+    const updatedScores = [...savedScores, newScore];
+    
+    // Sort by score (highest first)
+    updatedScores.sort((a, b) => b.score - a.score);
+    
+    // Keep only top 10 scores
+    const topScores = updatedScores.slice(0, 10);
+    
+    // Update state
+    setSavedScores(topScores);
+    
+    // Save to localStorage
+    localStorage.setItem('districtDriverScores', JSON.stringify(topScores));
+    
+    // Update high score if needed
+    if (score > highScore) {
+      setHighScore(score);
+      localStorage.setItem('districtDriverHighScore', score.toString());
+    }
+    
+    // Show success feedback
+    alert('Score saved successfully!');
   };
 
   // Background music is handled automatically by the useSound hook
@@ -1426,14 +1482,23 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                 <div className="flex flex-col md:flex-row gap-4 mb-4">
                   <div className="flex-1">
                     <label className="block text-sm text-gray-300 mb-1">Your Name:</label>
-                    <input 
-                      type="text" 
-                      value={playerName}
-                      onChange={(e) => setPlayerName(e.target.value)}
-                      className="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
-                      placeholder="Enter your name"
-                      maxLength={12}
-                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        className="flex-grow bg-gray-700 text-white p-2 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                        placeholder="Enter your name"
+                        maxLength={12}
+                      />
+                      <button 
+                        onClick={saveScore}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded font-medium transition-colors"
+                        title="Save score to local leaderboard"
+                      >
+                        Save
+                      </button>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <p className="text-xl text-white mb-1">Your Score:</p>
@@ -1465,30 +1530,47 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                       <div className="col-span-2">Today</div>
                     </div>
                     
-                    {/* High score entries */}
-                    <div className="bg-gray-700 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-200 text-sm">
-                      <div className="col-span-1">1</div>
-                      <div className="col-span-4 truncate">Champion</div>
-                      <div className="col-span-3 capitalize truncate">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
-                      <div className="col-span-2">{highScore}</div>
-                      <div className="col-span-2">Today</div>
-                    </div>
-                    
-                    <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
-                      <div className="col-span-1">2</div>
-                      <div className="col-span-4 truncate">Speedster</div>
-                      <div className="col-span-3 truncate">Turbo</div>
-                      <div className="col-span-2">{Math.max(160, Math.floor(highScore * 0.8))}</div>
-                      <div className="col-span-2">Yesterday</div>
-                    </div>
-                    
-                    <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
-                      <div className="col-span-1">3</div>
-                      <div className="col-span-4 truncate">Racer99</div>
-                      <div className="col-span-3 truncate">Drift</div>
-                      <div className="col-span-2">{Math.max(120, Math.floor(highScore * 0.6))}</div>
-                      <div className="col-span-2">04/05/25</div>
-                    </div>
+                    {/* Saved high scores */}
+                    {savedScores.length > 0 ? (
+                      savedScores.map((savedScore, index) => (
+                        <div 
+                          key={index}
+                          className={`${index % 2 === 0 ? 'bg-gray-700' : 'bg-gray-700 bg-opacity-50'} rounded-md p-1 mb-1 grid grid-cols-12 gap-2 ${index === 0 ? 'text-gray-200' : 'text-gray-300'} text-sm`}
+                        >
+                          <div className="col-span-1">{index + 1}</div>
+                          <div className="col-span-4 truncate">{savedScore.name}</div>
+                          <div className="col-span-3 capitalize truncate">{savedScore.car}</div>
+                          <div className="col-span-2">{savedScore.score}</div>
+                          <div className="col-span-2">{savedScore.date}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="bg-gray-700 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-200 text-sm">
+                          <div className="col-span-1">1</div>
+                          <div className="col-span-4 truncate">Champion</div>
+                          <div className="col-span-3 capitalize truncate">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
+                          <div className="col-span-2">{highScore}</div>
+                          <div className="col-span-2">Today</div>
+                        </div>
+                        
+                        <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                          <div className="col-span-1">2</div>
+                          <div className="col-span-4 truncate">Speedster</div>
+                          <div className="col-span-3 truncate">Turbo</div>
+                          <div className="col-span-2">{Math.max(160, Math.floor(highScore * 0.8))}</div>
+                          <div className="col-span-2">Yesterday</div>
+                        </div>
+                        
+                        <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                          <div className="col-span-1">3</div>
+                          <div className="col-span-4 truncate">Racer99</div>
+                          <div className="col-span-3 truncate">Drift</div>
+                          <div className="col-span-2">{Math.max(120, Math.floor(highScore * 0.6))}</div>
+                          <div className="col-span-2">04/05/25</div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1625,6 +1707,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   // Update high score if current score is higher
                   if (score > highScore) {
                     setHighScore(score);
+                    localStorage.setItem('districtDriverHighScore', score.toString());
                   }
                   setScore(0); // This will trigger the title screen to display
                 } else {
