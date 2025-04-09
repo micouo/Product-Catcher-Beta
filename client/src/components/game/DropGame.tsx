@@ -225,6 +225,7 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
 
   // Car selection state
   const [selectedCar, setSelectedCar] = useState<string>("peppy");
+  const [playerName, setPlayerName] = useState<string>("Player");
   const [carImagesLoaded, setCarImagesLoaded] = useState<{
     [key: string]: boolean;
   }>({
@@ -1221,52 +1222,72 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
                 </p>
               )}
               
-              {/* Your score */}
-              <p className="text-2xl text-white mb-4">Your Score: {score}</p>
-            
-              {/* Leaderboard */}
-              <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4">
-                  <h3 className="text-xl text-white font-bold">Leaderboard</h3>
+              {/* Name Input and Your Score */}
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-300 mb-1">Your Name:</label>
+                  <input 
+                    type="text" 
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    className="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter your name"
+                    maxLength={12}
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xl text-white mb-1">Your Score:</p>
+                  <p className="text-3xl font-bold text-blue-400">{score}</p>
+                </div>
+              </div>
+              
+              {/* Compact Leaderboard */}
+              <div className="bg-gray-800 rounded-lg overflow-hidden mb-4">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-2 px-3">
+                  <h3 className="text-lg text-white font-bold">Leaderboard</h3>
                 </div>
                 
-                <div className="p-4">
-                  <div className="grid grid-cols-12 gap-2 mb-2 text-gray-400 px-2">
-                    <div className="col-span-2 font-semibold">Rank</div>
-                    <div className="col-span-4 font-semibold">Car</div>
-                    <div className="col-span-3 font-semibold">Score</div>
-                    <div className="col-span-3 font-semibold">Date</div>
+                <div className="p-3">
+                  <div className="grid grid-cols-12 gap-2 mb-1 text-gray-400 text-xs px-2">
+                    <div className="col-span-1 font-semibold">#</div>
+                    <div className="col-span-4 font-semibold">Name</div>
+                    <div className="col-span-3 font-semibold">Car</div>
+                    <div className="col-span-2 font-semibold">Score</div>
+                    <div className="col-span-2 font-semibold">Date</div>
                   </div>
                   
                   {/* Current score highlighted */}
-                  <div className="bg-blue-900 bg-opacity-50 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-white">
-                    <div className="col-span-2 font-bold">YOU</div>
-                    <div className="col-span-4 capitalize">{selectedCar}</div>
-                    <div className="col-span-3 font-bold">{score}</div>
-                    <div className="col-span-3">Today</div>
+                  <div className="bg-blue-900 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-white text-sm">
+                    <div className="col-span-1 font-bold">★</div>
+                    <div className="col-span-4 font-bold truncate">{playerName}</div>
+                    <div className="col-span-3 capitalize truncate">{selectedCar}</div>
+                    <div className="col-span-2 font-bold">{score}</div>
+                    <div className="col-span-2">Today</div>
                   </div>
                   
-                  {/* High score entry */}
-                  <div className="bg-gray-700 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-gray-200">
-                    <div className="col-span-2">1</div>
-                    <div className="col-span-4 capitalize">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
-                    <div className="col-span-3">{highScore}</div>
-                    <div className="col-span-3">Today</div>
+                  {/* High score entries */}
+                  <div className="bg-gray-700 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-200 text-sm">
+                    <div className="col-span-1">1</div>
+                    <div className="col-span-4 truncate">Champion</div>
+                    <div className="col-span-3 capitalize truncate">{selectedCar === 'phantom' ? 'peppy' : 'phantom'}</div>
+                    <div className="col-span-2">{highScore}</div>
+                    <div className="col-span-2">Today</div>
                   </div>
                   
-                  {/* Additional leaderboard entries */}
-                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-2 mb-2 grid grid-cols-12 gap-2 text-gray-300">
-                    <div className="col-span-2">2</div>
-                    <div className="col-span-4">Turbo</div>
-                    <div className="col-span-3">{Math.max(160, Math.floor(highScore * 0.8))}</div>
-                    <div className="col-span-3">Yesterday</div>
+                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                    <div className="col-span-1">2</div>
+                    <div className="col-span-4 truncate">Speedster</div>
+                    <div className="col-span-3 truncate">Turbo</div>
+                    <div className="col-span-2">{Math.max(160, Math.floor(highScore * 0.8))}</div>
+                    <div className="col-span-2">Yesterday</div>
                   </div>
                   
-                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-2 grid grid-cols-12 gap-2 text-gray-300">
-                    <div className="col-span-2">3</div>
-                    <div className="col-span-4">Drift</div>
-                    <div className="col-span-3">{Math.max(120, Math.floor(highScore * 0.6))}</div>
-                    <div className="col-span-3">04/05/25</div>
+                  <div className="bg-gray-700 bg-opacity-50 rounded-md p-1 grid grid-cols-12 gap-2 text-gray-300 text-sm">
+                    <div className="col-span-1">3</div>
+                    <div className="col-span-4 truncate">Racer99</div>
+                    <div className="col-span-3 truncate">Drift</div>
+                    <div className="col-span-2">{Math.max(120, Math.floor(highScore * 0.6))}</div>
+                    <div className="col-span-2">04/05/25</div>
                   </div>
                 </div>
               </div>
