@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import GameContainer from "@/components/GameContainer";
 import InstructionsSection from "@/components/InstructionsSection";
@@ -5,6 +7,28 @@ import FeaturePreview from "@/components/FeaturePreview";
 import Footer from "@/components/Footer";
 
 export default function Game() {
+  const [location] = useLocation();
+  const instructionsRef = useRef<HTMLDivElement>(null);
+  const upcomingFeaturesRef = useRef<HTMLDivElement>(null);
+  
+  // Handle scrolling to sections based on hash
+  useEffect(() => {
+    // Extract the hash from the location
+    const hash = location.includes('#') ? location.split('#')[1] : '';
+    
+    if (hash === 'instructions' && instructionsRef.current) {
+      // Scroll to instructions section with a small delay to ensure rendering is complete
+      setTimeout(() => {
+        instructionsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else if (hash === 'upcoming-features' && upcomingFeaturesRef.current) {
+      // Scroll to upcoming features section
+      setTimeout(() => {
+        upcomingFeaturesRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [location]);
+
   return (
     <div className="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
       <Header />
@@ -25,11 +49,11 @@ export default function Game() {
           <GameContainer />
         </div>
         
-        <div id="instructions">
+        <div id="instructions" ref={instructionsRef}>
           <InstructionsSection />
         </div>
         
-        <div id="upcoming-features">
+        <div id="upcoming-features" ref={upcomingFeaturesRef}>
           <FeaturePreview />
         </div>
       </main>

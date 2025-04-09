@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import SoundControls from './SoundControls';
 import carIconImage from "@assets/image_1744163026077.png";
 
 export default function Header() {
@@ -19,10 +18,8 @@ export default function Header() {
             </Link>
           </div>
           
-          {/* Controls and Navigation */}
-          <div className="flex items-center space-x-4">
-            <SoundControls className="mr-4" />
-            
+          {/* Navigation */}
+          <div className="flex items-center">
             <nav>
               <ul className="flex space-x-6">
                 <li>
