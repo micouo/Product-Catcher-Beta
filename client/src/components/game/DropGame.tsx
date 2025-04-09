@@ -283,6 +283,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   // Car selection state
   const [selectedCar, setSelectedCar] = useState<string>("peppy");
   const [playerName, setPlayerName] = useState<string>("Player");
+  const [showFullLeaderboard, setShowFullLeaderboard] = useState<boolean>(false);
   const [showMoreInstructions, setShowMoreInstructions] = useState(false);
   const [carImagesLoaded, setCarImagesLoaded] = useState<{
     [key: string]: boolean;
@@ -1437,8 +1438,79 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
         className="border-2 border-gray-700 bg-transparent max-w-full h-auto relative z-10"
       />
 
+      {/* Full Leaderboard Screen */}
+      {showFullLeaderboard && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 z-30">
+          <div className="w-full max-w-4xl bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 flex justify-between items-center">
+              <h3 className="text-xl text-white font-bold">Full Leaderboard</h3>
+              <button 
+                onClick={() => setShowFullLeaderboard(false)}
+                className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1 rounded-md transition-colors"
+              >
+                ← Back
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="grid grid-cols-12 gap-2 mb-2 text-gray-300 text-sm px-2 py-2 border-b border-gray-700">
+                <div className="col-span-1 font-semibold">#</div>
+                <div className="col-span-4 font-semibold">Name</div>
+                <div className="col-span-3 font-semibold">Car</div>
+                <div className="col-span-2 font-semibold">Score</div>
+                <div className="col-span-2 font-semibold">Date</div>
+              </div>
+              
+              <div className="max-h-[500px] overflow-y-auto pr-1">
+                {savedScores.length > 0 ? (
+                  savedScores.map((savedScore, index) => (
+                    <div 
+                      key={index}
+                      className={`${
+                        savedScore.score >= 200 
+                          ? 'bg-yellow-900 bg-opacity-40' 
+                          : index % 2 === 0 
+                            ? 'bg-gray-700' 
+                            : 'bg-gray-700 bg-opacity-50'
+                      } rounded-md p-2 mb-1 grid grid-cols-12 gap-2 ${
+                        savedScore.score >= 200 
+                          ? 'text-yellow-200' 
+                          : index === 0 
+                            ? 'text-gray-200' 
+                            : 'text-gray-300'
+                      } text-sm`}
+                    >
+                      <div className="col-span-1">{index + 1}</div>
+                      <div className="col-span-4 truncate">{savedScore.name}</div>
+                      <div className="col-span-3 capitalize truncate">{savedScore.car}</div>
+                      <div className="col-span-2 font-medium">
+                        {savedScore.score}{savedScore.score >= 200 && ' 🏆'}
+                      </div>
+                      <div className="col-span-2">{savedScore.date}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    No saved scores yet. Play and save your score to see it here!
+                  </div>
+                )}
+              </div>
+              
+              <div className="pt-4 flex justify-center">
+                <button 
+                  onClick={() => setShowFullLeaderboard(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded font-medium transition-colors"
+                >
+                  Close Leaderboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Game Start Screen or Game Over Screen */}
-      {!isPlaying && (
+      {!isPlaying && !showFullLeaderboard && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <div className="transform scale-[0.9] w-full max-w-4xl flex flex-col items-center">
             <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
@@ -1506,10 +1578,10 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   </div>
                 </div>
                 
-                {/* Compact Leaderboard */}
+                {/* Compact Leaderboard - Top 3 only */}
                 <div className="bg-gray-800 rounded-lg overflow-hidden mb-4">
                   <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-2 px-3">
-                    <h3 className="text-lg text-white font-bold">Leaderboard</h3>
+                    <h3 className="text-lg text-white font-bold">Leaderboard (Top 3)</h3>
                   </div>
                   
                   <div className="p-3">
@@ -1532,9 +1604,9 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                       <div className="col-span-2">Today</div>
                     </div>
                     
-                    {/* Saved high scores */}
+                    {/* Top 3 Saved high scores only */}
                     {savedScores.length > 0 ? (
-                      savedScores.map((savedScore, index) => (
+                      savedScores.slice(0, 3).map((savedScore, index) => (
                         <div 
                           key={index}
                           className={`${
@@ -1715,26 +1787,38 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
               </div>
             )}
 
-            {/* Start/Return to Title button */}
-            <button
-              onClick={() => {
-                if (score > 0) {
-                  // Reset score but don't start game yet - return to title screen
-                  // Update high score if current score is higher
-                  if (score > highScore) {
-                    setHighScore(score);
-                    localStorage.setItem('districtDriverHighScore', score.toString());
+            {/* Buttons row: Return to Title and Show Leaderboard */}
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  if (score > 0) {
+                    // Reset score but don't start game yet - return to title screen
+                    // Update high score if current score is higher
+                    if (score > highScore) {
+                      setHighScore(score);
+                      localStorage.setItem('districtDriverHighScore', score.toString());
+                    }
+                    setScore(0); // This will trigger the title screen to display
+                  } else {
+                    // We're on the title screen, so start the game
+                    startGame();
                   }
-                  setScore(0); // This will trigger the title screen to display
-                } else {
-                  // We're on the title screen, so start the game
-                  startGame();
-                }
-              }}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
-            >
-              {score > 0 ? "Return to Title" : "Start Game"}
-            </button>
+                }}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
+              >
+                {score > 0 ? "Return to Title" : "Start Game"}
+              </button>
+              
+              {/* Only show the Show Leaderboard button if we have saved scores */}
+              {score > 0 && savedScores.length > 0 && (
+                <button
+                  onClick={() => setShowFullLeaderboard(true)}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 text-white font-medium py-3 px-8 rounded-md transition shadow-md flex items-center text-lg cursor-pointer hover:opacity-90"
+                >
+                  Show Leaderboard
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
