@@ -24,12 +24,14 @@ type SoundConfig = {
 // Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
 // C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
 
-// Bass patterns (3 different patterns for variety)
+// Bass patterns (4 different patterns for variety and more jazz feel)
 const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
 const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
 const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
+// New jazzy walking bass pattern
+const BASS_PATTERN_D = [349.23, 392.00, 440.00, 349.23, 311.13, 349.23, 392.00, 440.00, 392.00, 349.23, 329.63, 349.23, 392.00, 349.23, 311.13, 261.63];
 
-// Melody patterns (4 different patterns for variety)
+// Melody patterns (5 different patterns for variety including more jazzy phrasing)
 const MELODY_PATTERN_A = [
   0, 523.25, 587.33, 659.25, 
   523.25, 0, 0, 0, 
@@ -54,6 +56,13 @@ const MELODY_PATTERN_D = [
   392.00, 349.23, 0, 0,
   392.00, 440.00, 466.16, 523.25
 ];
+// New jazzy saxophone-like melody with blue notes
+const MELODY_PATTERN_E = [
+  523.25, 466.16, 440.00, 415.30, 
+  440.00, 466.16, 0, 0,
+  523.25, 587.33, 523.25, 466.16,
+  440.00, 466.16, 0, 0
+];
 
 // Jazz chord fills (played occasionally for harmonic depth)
 const JAZZ_CHORD_PATTERN_A = [
@@ -68,11 +77,22 @@ const JAZZ_CHORD_PATTERN_B = [
   0, 0, 0, 0,
   [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
 ];
+// New jazz seventh chord pattern
+const JAZZ_CHORD_PATTERN_C = [
+  [349.23, 440.00, 523.25, 622.25], 0, 0, 0,  // F major 7th
+  0, 0, [392.00, 493.88, 587.33, 698.46], 0,  // G dominant 7th
+  0, 0, 0, 0,
+  [349.23, 415.30, 523.25, 622.25], 0, 0, 0,  // F minor 7th
+];
 
-// Varied drum patterns
-const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
-const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0];
-const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5];
+// Varied drum patterns with more complex rhythms including snare emphasis
+const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0]; // Basic pattern
+const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0]; // Hi-hat pattern
+const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5]; // Syncopated pattern
+// New pattern with snare on 2 and 4 (classic jazz pattern)
+const DRUM_PATTERN_D = [1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0.5];
+// Brushed snare jazz pattern
+const DRUM_PATTERN_E = [1, 2, 0.5, 2, 1, 2, 0.5, 2, 1, 2, 0.5, 2, 1, 2, 0.5, 2];
 
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
@@ -255,38 +275,44 @@ export function useSound() {
   };
   
   // Choose a specific pattern sequence based on current time
-  // This ensures the music has longer, more varied sequences
+  // This ensures the music has longer, more varied sequences with jazz influence
   const getPatternForSection = (patternType: string, sectionIndex: number) => {
     switch (patternType) {
       case 'bass':
         // Alternate between different bass patterns in a more complex sequence
-        if (sectionIndex % 4 === 0) return BASS_PATTERN_A; 
-        if (sectionIndex % 4 === 1) return BASS_PATTERN_B;
-        if (sectionIndex % 4 === 2) return BASS_PATTERN_C;
+        if (sectionIndex % 5 === 0) return BASS_PATTERN_A; 
+        if (sectionIndex % 5 === 1) return BASS_PATTERN_B;
+        if (sectionIndex % 5 === 2) return BASS_PATTERN_C;
+        if (sectionIndex % 5 === 3) return BASS_PATTERN_D; // New walking bass pattern
         return BASS_PATTERN_A;
       
       case 'melody':
-        // Create more varied melody sequences
-        if (sectionIndex % 8 === 0) return MELODY_PATTERN_A;
-        if (sectionIndex % 8 === 1) return MELODY_PATTERN_B;
-        if (sectionIndex % 8 === 2) return MELODY_PATTERN_C;
-        if (sectionIndex % 8 === 3) return MELODY_PATTERN_D;
-        if (sectionIndex % 8 === 4) return MELODY_PATTERN_B;
-        if (sectionIndex % 8 === 5) return MELODY_PATTERN_A;
-        if (sectionIndex % 8 === 6) return MELODY_PATTERN_D;
+        // Create more varied melody sequences with saxophone-like patterns
+        if (sectionIndex % 10 === 0) return MELODY_PATTERN_A;
+        if (sectionIndex % 10 === 1) return MELODY_PATTERN_B;
+        if (sectionIndex % 10 === 2) return MELODY_PATTERN_C;
+        if (sectionIndex % 10 === 3) return MELODY_PATTERN_D;
+        if (sectionIndex % 10 === 4) return MELODY_PATTERN_E; // New jazzy saxophone pattern
+        if (sectionIndex % 10 === 5) return MELODY_PATTERN_B;
+        if (sectionIndex % 10 === 6) return MELODY_PATTERN_E; // More saxophone
+        if (sectionIndex % 10 === 7) return MELODY_PATTERN_A;
+        if (sectionIndex % 10 === 8) return MELODY_PATTERN_D;
         return MELODY_PATTERN_C;
         
       case 'chord':
-        // Add occasional jazz chords for harmonic interest
-        if (sectionIndex % 4 === 0) return JAZZ_CHORD_PATTERN_A;
-        if (sectionIndex % 4 === 2) return JAZZ_CHORD_PATTERN_B;
+        // Add more jazz chords for harmonic depth
+        if (sectionIndex % 6 === 0) return JAZZ_CHORD_PATTERN_A;
+        if (sectionIndex % 6 === 2) return JAZZ_CHORD_PATTERN_B;
+        if (sectionIndex % 6 === 4) return JAZZ_CHORD_PATTERN_C; // New jazz 7th chords
         return []; // No chords in other sections
       
       case 'drums':
-        // Alternate drum patterns for rhythmic variety
-        if (sectionIndex % 3 === 0) return DRUM_PATTERN_A;
-        if (sectionIndex % 3 === 1) return DRUM_PATTERN_B;
-        return DRUM_PATTERN_C;
+        // Alternate drum patterns for rhythmic variety including snare emphasis
+        if (sectionIndex % 5 === 0) return DRUM_PATTERN_A;
+        if (sectionIndex % 5 === 1) return DRUM_PATTERN_B;
+        if (sectionIndex % 5 === 2) return DRUM_PATTERN_C;
+        if (sectionIndex % 5 === 3) return DRUM_PATTERN_D; // Classic jazz snare pattern
+        return DRUM_PATTERN_E; // Brushed snare pattern
       
       default:
         return [];
@@ -325,7 +351,7 @@ export function useSound() {
       const startingSection = randomInt(0, 15);
       
       // Define how many sections to play before looping (creates a longer, more varied piece)
-      const sectionsToPlay = 4; // This creates a 4x longer composition before looping
+      const sectionsToPlay = 8; // This creates an 8x longer composition before looping
       
       // Schedule multiple sections of music to create a longer, more varied composition
       for (let section = 0; section < sectionsToPlay; section++) {
@@ -367,24 +393,92 @@ export function useSound() {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
-          const oscillator = context.createOscillator();
-          const gainNode = context.createGain();
           
-          // Use different oscillator types for variety
-          oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
-          
-          gainNode.gain.setValueAtTime(0.15, noteTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(masterGain);
-          
-          // Track the oscillator for clean shutdown
-          activeOscillators.current.push(oscillator);
-          
-          oscillator.start(noteTime);
-          oscillator.stop(noteTime + noteDuration);
+          // For pattern E (the saxophone pattern), use a more complex saxophone-like instrument
+          if (melodyPattern === MELODY_PATTERN_E) {
+            // Create a more complex saxophone-like sound with multiple oscillators
+            
+            // Main tone - a combination of sine and triangle for richness
+            const mainOsc = context.createOscillator();
+            mainOsc.type = 'sine';  
+            mainOsc.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
+            
+            // Envelope with jazz-like articulation
+            const mainGain = context.createGain();
+            mainGain.gain.setValueAtTime(0, noteTime);
+            mainGain.gain.linearRampToValueAtTime(0.2, noteTime + 0.03); // Slow attack
+            mainGain.gain.setValueAtTime(0.2, noteTime + noteDuration * 0.7);
+            mainGain.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration);
+            
+            // Add harmonics for saxophone-like tone
+            const harmonicOsc = context.createOscillator();
+            harmonicOsc.type = 'triangle';
+            // Fifth up from the fundamental frequency for saxophone-like timbre
+            harmonicOsc.frequency.setValueAtTime(typeof frequency === 'number' ? frequency * 1.5 : 0, noteTime); 
+            
+            const harmonicGain = context.createGain();
+            harmonicGain.gain.setValueAtTime(0, noteTime);
+            harmonicGain.gain.linearRampToValueAtTime(0.05, noteTime + 0.04);
+            harmonicGain.gain.setValueAtTime(0.05, noteTime + noteDuration * 0.6);
+            harmonicGain.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
+            
+            // Add subtle vibrato for expressiveness
+            const vibratoOsc = context.createOscillator();
+            vibratoOsc.type = 'sine';
+            vibratoOsc.frequency.value = 5 + Math.random() * 2; // 5-7 Hz vibrato
+            
+            const vibratoGain = context.createGain();
+            vibratoGain.gain.value = 3; // Vibrato depth
+            
+            // Connect modulation chain for vibrato
+            vibratoOsc.connect(vibratoGain);
+            vibratoGain.connect(mainOsc.frequency);
+            
+            // Connect audio chain
+            mainOsc.connect(mainGain);
+            harmonicOsc.connect(harmonicGain);
+            
+            mainGain.connect(masterGain);
+            harmonicGain.connect(masterGain);
+            
+            // Track oscillators for cleanup
+            activeOscillators.current.push(mainOsc);
+            activeOscillators.current.push(harmonicOsc);
+            activeOscillators.current.push(vibratoOsc);
+            
+            // Start and stop oscillators
+            const startTime = noteTime;
+            const stopTime = noteTime + noteDuration * 1.1; // Slightly longer for natural decay
+            
+            mainOsc.start(startTime);
+            mainOsc.stop(stopTime);
+            
+            harmonicOsc.start(startTime);
+            harmonicOsc.stop(stopTime);
+            
+            vibratoOsc.start(startTime);
+            vibratoOsc.stop(stopTime);
+          } else {
+            // Regular melody sound
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+            
+            // Use different oscillator types for variety
+            oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
+            oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
+            
+            gainNode.gain.setValueAtTime(0.15, noteTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Track the oscillator for clean shutdown
+            activeOscillators.current.push(oscillator);
+            
+            oscillator.start(noteTime);
+            oscillator.stop(noteTime + noteDuration);
+          }
         });
         
         // Schedule the jazz chord patterns for harmonic depth
@@ -443,6 +537,60 @@ export function useSound() {
             
             kickOsc.start(noteTime);
             kickOsc.stop(noteTime + 0.1);
+          }
+          
+          // Create snare drum for jazz feel (value 2)
+          if (hit === 2) {
+            // Snare body - noise component
+            const noiseBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            
+            // Fill buffer with noise
+            for (let i = 0; i < noiseBuffer.length; i++) {
+              noiseData[i] = Math.random() * 2 - 1;
+            }
+            
+            // Noise source for snare
+            const snareNoise = context.createBufferSource();
+            snareNoise.buffer = noiseBuffer;
+            
+            // Filter for snare tone
+            const snareFilter = context.createBiquadFilter();
+            snareFilter.type = 'bandpass';
+            snareFilter.frequency.value = 1800;
+            snareFilter.Q.value = 0.5;
+            
+            // Envelope for snare
+            const snareGain = context.createGain();
+            snareGain.gain.setValueAtTime(0.3, noteTime);
+            snareGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.15);
+            
+            // Snare tonal component (for jazz feel)
+            const snareTone = context.createOscillator();
+            snareTone.type = 'triangle';
+            snareTone.frequency.value = 180;
+            
+            const snareToneGain = context.createGain();
+            snareToneGain.gain.setValueAtTime(0.2, noteTime);
+            snareToneGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.05);
+            
+            // Connect the components
+            snareNoise.connect(snareFilter);
+            snareFilter.connect(snareGain);
+            snareGain.connect(masterGain);
+            
+            snareTone.connect(snareToneGain);
+            snareToneGain.connect(masterGain);
+            
+            // Track for cleanup
+            activeOscillators.current.push(snareTone);
+            
+            // Start and stop the components
+            snareNoise.start(noteTime);
+            snareNoise.stop(noteTime + 0.15);
+            
+            snareTone.start(noteTime);
+            snareTone.stop(noteTime + 0.05);
           }
           
           // Create hi-hat for smaller hit values (adding more complex rhythm)
