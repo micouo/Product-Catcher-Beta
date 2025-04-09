@@ -232,7 +232,7 @@ export function useSound() {
   
   // Choose a specific pattern sequence based on current time
   // This ensures the music has longer, more varied sequences
-  const getPatternForSection = (patternType: string, sectionIndex: number) => {
+  const getPatternForSection = (patternType: string, sectionIndex: number): number[] => {
     switch (patternType) {
       case 'bass':
         // Alternate between different bass patterns in a more complex sequence
@@ -323,7 +323,7 @@ export function useSound() {
           const gainNode = context.createGain();
           
           oscillator.type = 'square';
-          oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
+          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency / 2 : 0, noteTime); // Lower octave for bass
           
           gainNode.gain.setValueAtTime(0.25, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
@@ -348,7 +348,7 @@ export function useSound() {
           
           // Use different oscillator types for variety
           oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
-          oscillator.frequency.setValueAtTime(frequency, noteTime);
+          oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
           
           gainNode.gain.setValueAtTime(0.15, noteTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
