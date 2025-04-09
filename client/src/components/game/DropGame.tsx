@@ -32,6 +32,7 @@ import phoImage from "@assets/pho.png";
 // Import obstacle images
 import obstacleHailImage from "@assets/obstaclehail.png";
 import obstacleSpikeBallImage from "@assets/obstaclespikeball.png";
+import heartImage from "@assets/heart.png";
 
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
@@ -229,6 +230,7 @@ let playButtonImage: HTMLImageElement | null = null;
 let replayButtonImage: HTMLImageElement | null = null;
 let obstacleHailImg: HTMLImageElement | null = null;
 let obstacleSpikeBallImg: HTMLImageElement | null = null;
+let heartImg: HTMLImageElement | null = null;
 
 // Define button constants - these can be easily adjusted
 const BUTTON_SIZE = 50; // Size of the pause button (width and height)
@@ -283,6 +285,13 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   const [isPlayerDamaged, setIsPlayerDamaged] = useState(false); // Track damage state for red flash effect
   const [damageFlashTime, setDamageFlashTime] = useState(0); // Track time for the flash effect
   const [damageFlashCount, setDamageFlashCount] = useState(0); // Track flash count for multiple flashes
+  
+  // Heart flash animation state
+  const [heartFlashState, setHeartFlashState] = useState<{active: boolean, startTime: number, lifeLost: number}>({
+    active: false,
+    startTime: 0,
+    lifeLost: 0
+  }); // Track heart flash animation
   const [player, setPlayer] = useState<Player>({
     x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
     y: GAME_HEIGHT - PLAYER_HEIGHT - 0,
@@ -401,6 +410,15 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
         obstacleSpikeBallImg = img;
       };
     }
+    
+    // Load heart image
+    if (!heartImg) {
+      const img = new Image();
+      img.src = heartImage;
+      img.onload = () => {
+        heartImg = img;
+      };
+    }
   }, []);
 
   // Toggle pause state
@@ -431,6 +449,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     setIsPlayerDamaged(false); // Reset damage effect
     setDamageFlashCount(0); // Reset flash counter
     setEngineShakeOffset(0); // Reset engine shake
+    setHeartFlashState({active: false, startTime: 0, lifeLost: 0}); // Reset heart flash state
 
     // Keep high score
   };
@@ -551,6 +570,8 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     damageFlashTime,
     damageFlashCount,
     engineShakeOffset,
+    heartFlashState,
+    lives
   ]);
 
   // Function to create game objects - defined outside the useEffect for access by gameLoop
@@ -907,12 +928,21 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
 
             // If obstacle hits player, reduce lives
             setLives((prevLives) => {
-              if (prevLives <= 1) {
+              const newLives = prevLives - 1;
+              
+              // Activate heart flashing animation
+              setHeartFlashState({
+                active: true,
+                startTime: Date.now(),
+                lifeLost: prevLives
+              });
+              
+              if (newLives <= 0) {
                 playSound("gameOver");
                 endGame();
                 if (onGameOver) onGameOver();
               }
-              return prevLives - 1;
+              return newLives;
             });
             return { ...updatedObj, y: GAME_HEIGHT + 100 }; // Move it out of the game area
           }
@@ -968,6 +998,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     setIsPlayerDamaged(false); // Reset damage effect
     setDamageFlashCount(0); // Reset flash counter
     setEngineShakeOffset(0); // Reset engine shake
+    setHeartFlashState({active: false, startTime: 0, lifeLost: 0}); // Reset heart flash state
 
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
@@ -1255,9 +1286,64 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     ctx.textAlign = "center";
     ctx.fillText(`High Score: ${highScore}`, GAME_WIDTH / 2, 30);
 
-    // Draw lives
-    ctx.textAlign = "right";
-    ctx.fillText(`Lives: ${lives}`, GAME_WIDTH - 20, 30);
+    // Draw lives as heart images
+    if (heartImg) {
+      const heartSize = 30; // Size of the heart image
+      const heartSpacing = 8; // Spacing between hearts
+      const startX = GAME_WIDTH - 20 - (heartSize * 3) - (heartSpacing * 2); // Position for 3 hearts
+      const heartY = 10; // Vertical position
+      
+      // Draw empty placeholder hearts first (gray silhouettes)
+      ctx.globalAlpha = 0.3;
+      for (let i = 0; i < 3; i++) {
+        const x = startX + (i * (heartSize + heartSpacing));
+        ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+      }
+      
+      // Draw active hearts with proper animation
+      ctx.globalAlpha = 1.0;
+      
+      // Flash animation constants
+      const FLASH_DURATION = 800; // Total flash animation time in ms
+      const FLASH_FREQUENCY = 50; // Time between flashes in ms
+      
+      for (let i = 0; i < lives; i++) {
+        const x = startX + (i * (heartSize + heartSpacing));
+        
+        // Apply flashing animation to the heart that's being lost
+        if (heartFlashState.active && heartFlashState.lifeLost === i + 1) {
+          const elapsed = Date.now() - heartFlashState.startTime;
+          
+          // Flash the heart rapidly
+          if (elapsed < FLASH_DURATION) {
+            // Toggle visibility based on time to create rapid flashing
+            const isVisible = Math.floor(elapsed / FLASH_FREQUENCY) % 2 === 0;
+            
+            if (isVisible) {
+              ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+            }
+            
+            // If animation is complete, reset the flash state
+            if (elapsed >= FLASH_DURATION) {
+              setHeartFlashState({active: false, startTime: 0, lifeLost: 0});
+            }
+          } else {
+            // Animation complete, don't draw this heart anymore
+            setHeartFlashState({active: false, startTime: 0, lifeLost: 0});
+          }
+        } else {
+          // Normal heart rendering (no animation)
+          ctx.drawImage(heartImg, x, heartY, heartSize, heartSize);
+        }
+      }
+      
+      // Reset alpha
+      ctx.globalAlpha = 1.0;
+    } else {
+      // Fallback to text if heart image isn't loaded
+      ctx.textAlign = "right";
+      ctx.fillText(`Lives: ${lives}`, GAME_WIDTH - 20, 30);
+    }
 
     // Draw game control buttons
     drawPauseButton(ctx);
