@@ -726,20 +726,15 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
           if (currentTime - lastBoostSoundTime > 5000) { // 5000ms = 5 seconds cooldown
             playSound('boost');
             setLastBoostSoundTime(currentTime);
-            // Add visual feedback that the boost is active with full sound
-            setCar((prevCar) => ({
-              ...prevCar,
-              // Show slight angle to indicate drifting motion
-              angle: prevCar.image === carImages[3] ? 10 : 5 // Drift car gets more angle
-            }));
             
-            // Reset angle after drift is complete
+            // Add visual feedback with an extra engine shake to simulate drifting
+            const boostShakeAmount = selectedCar === 3 ? 2.0 : 1.5; // Drift car gets more shake
+            setEngineShakeOffset(boostShakeAmount);
+            
+            // Reset shake after drift is complete
             setTimeout(() => {
-              setCar((prevCar) => ({
-                ...prevCar,
-                angle: 0
-              }));
-            }, 1000); // Reset after 1 second
+              setEngineShakeOffset(0);
+            }, 800); // Reset after 0.8 seconds
           }
           break;
         case "ArrowLeft":
