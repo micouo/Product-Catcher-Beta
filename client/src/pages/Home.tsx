@@ -12,11 +12,12 @@ export default function Home() {
         {/* Game title section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-game bg-gradient-to-r from-blue-500 to-emerald-500 text-transparent bg-clip-text mb-4">
-            Product Catcher Challenge
+            District Driver
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Test your reflexes in this addictive dropping game! Catch the falling products with your basket 
-            while avoiding dangerous obstacles. How high can you score?
+            Race through the busy streets of the University District in this addictive driving game! 
+            Control your car to collect delicious food items while avoiding obstacles. 
+            Score 200 points to earn a 5% discount on your next purchase at participating stores in the University District!
           </p>
         </div>
 

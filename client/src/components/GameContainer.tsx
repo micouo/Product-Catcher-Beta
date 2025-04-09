@@ -8,6 +8,7 @@ export default function GameContainer() {
   const [currentScore, setCurrentScore] = useState(0);
   const [gameActive, setGameActive] = useState(false);
   const { initializeAudio, startMusic } = useSound();
+  const [isGameFocused, setIsGameFocused] = useState(false);
 
   // Simulate loading time for game assets
   useEffect(() => {
@@ -32,11 +33,20 @@ export default function GameContainer() {
   // Handle score updates from the game
   const handleScoreUpdate = (score: number) => {
     setCurrentScore(score);
+    // Ensure game is marked as active when score updates are happening
+    if (!gameActive && score > 0) {
+      setGameActive(true);
+    }
   };
 
   // Handle game over event
   const handleGameOver = () => {
     setGameActive(false);
+  };
+  
+  // Handle game start event
+  const handleGameStart = () => {
+    setGameActive(true);
   };
   
   // Add an event listener for the first user interaction
@@ -64,6 +74,28 @@ export default function GameContainer() {
       document.removeEventListener('touchstart', startAudioOnInteraction);
     };
   }, [initializeAudio, startMusic]);
+  
+  // Prevent arrow keys from scrolling the page
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default scrolling behavior for arrow keys
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.key)) {
+        e.preventDefault();
+      }
+    };
+    
+    // Add global event listener when game is active
+    if (!isLoading && gameActive) {
+      document.addEventListener('keydown', handleKeyDown);
+      setIsGameFocused(true);
+    } else {
+      setIsGameFocused(false);
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLoading, gameActive]);
 
   return (
     <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden mb-8">
@@ -77,6 +109,7 @@ export default function GameContainer() {
           <DropGame 
             onScoreUpdate={handleScoreUpdate}
             onGameOver={handleGameOver}
+            onGameStart={handleGameStart}
           />
         )}
       </div>

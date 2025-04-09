@@ -18,6 +18,7 @@ import car9Image from "@assets/car 9.png";
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
   onGameOver?: () => void;
+  onGameStart?: () => void;
 }
 
 interface GameObject {
@@ -198,7 +199,7 @@ const BUTTON_MARGIN_TOP = 70; // Margin from the top edge of the screen (increas
 const BUTTON_OPACITY = 0.9; // Opacity of the button
 const BUTTON_SPACING = 20; // Space between buttons (reduced from 60 to 20 to make them closer)
 
-export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
+export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastSpawnTimeRef = useRef<number>(Date.now());
@@ -617,6 +618,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     if (!isPlaying) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default scrolling behavior for arrow keys during gameplay
+      if (isPlaying && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.key)) {
+        e.preventDefault();
+      }
+      
       // Handle each key separately without using else if to allow multiple keys
       switch (e.key) {
         case "Escape":
@@ -655,6 +661,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      // Prevent default scrolling behavior for arrow keys during gameplay
+      if (isPlaying && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.key)) {
+        e.preventDefault();
+      }
+      
       // Handle each key separately without using else if to allow multiple keys
       switch (e.key) {
         case "Shift":
@@ -879,6 +890,11 @@ export default function DropGame({ onScoreUpdate, onGameOver }: GameProps) {
     // Reset timers
     lastSpawnTimeRef.current = Date.now();
     gameStartTimeRef.current = Date.now();
+    
+    // Notify parent that game has started
+    if (onGameStart) {
+      onGameStart();
+    }
   };
 
   // End game
