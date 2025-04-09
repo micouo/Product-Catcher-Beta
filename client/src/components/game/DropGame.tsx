@@ -1386,7 +1386,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-20">
           <div className="transform scale-[0.9] w-full max-w-4xl flex flex-col items-center">
             <h2 className="text-4xl font-game text-blue-500 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              {score > 0 ? "Game Over!" : "District Driver"}
+              {score > 0 ? "Game Over!" : ""}
             </h2>
 
             {/* GAME OVER SCREEN CONTENT */}
