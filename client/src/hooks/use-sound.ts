@@ -237,7 +237,12 @@ export function useSound() {
     try {
       // Create the audio context if it doesn't exist
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        try {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (err) {
+          console.error('Error creating audio context:', err);
+          // Continue anyway - we can still try to use HTML Audio elements
+        }
       }
       
       // Mark that we've had user interaction
@@ -245,43 +250,68 @@ export function useSound() {
       
       // Create audio elements if they don't exist yet
       if (!backgroundMusicElement) {
-        backgroundMusicElement = new Audio('/background-music.mp3');
-        backgroundMusicElement.loop = true;
-        backgroundMusicElement.volume = 0.3;
-        // Preload the audio
-        backgroundMusicElement.preload = 'auto';
+        try {
+          backgroundMusicElement = new Audio('/background-music.mp3');
+          backgroundMusicElement.loop = true;
+          backgroundMusicElement.volume = 0.3;
+          // Preload the audio
+          backgroundMusicElement.preload = 'auto';
+        } catch (err) {
+          console.error('Error creating background music element:', err);
+          // Continue without background music
+        }
       }
       
       if (!hitSoundElement) {
-        hitSoundElement = new Audio('/sounds/hit.wav');
-        hitSoundElement.volume = 0.45; // 45% volume
-        audioElements.hit = hitSoundElement;
+        try {
+          hitSoundElement = new Audio('/sounds/hit.wav');
+          hitSoundElement.volume = 0.45; // 45% volume
+          audioElements.hit = hitSoundElement;
+        } catch (err) {
+          console.error('Error creating hit sound element:', err);
+          // Continue without hit sound
+        }
       }
       
       if (!pickupSoundElement) {
-        pickupSoundElement = new Audio('/sounds/pickup.wav');
-        pickupSoundElement.volume = 1.0;
-        audioElements.collect = pickupSoundElement;
+        try {
+          pickupSoundElement = new Audio('/sounds/pickup.wav');
+          pickupSoundElement.volume = 1.0;
+          audioElements.collect = pickupSoundElement;
+        } catch (err) {
+          console.error('Error creating pickup sound element:', err);
+          // Continue without pickup sound
+        }
       }
       
       // Start background music in response to user interaction
       if (musicEnabled && !musicInitialized && backgroundMusicElement) {
-        // Play the music (must be in response to a user action)
-        backgroundMusicElement.play()
-          .then(() => {
-            console.log('Background music started successfully');
-            setMusicInitialized(true);
-          })
-          .catch(err => {
-            console.error('Error playing background music:', err);
-          });
+        // Try to play the music (must be in response to a user action)
+        try {
+          // Use the generateBackgroundMusic method instead of playing the audio file
+          // This won't interrupt already playing sound if it's working
+          startBackgroundMusic();
+          setMusicInitialized(true);
+        } catch (err) {
+          console.error('Error starting background music:', err);
+          // Try the regular audio element as a fallback
+          backgroundMusicElement.play()
+            .then(() => {
+              console.log('Background music started successfully via HTML Audio element');
+              setMusicInitialized(true);
+            })
+            .catch(err => {
+              console.error('Error playing background music via HTML Audio element:', err);
+              // Game can continue without music
+            });
+        }
       }
     } catch (error) {
       console.error('Error initializing audio:', error);
     }
   };
   
-  // Create and play a sound
+  // Create and play a sound without affecting background music
   const playSound = (type: SoundType) => {
     if (!soundEnabled) return;
     
@@ -297,8 +327,6 @@ export function useSound() {
       setTimeout(() => {
         driftCooldownRef.current = false;
       }, 5000);
-      
-      console.log('Playing drift sound effect');
     }
     
     // If we have a real audio element for this sound, play it
@@ -325,20 +353,24 @@ export function useSound() {
   };
   
   // Play a generated sound (for sounds without files)
+  // This function creates a separate audio context for sound effects
+  // to avoid affecting the background music
   const playGeneratedSound = (type: SoundType) => {
-    const context = audioContextRef.current;
-    if (!context) return;
+    // Create a temporary audio context just for this sound effect
+    // This ensures it won't interfere with the background music
+    const tempContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
     // Check if we have a config for this sound type
     if (!SOUND_CONFIG[type]) return;
     
     const config = SOUND_CONFIG[type];
-    const now = context.currentTime;
+    const now = tempContext.currentTime;
+    const tempOscillators: OscillatorNode[] = [];
     
     // Play a sequence of notes for more interesting sounds
     config.notes.forEach((note: number, index: number) => {
-      const oscillator = context.createOscillator();
-      const gainNode = context.createGain();
+      const oscillator = tempContext.createOscillator();
+      const gainNode = tempContext.createGain();
       
       oscillator.type = config.type as OscillatorType;
       oscillator.frequency.setValueAtTime(note, now + index * (config.duration / config.notes.length));
@@ -352,11 +384,34 @@ export function useSound() {
       }
       
       oscillator.connect(gainNode);
-      gainNode.connect(context.destination);
+      gainNode.connect(tempContext.destination);
       
       oscillator.start(now + index * (config.duration / config.notes.length));
       oscillator.stop(now + (index + 1) * (config.duration / config.notes.length));
+      
+      // Track oscillators for cleanup
+      tempOscillators.push(oscillator);
     });
+    
+    // Close the temporary context after all sounds finish playing
+    const maxDuration = config.duration * 1.5; // Add a bit of buffer
+    setTimeout(() => {
+      try {
+        // Clean up oscillators first
+        tempOscillators.forEach(osc => {
+          try {
+            osc.stop();
+          } catch (e) {
+            // Ignore already stopped oscillators
+          }
+        });
+        
+        // Then close the context
+        tempContext.close().catch(console.error);
+      } catch (error) {
+        console.error('Error cleaning up temporary audio context:', error);
+      }
+    }, maxDuration * 1000);
   };
   
   // Random integer between min and max (inclusive)
