@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSound } from "../../hooks/use-sound";
+import { useSound } from "../../hooks/use-sound-new";
 import Background from "./Background";
 import car1Image from "@assets/car 1.png";
 import pauseImage from "@assets/pause.png";
@@ -258,8 +258,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   // Engine shake animation
   const [engineShakeOffset, setEngineShakeOffset] = useState(0);
   const [lastEngineShakeTime, setLastEngineShakeTime] = useState(0);
-  // Boost sound cooldown
-  const [lastBoostSoundTime, setLastBoostSoundTime] = useState(0);
   const [playerImageLoaded, setPlayerImageLoaded] = useState(false);
   const [pauseButtonLoaded, setPauseButtonLoaded] = useState(false);
   const [playButtonLoaded, setPlayButtonLoaded] = useState(false);
@@ -720,21 +718,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
           break;
         case "Shift":
           setPlayer((prev) => ({ ...prev, boosting: true }));
-          
-          // Play drift sound with a 5-second cooldown
-          const currentTime = Date.now();
-          if (currentTime - lastBoostSoundTime > 5000) { // 5000ms = 5 seconds cooldown
-            playSound('boost');
-            setLastBoostSoundTime(currentTime);
-            
-            // Add visual feedback with an extra engine shake to simulate drifting
-            setEngineShakeOffset(2.0); // Same shake amount for all cars
-            
-            // Reset shake after drift is complete
-            setTimeout(() => {
-              setEngineShakeOffset(0);
-            }, 800); // Reset after 0.8 seconds
-          }
           break;
         case "ArrowLeft":
         case "a":
@@ -854,7 +837,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
         canvas.removeEventListener("touchend", handleTouchEnd);
       }
     };
-  }, [isPlaying, playSound, lastBoostSoundTime]);
+  }, [isPlaying, playSound]);
 
   // Update player position based on movement flags
   const updatePlayerPosition = () => {

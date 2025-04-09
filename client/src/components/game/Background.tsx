@@ -502,7 +502,7 @@ export default function Background({ width, height, isPaused = false }: Backgrou
         img: building2Img, 
         width: BUILDING_SCALE * 1.02 * 1.2 * 1.7, 
         height: height * 0.6 * 1.4,
-        yOffset: 75 // Building 2 vertical offset
+        yOffset: 80 // Building 2 vertical offset
       },
       { 
         img: building3Img, 

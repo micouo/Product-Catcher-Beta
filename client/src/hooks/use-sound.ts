@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose' | 'boost';
+type SoundType = 'collect' | 'hit' | 'gameOver' | 'start' | 'lose';
 
 // Create audio elements lazily when needed
 let backgroundMusicElement: HTMLAudioElement | null = null;
 let hitSoundElement: HTMLAudioElement | null = null;
 let pickupSoundElement: HTMLAudioElement | null = null;
-let boostSoundElement: HTMLAudioElement | null = null;
 
 // Audio elements for real sound files - will create these lazily
 const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {};
@@ -96,13 +95,6 @@ const SOUND_CONFIG: Record<string, SoundConfig> = {
     duration: 0.3,
     ramp: 'down',
     notes: [200, 150]
-  },
-  boost: {
-    type: 'sawtooth',
-    frequency: 180,
-    duration: 0.8,
-    ramp: 'down',
-    notes: [220, 240, 260, 280, 300, 320, 340, 320, 300, 280, 260, 240]
   }
 };
 
@@ -154,12 +146,6 @@ export function useSound() {
         audioElements.collect = pickupSoundElement;
       }
       
-      if (!boostSoundElement) {
-        boostSoundElement = new Audio('/attached_assets/boost.wav');
-        boostSoundElement.volume = 0.6; // 60% volume
-        audioElements.boost = boostSoundElement;
-      }
-      
       // Start background music in response to user interaction
       if (musicEnabled && !musicInitialized && backgroundMusicElement) {
         // Play the music (must be in response to a user action)
@@ -181,38 +167,18 @@ export function useSound() {
   const playSound = (type: SoundType) => {
     if (!soundEnabled) return;
     
-    // Make sure audio context is initialized
-    if (!audioContextRef.current) {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        interactionRef.current = true;
-      } catch (error) {
-        console.error('Error initializing audio context:', error);
-      }
-    }
-    
     // If we have a real audio element for this sound, play it
     if (audioElements[type]) {
       try {
         // Stop and reset the audio to allow replaying the sound immediately
         const audio = audioElements[type];
         if (audio) {
-          audio.pause(); // Make sure it's not playing
           audio.currentTime = 0;
-          
-          // Create a new audio element to avoid browser limitations with multiple plays
-          const tempAudio = new Audio(audio.src);
-          tempAudio.volume = audio.volume;
-          
-          const playPromise = tempAudio.play();
-          
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.error('Error playing audio:', err);
-              // Fall back to generated sound on error
-              playGeneratedSound(type);
-            });
-          }
+          audio.play().catch(err => {
+            console.error('Error playing audio:', err);
+            // Fall back to generated sound on error
+            playGeneratedSound(type);
+          });
         }
         return;
       } catch (error) {
@@ -235,68 +201,7 @@ export function useSound() {
     const config = SOUND_CONFIG[type];
     const now = context.currentTime;
     
-    // For the boost sound, we need a special drifting car sound
-    if (type === 'boost') {
-      // Create a noise source for tire screech
-      const bufferSize = 2 * context.sampleRate;
-      const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      
-      // Fill the buffer with noise
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      
-      // Create a noise source from the buffer
-      const noise = context.createBufferSource();
-      noise.buffer = noiseBuffer;
-      
-      // Create a bandpass filter to make it sound like tire screeching
-      const bandpass = context.createBiquadFilter();
-      bandpass.type = 'bandpass';
-      bandpass.frequency.value = 800;
-      bandpass.Q.value = 1.5;
-      
-      // Create a gain node for volume envelope
-      const gainNode = context.createGain();
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1); // Quick ramp up
-      gainNode.gain.setValueAtTime(0.2, now + 0.2);
-      gainNode.gain.linearRampToValueAtTime(0.5, now + 0.4); // Pitch increase as the car speeds up
-      gainNode.gain.linearRampToValueAtTime(0.1, now + 0.9); // Gradual fade out
-      
-      // Connect everything
-      noise.connect(bandpass);
-      bandpass.connect(gainNode);
-      gainNode.connect(context.destination);
-      
-      // Play the noise for the duration of the drift sound
-      noise.start(now);
-      noise.stop(now + 1.0);
-      
-      // Add a low engine sound for the boost
-      const oscillator = context.createOscillator();
-      const engineGain = context.createGain();
-      
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(120, now);
-      oscillator.frequency.linearRampToValueAtTime(220, now + 0.5); // Rev up
-      oscillator.frequency.linearRampToValueAtTime(150, now + 0.9); // Rev down
-      
-      engineGain.gain.setValueAtTime(0.1, now);
-      engineGain.gain.linearRampToValueAtTime(0.3, now + 0.3);
-      engineGain.gain.linearRampToValueAtTime(0.1, now + 0.9);
-      
-      oscillator.connect(engineGain);
-      engineGain.connect(context.destination);
-      
-      oscillator.start(now);
-      oscillator.stop(now + 1.0);
-      
-      return;
-    }
-    
-    // For other sounds, use the regular pattern
+    // Play a sequence of notes for more interesting sounds
     config.notes.forEach((note: number, index: number) => {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
@@ -410,8 +315,7 @@ export function useSound() {
         const drumPattern = getPatternForSection('drums', currentSection);
         
         // Schedule the bass pattern for this section
-        bassPattern.forEach((note, index) => {
-          const frequency = typeof note === 'number' ? note : 0;
+        bassPattern.forEach((frequency, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -435,8 +339,7 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((note, index) => {
-          const frequency = typeof note === 'number' ? note : 0;
+        melodyPattern.forEach((frequency, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
