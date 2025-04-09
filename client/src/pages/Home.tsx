@@ -19,7 +19,7 @@ export default function Home() {
           </div>
           
           {/* Main title and CTA */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-game text-red-600 mb-6 px-4 py-2">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-game text-blue-600 mb-6 px-4 py-2">
             District Driver
           </h1>
           
