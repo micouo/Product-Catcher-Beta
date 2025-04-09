@@ -19,60 +19,62 @@ type SoundConfig = {
   notes: number[];
 };
 
-// Music generation - Extended 8-bit funky-jazz patterns with multiple sections
-// F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
-// Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
-// C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
+// Music generation - Jazzy major key melody with high hats and snares
+// D major scale frequencies: D(293.66), E(329.63), F#(369.99), G(392.00), A(440.00), B(493.88), C#(554.37)
+// G major scale frequencies: G(392.00), A(440.00), B(493.88), C(523.25), D(587.33), E(659.25), F#(739.99)
+// C major 7th jazz chord: C(261.63), E(329.63), G(392.00), B(493.88)
+// D7 jazz chord: D(293.66), F#(369.99), A(440.00), C(523.25)
 
-// Bass patterns (3 different patterns for variety)
-const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
-const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
-const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
+// Walking bass patterns in major key - more jazzy feel
+const BASS_PATTERN_A = [293.66, 0, 369.99, 0, 440.00, 0, 392.00, 0, 293.66, 0, 329.63, 0, 369.99, 0, 392.00, 0];
+const BASS_PATTERN_B = [392.00, 0, 440.00, 0, 493.88, 0, 440.00, 0, 392.00, 0, 329.63, 0, 293.66, 0, 261.63, 0];
+const BASS_PATTERN_C = [293.66, 0, 261.63, 0, 293.66, 329.63, 369.99, 0, 440.00, 392.00, 369.99, 329.63, 293.66, 0, 261.63, 0];
 
-// Melody patterns (4 different patterns for variety)
+// Jazzy melody patterns in major key
 const MELODY_PATTERN_A = [
-  0, 523.25, 587.33, 659.25, 
-  523.25, 0, 0, 0, 
-  466.16, 523.25, 466.16, 0, 
-  440.00, 0, 392.00, 0
+  587.33, 0, 659.25, 739.99, 
+  659.25, 587.33, 0, 659.25, 
+  739.99, 880.00, 739.99, 659.25, 
+  587.33, 0, 493.88, 0
 ];
 const MELODY_PATTERN_B = [
-  659.25, 587.33, 523.25, 0, 
-  587.33, 523.25, 466.16, 0,
-  523.25, 466.16, 440.00, 0,
-  466.16, 440.00, 392.00, 0
+  587.33, 659.25, 587.33, 493.88, 
+  587.33, 659.25, 739.99, 0,
+  659.25, 587.33, 493.88, 440.00,
+  493.88, 587.33, 0, 0
 ];
 const MELODY_PATTERN_C = [
-  523.25, 0, 587.33, 0,
-  523.25, 587.33, 659.25, 0,
-  587.33, 659.25, 783.99, 0,
-  659.25, 0, 587.33, 0
+  493.88, 0, 587.33, 0,
+  493.88, 587.33, 659.25, 739.99,
+  880.00, 739.99, 659.25, 0,
+  587.33, 493.88, 440.00, 493.88
 ];
 const MELODY_PATTERN_D = [
-  0, 0, 392.00, 440.00,
-  466.16, 523.25, 466.16, 440.00,
-  392.00, 349.23, 0, 0,
-  392.00, 440.00, 466.16, 523.25
+  739.99, 0, 659.25, 587.33,
+  739.99, 880.00, 987.77, 880.00,
+  739.99, 659.25, 587.33, 493.88,
+  587.33, 0, 493.88, 440.00
 ];
 
-// Jazz chord fills (played occasionally for harmonic depth)
+// Jazz chord fills with 7th chords for rich harmonic color
 const JAZZ_CHORD_PATTERN_A = [
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  [293.66, 369.99, 440.00, 523.25], 0, 0, 0,  // D7
   0, 0, 0, 0,
-  [415.30, 523.25, 622.25], 0, 0, 0,  // Ab major
+  [392.00, 493.88, 587.33, 659.25], 0, 0, 0,  // G major 7
   0, 0, 0, 0
 ];
 const JAZZ_CHORD_PATTERN_B = [
   0, 0, 0, 0,
-  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  [293.66, 369.99, 440.00], 0, 0, 0,  // D major
   0, 0, 0, 0,
-  [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
+  [261.63, 329.63, 392.00, 493.88], 0, 0, 0,  // C major 7
 ];
 
-// Varied drum patterns
-const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
-const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0];
-const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5];
+// Drum patterns with high hats and snares
+// 1 = kick, 0.5 = hi-hat, 0.7 = snare
+const DRUM_PATTERN_A = [1, 0.5, 0.7, 0.5, 1, 0.5, 0.7, 0.5, 1, 0.5, 0.7, 0.5, 1, 0.5, 0.7, 0.5];
+const DRUM_PATTERN_B = [1, 0.5, 0.5, 0.7, 1, 0.5, 0.5, 0.7, 1, 0.5, 0.5, 0.7, 1, 0.5, 0.7, 0.5];
+const DRUM_PATTERN_C = [1, 0.5, 0.7, 0.5, 1, 0.5, 0.5, 0.7, 1, 0.5, 0.7, 0.5, 1, 0.7, 0.5, 0.5];
 
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
@@ -302,7 +304,7 @@ export function useSound() {
       stopMusic();
       
       // Use Web Audio API for procedural music generation
-      console.log('Starting 8-bit funky background music');
+      console.log('Starting jazzy major key background music with high hats and snares');
       
       // Make sure we have an audio context
       if (!audioContextRef.current) {
@@ -445,6 +447,60 @@ export function useSound() {
             kickOsc.stop(noteTime + 0.1);
           }
           
+          // Create snare drum sound (adding classic jazz rhythm)
+          if (hit === 0.7) {
+            // Snare drum noise component - we'll use a buffer source instead of oscillator for noise
+            const snareNoiseGain = context.createGain();
+            const snareFilter = context.createBiquadFilter();
+            
+            // Create a custom waveform for noise
+            const noiseBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
+            const bufferData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBuffer.length; i++) {
+              bufferData[i] = Math.random() * 2 - 1;
+            }
+            
+            // Create a buffer source node for the noise
+            const snareNoiseSource = context.createBufferSource();
+            snareNoiseSource.buffer = noiseBuffer;
+            
+            snareFilter.type = 'bandpass';
+            snareFilter.frequency.value = 2000;
+            snareFilter.Q.value = 1.5;
+            
+            snareNoiseGain.gain.setValueAtTime(0.35, noteTime);
+            snareNoiseGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.15);
+            
+            // Connect noise component
+            snareNoiseSource.connect(snareFilter);
+            snareFilter.connect(snareNoiseGain);
+            snareNoiseGain.connect(masterGain);
+            
+            // Snare drum tonal component
+            const snareToneOsc = context.createOscillator();
+            const snareToneGain = context.createGain();
+            
+            snareToneOsc.type = 'triangle';
+            snareToneOsc.frequency.setValueAtTime(180, noteTime);
+            snareToneOsc.frequency.exponentialRampToValueAtTime(120, noteTime + 0.05);
+            
+            snareToneGain.gain.setValueAtTime(0.3, noteTime);
+            snareToneGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
+            
+            // Connect tonal component
+            snareToneOsc.connect(snareToneGain);
+            snareToneGain.connect(masterGain);
+            
+            // Start and stop both components
+            snareNoiseSource.start(noteTime);
+            snareNoiseSource.stop(noteTime + 0.15);
+            snareToneOsc.start(noteTime);
+            snareToneOsc.stop(noteTime + 0.1);
+            
+            // Track oscillators for cleanup
+            activeOscillators.current.push(snareToneOsc);
+          }
+          
           // Create hi-hat for smaller hit values (adding more complex rhythm)
           if (hit === 0.5) {
             const hihatOsc = context.createOscillator();
@@ -452,12 +508,12 @@ export function useSound() {
             const hihatFilter = context.createBiquadFilter();
             
             hihatOsc.type = 'square';
-            hihatOsc.frequency.setValueAtTime(800, noteTime);
+            hihatOsc.frequency.setValueAtTime(2200, noteTime);
             
             hihatFilter.type = 'highpass';
             hihatFilter.frequency.value = 7000;
             
-            hihatGain.gain.setValueAtTime(0.2, noteTime);
+            hihatGain.gain.setValueAtTime(0.15, noteTime);
             hihatGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.03);
             
             hihatOsc.connect(hihatFilter);
@@ -491,7 +547,7 @@ export function useSound() {
       setMusicInitialized(true);
       
     } catch (error) {
-      console.error('Error starting 8-bit background music:', error);
+      console.error('Error starting jazzy background music:', error);
     }
   };
 
