@@ -19,16 +19,60 @@ type SoundConfig = {
   notes: number[];
 };
 
-// Music generation - 8-bit funky patterns
+// Music generation - Extended 8-bit funky-jazz patterns with multiple sections
 // F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
-const FUNKY_BASS_PATTERN = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
-const FUNKY_MELODY_PATTERN = [
+// Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
+// C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
+
+// Bass patterns (3 different patterns for variety)
+const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
+const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
+const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
+
+// Melody patterns (4 different patterns for variety)
+const MELODY_PATTERN_A = [
   0, 523.25, 587.33, 659.25, 
   523.25, 0, 0, 0, 
   466.16, 523.25, 466.16, 0, 
   440.00, 0, 392.00, 0
 ];
-const FUNKY_DRUM_PATTERN = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
+const MELODY_PATTERN_B = [
+  659.25, 587.33, 523.25, 0, 
+  587.33, 523.25, 466.16, 0,
+  523.25, 466.16, 440.00, 0,
+  466.16, 440.00, 392.00, 0
+];
+const MELODY_PATTERN_C = [
+  523.25, 0, 587.33, 0,
+  523.25, 587.33, 659.25, 0,
+  587.33, 659.25, 783.99, 0,
+  659.25, 0, 587.33, 0
+];
+const MELODY_PATTERN_D = [
+  0, 0, 392.00, 440.00,
+  466.16, 523.25, 466.16, 440.00,
+  392.00, 349.23, 0, 0,
+  392.00, 440.00, 466.16, 523.25
+];
+
+// Jazz chord fills (played occasionally for harmonic depth)
+const JAZZ_CHORD_PATTERN_A = [
+  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  0, 0, 0, 0,
+  [415.30, 523.25, 622.25], 0, 0, 0,  // Ab major
+  0, 0, 0, 0
+];
+const JAZZ_CHORD_PATTERN_B = [
+  0, 0, 0, 0,
+  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  0, 0, 0, 0,
+  [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
+];
+
+// Varied drum patterns
+const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
+const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0];
+const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5];
 
 const SOUND_CONFIG: Record<string, SoundConfig> = {
   gameOver: {
@@ -181,6 +225,50 @@ export function useSound() {
     });
   };
   
+  // Random integer between min and max (inclusive)
+  const randomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+  
+  // Choose a specific pattern sequence based on current time
+  // This ensures the music has longer, more varied sequences
+  const getPatternForSection = (patternType: string, sectionIndex: number) => {
+    switch (patternType) {
+      case 'bass':
+        // Alternate between different bass patterns in a more complex sequence
+        if (sectionIndex % 4 === 0) return BASS_PATTERN_A; 
+        if (sectionIndex % 4 === 1) return BASS_PATTERN_B;
+        if (sectionIndex % 4 === 2) return BASS_PATTERN_C;
+        return BASS_PATTERN_A;
+      
+      case 'melody':
+        // Create more varied melody sequences
+        if (sectionIndex % 8 === 0) return MELODY_PATTERN_A;
+        if (sectionIndex % 8 === 1) return MELODY_PATTERN_B;
+        if (sectionIndex % 8 === 2) return MELODY_PATTERN_C;
+        if (sectionIndex % 8 === 3) return MELODY_PATTERN_D;
+        if (sectionIndex % 8 === 4) return MELODY_PATTERN_B;
+        if (sectionIndex % 8 === 5) return MELODY_PATTERN_A;
+        if (sectionIndex % 8 === 6) return MELODY_PATTERN_D;
+        return MELODY_PATTERN_C;
+        
+      case 'chord':
+        // Add occasional jazz chords for harmonic interest
+        if (sectionIndex % 4 === 0) return JAZZ_CHORD_PATTERN_A;
+        if (sectionIndex % 4 === 2) return JAZZ_CHORD_PATTERN_B;
+        return []; // No chords in other sections
+      
+      case 'drums':
+        // Alternate drum patterns for rhythmic variety
+        if (sectionIndex % 3 === 0) return DRUM_PATTERN_A;
+        if (sectionIndex % 3 === 1) return DRUM_PATTERN_B;
+        return DRUM_PATTERN_C;
+      
+      default:
+        return [];
+    }
+  };
+  
   // Generate 8-bit music using Web Audio API
   const startBackgroundMusic = () => {
     if (!musicEnabled) return;
@@ -189,7 +277,7 @@ export function useSound() {
       // Clean up any previous music first
       stopMusic();
       
-      // Use Web Audio API instead of an audio file
+      // Use Web Audio API for procedural music generation
       console.log('Starting 8-bit funky background music');
       
       // Make sure we have an audio context
@@ -209,86 +297,166 @@ export function useSound() {
       masterGain.gain.value = 0.2; // Master volume
       masterGain.connect(context.destination);
       
-      // Schedule the bass pattern
-      FUNKY_BASS_PATTERN.forEach((frequency, index) => {
-        if (frequency === 0) return; // Skip rests
-        
-        const noteTime = now + index * noteDuration;
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
-        
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
-        
-        gainNode.gain.setValueAtTime(0.25, noteTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(masterGain);
-        
-        // Track the oscillator for clean shutdown
-        activeOscillators.current.push(oscillator);
-        
-        oscillator.start(noteTime);
-        oscillator.stop(noteTime + noteDuration);
-      });
+      // Generate a random starting section to add variety
+      const startingSection = randomInt(0, 15);
       
-      // Schedule the melody pattern
-      FUNKY_MELODY_PATTERN.forEach((frequency, index) => {
-        if (frequency === 0) return; // Skip rests
-        
-        const noteTime = now + index * noteDuration;
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
-        
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(frequency, noteTime);
-        
-        gainNode.gain.setValueAtTime(0.15, noteTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(masterGain);
-        
-        // Track the oscillator for clean shutdown
-        activeOscillators.current.push(oscillator);
-        
-        oscillator.start(noteTime);
-        oscillator.stop(noteTime + noteDuration);
-      });
+      // Define how many sections to play before looping (creates a longer, more varied piece)
+      const sectionsToPlay = 4; // This creates a 4x longer composition before looping
       
-      // Schedule drum sounds (kick drum)
-      FUNKY_DRUM_PATTERN.forEach((hit, index) => {
-        if (hit === 0) return; // Skip rests
+      // Schedule multiple sections of music to create a longer, more varied composition
+      for (let section = 0; section < sectionsToPlay; section++) {
+        const currentSection = (startingSection + section) % 16; // Cycle through 16 different pattern combinations
+        const sectionTime = now + section * (noteDuration * 16); // Each section is 16 notes long
         
-        const noteTime = now + index * noteDuration;
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
+        // Get appropriate patterns for this section
+        const bassPattern = getPatternForSection('bass', currentSection);
+        const melodyPattern = getPatternForSection('melody', currentSection);
+        const chordPattern = getPatternForSection('chord', currentSection);
+        const drumPattern = getPatternForSection('drums', currentSection);
         
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(120, noteTime);
-        oscillator.frequency.exponentialRampToValueAtTime(40, noteTime + 0.05);
+        // Schedule the bass pattern for this section
+        bassPattern.forEach((frequency, index) => {
+          if (frequency === 0) return; // Skip rests
+          
+          const noteTime = sectionTime + index * noteDuration;
+          const oscillator = context.createOscillator();
+          const gainNode = context.createGain();
+          
+          oscillator.type = 'square';
+          oscillator.frequency.setValueAtTime(frequency / 2, noteTime); // Lower octave for bass
+          
+          gainNode.gain.setValueAtTime(0.25, noteTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.9);
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(masterGain);
+          
+          // Track the oscillator for clean shutdown
+          activeOscillators.current.push(oscillator);
+          
+          oscillator.start(noteTime);
+          oscillator.stop(noteTime + noteDuration);
+        });
         
-        gainNode.gain.setValueAtTime(0.5, noteTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
+        // Schedule the melody pattern for this section
+        melodyPattern.forEach((frequency, index) => {
+          if (frequency === 0) return; // Skip rests
+          
+          const noteTime = sectionTime + index * noteDuration;
+          const oscillator = context.createOscillator();
+          const gainNode = context.createGain();
+          
+          // Use different oscillator types for variety
+          oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
+          oscillator.frequency.setValueAtTime(frequency, noteTime);
+          
+          gainNode.gain.setValueAtTime(0.15, noteTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 0.8);
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(masterGain);
+          
+          // Track the oscillator for clean shutdown
+          activeOscillators.current.push(oscillator);
+          
+          oscillator.start(noteTime);
+          oscillator.stop(noteTime + noteDuration);
+        });
         
-        oscillator.connect(gainNode);
-        gainNode.connect(masterGain);
+        // Schedule the jazz chord patterns for harmonic depth
+        chordPattern.forEach((chord, index) => {
+          if (chord === 0) return; // Skip rests
+          
+          const noteTime = sectionTime + index * noteDuration;
+          
+          // Each chord is an array of frequencies to play simultaneously
+          if (Array.isArray(chord)) {
+            chord.forEach(frequency => {
+              const oscillator = context.createOscillator();
+              const gainNode = context.createGain();
+              
+              oscillator.type = 'sine';
+              oscillator.frequency.setValueAtTime(frequency, noteTime);
+              
+              gainNode.gain.setValueAtTime(0.08, noteTime); // Lower volume for chords
+              gainNode.gain.exponentialRampToValueAtTime(0.01, noteTime + noteDuration * 1.5);
+              
+              oscillator.connect(gainNode);
+              gainNode.connect(masterGain);
+              
+              // Track the oscillator for clean shutdown
+              activeOscillators.current.push(oscillator);
+              
+              oscillator.start(noteTime);
+              oscillator.stop(noteTime + noteDuration * 1.5);
+            });
+          }
+        });
         
-        // Track the oscillator for clean shutdown
-        activeOscillators.current.push(oscillator);
-        
-        oscillator.start(noteTime);
-        oscillator.stop(noteTime + 0.1);
-      });
+        // Schedule drum sounds for this section
+        drumPattern.forEach((hit, index) => {
+          if (hit === 0) return; // Skip rests
+          
+          const noteTime = sectionTime + index * noteDuration;
+          
+          // Create kick drum
+          if (hit === 1) {
+            const kickOsc = context.createOscillator();
+            const kickGain = context.createGain();
+            
+            kickOsc.type = 'sine';
+            kickOsc.frequency.setValueAtTime(120, noteTime);
+            kickOsc.frequency.exponentialRampToValueAtTime(40, noteTime + 0.05);
+            
+            kickGain.gain.setValueAtTime(0.5, noteTime);
+            kickGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.1);
+            
+            kickOsc.connect(kickGain);
+            kickGain.connect(masterGain);
+            
+            // Track the oscillator for clean shutdown
+            activeOscillators.current.push(kickOsc);
+            
+            kickOsc.start(noteTime);
+            kickOsc.stop(noteTime + 0.1);
+          }
+          
+          // Create hi-hat for smaller hit values (adding more complex rhythm)
+          if (hit === 0.5) {
+            const hihatOsc = context.createOscillator();
+            const hihatGain = context.createGain();
+            const hihatFilter = context.createBiquadFilter();
+            
+            hihatOsc.type = 'square';
+            hihatOsc.frequency.setValueAtTime(800, noteTime);
+            
+            hihatFilter.type = 'highpass';
+            hihatFilter.frequency.value = 7000;
+            
+            hihatGain.gain.setValueAtTime(0.2, noteTime);
+            hihatGain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.03);
+            
+            hihatOsc.connect(hihatFilter);
+            hihatFilter.connect(hihatGain);
+            hihatGain.connect(masterGain);
+            
+            // Track the oscillator for clean shutdown
+            activeOscillators.current.push(hihatOsc);
+            
+            hihatOsc.start(noteTime);
+            hihatOsc.stop(noteTime + 0.03);
+          }
+        });
+      }
       
-      // Schedule the next pattern after this one finishes
-      // This creates an infinite loop of music
+      // Schedule the next batch of patterns after all sections finish
+      // This creates an extended musical structure before repeating
+      const totalDuration = sectionsToPlay * 16 * noteDuration;
       const timerId = setTimeout(() => {
         if (musicEnabled) {
           startBackgroundMusic();
         }
-      }, noteDuration * FUNKY_BASS_PATTERN.length * 1000);
+      }, totalDuration * 1000);
       
       // Track the timer ID for clean shutdown
       audioNodesTimers.current.push(timerId);
