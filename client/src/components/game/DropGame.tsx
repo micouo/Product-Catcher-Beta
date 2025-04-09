@@ -15,6 +15,20 @@ import car7Image from "@assets/car 7.png";
 import car8Image from "@assets/car 8.png";
 import car9Image from "@assets/car 9.png";
 
+// Import item assets
+import toothbrushImage from "@assets/toothbrush.png";
+import movieticketImage from "@assets/movieticket.png";
+import wineImage from "@assets/wine.png";
+import bouquetImage from "@assets/bouquet.png";
+import sunImage from "@assets/sun.png";
+import dogboneImage from "@assets/dogbone.png";
+import coffeeImage from "@assets/coffee.png";
+import tacoImage from "@assets/taco.png";
+import eggImage from "@assets/egg.png";
+import pizzaImage from "@assets/pizza.png";
+import icecreamImage from "@assets/icecream.png";
+import phoImage from "@assets/pho.png";
+
 interface GameProps {
   onScoreUpdate?: (score: number) => void;
   onGameOver?: () => void;
@@ -28,7 +42,7 @@ interface GameObject {
   width: number;
   height: number;
   type: "product" | "obstacle";
-  foodType?: string; // for displaying different food emojis
+  itemName?: string; // name of the item to display
   speed: number;
 }
 
@@ -64,8 +78,27 @@ const ANIM_INTERVAL = 150; // milliseconds between animation frames
 const ENGINE_SHAKE_INTERVAL = 50; // milliseconds between engine shake frames
 const ENGINE_SHAKE_AMOUNT = 1.2; // pixels to shake up and down
 
-// Food emojis for products
-const FOOD_EMOJIS = ["🍕", "🍜", "🌮", "🍳", "☕", "🍦"];
+// Create an array of item images
+interface ItemImage {
+  image: HTMLImageElement | null;
+  name: string;
+}
+
+// Initialize an array of item images
+const ITEM_IMAGES: ItemImage[] = [
+  { image: null, name: "toothbrush" },
+  { image: null, name: "movieticket" },
+  { image: null, name: "wine" },
+  { image: null, name: "bouquet" },
+  { image: null, name: "sun" },
+  { image: null, name: "dogbone" },
+  { image: null, name: "coffee" },
+  { image: null, name: "taco" },
+  { image: null, name: "egg" },
+  { image: null, name: "pizza" },
+  { image: null, name: "icecream" },
+  { image: null, name: "pho" }
+];
 
 // Helper function to draw rounded rectangles since roundRect may not be available in all browsers
 function drawRoundedRect(
@@ -256,7 +289,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     boosting: false,
   });
 
-  // Load all car images, pause/play buttons on component mount
+  // Load all car images, item images, and UI button images on component mount
   useEffect(() => {
     // Helper function to load a car image
     const loadCarImage = (carKey: string, imageSrc: string) => {
@@ -279,6 +312,17 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       }
     };
 
+    // Helper function to load an item image
+    const loadItemImage = (index: number, imageSrc: string) => {
+      if (!ITEM_IMAGES[index].image) {
+        const img = new Image();
+        img.src = imageSrc;
+        img.onload = () => {
+          ITEM_IMAGES[index].image = img;
+        };
+      }
+    };
+
     // Load all car images
     loadCarImage("peppy", car1Image); // Car 1
     loadCarImage("rusty", car2Image); // Car 2
@@ -289,6 +333,20 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     loadCarImage("crawler", car7Image); // Car 7
     loadCarImage("bugsy", car8Image); // Car 8
     loadCarImage("phantom", car9Image); // Car 9
+
+    // Load all item images
+    loadItemImage(0, toothbrushImage);
+    loadItemImage(1, movieticketImage);
+    loadItemImage(2, wineImage);
+    loadItemImage(3, bouquetImage);
+    loadItemImage(4, sunImage);
+    loadItemImage(5, dogboneImage);
+    loadItemImage(6, coffeeImage);
+    loadItemImage(7, tacoImage);
+    loadItemImage(8, eggImage);
+    loadItemImage(9, pizzaImage);
+    loadItemImage(10, icecreamImage);
+    loadItemImage(11, phoImage);
 
     // Load pause button
     if (!pauseButtonImage) {
@@ -483,7 +541,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     );
 
     const isProduct = Math.random() < productProbability;
-    const randomFoodIndex = Math.floor(Math.random() * FOOD_EMOJIS.length);
+    const randomItemIndex = Math.floor(Math.random() * ITEM_IMAGES.length);
 
     // Apply speed multiplier to make objects faster over time
     const baseSpeed = BASE_OBJECT_SPEED + Math.random() * 3; // Random base speed
@@ -496,7 +554,7 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
       width: OBJECT_WIDTH,
       height: OBJECT_HEIGHT,
       type: isProduct ? "product" : "obstacle",
-      foodType: isProduct ? FOOD_EMOJIS[randomFoodIndex] : undefined,
+      itemName: isProduct ? ITEM_IMAGES[randomItemIndex].name : undefined,
       speed: scaledSpeed,
     };
   };
@@ -1098,22 +1156,29 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
   // Draw game objects
   const drawObject = (ctx: CanvasRenderingContext2D, obj: GameObject) => {
     if (obj.type === "product") {
-      const centerX = obj.x + obj.width / 2;
-      const centerY = obj.y + obj.height / 2;
-
-      // Draw food emoji
-      ctx.font = `${obj.width * 0.8}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      // Draw the food emoji
-      ctx.fillText(obj.foodType || "🍕", centerX, centerY);
-
-      // Add subtle glow effect for the emoji
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "rgba(255, 255, 255, 0.7)";
-      ctx.fillText(obj.foodType || "🍕", centerX, centerY);
-      ctx.shadowBlur = 0;
+      // Find the item image from the item name
+      const itemImage = ITEM_IMAGES.find(item => item.name === obj.itemName)?.image;
+      
+      if (itemImage) {
+        // Draw the item image
+        ctx.save();
+        
+        // Add subtle glow effect for the item
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(255, 255, 255, 0.7)";
+        
+        // Draw centered image slightly larger for visibility
+        const scale = 1.5;
+        const drawWidth = obj.width * scale;
+        const drawHeight = obj.height * scale;
+        const x = obj.x + (obj.width - drawWidth) / 2;
+        const y = obj.y + (obj.height - drawHeight) / 2;
+        
+        ctx.drawImage(itemImage, x, y, drawWidth, drawHeight);
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
     } else {
       // Draw obstacle as a spiky circle
       ctx.fillStyle = "#EF4444"; // Red color for obstacles
@@ -1320,8 +1385,8 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                     How to Play:
                   </p>
                   <p className="mb-1">
-                    • Drive your car to catch the tasty food items (🍕, 🍜, 🌮, 🍳,
-                    ☕, 🍦)
+                    • Drive your car to catch various items like toothbrushes, movie tickets, 
+                    coffees, tacos, and more
                   </p>
                   <p className="mb-1">• Avoid the red spiky obstacles</p>
                   <p className="mb-1">
