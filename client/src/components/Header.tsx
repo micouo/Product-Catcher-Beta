@@ -31,19 +31,19 @@ export default function Header() {
                   </Link>
                 </li>
                 <li>
-                  <a href="#game" className="text-white hover:text-blue-400 transition">
-                    Play
-                  </a>
+                  <Link href="/game">
+                    <span className="text-white hover:text-blue-400 transition cursor-pointer">Play</span>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#instructions" className="text-white hover:text-blue-400 transition">
-                    How to Play
-                  </a>
+                  <Link href="/game#instructions">
+                    <span className="text-white hover:text-blue-400 transition cursor-pointer">How to Play</span>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#upcoming-features" className="text-white hover:text-blue-400 transition">
-                    Coming Soon
-                  </a>
+                  <Link href="/game#upcoming-features">
+                    <span className="text-white hover:text-blue-400 transition cursor-pointer">Coming Soon</span>
+                  </Link>
                 </li>
               </ul>
             </nav>
