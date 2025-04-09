@@ -19,174 +19,59 @@ type SoundConfig = {
   notes: number[];
 };
 
-// Music generation - Cinematic 8-bit adventure theme (featuring a memorable main melody)
+// Music generation - Extended 8-bit funky-jazz patterns with multiple sections
+// F major scale frequencies: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
+// Eb major scale frequencies: Eb(311.13), F(349.23), G(392.00), Ab(415.30), Bb(466.16), C(523.25), D(587.33)
+// C major scale frequencies: C(261.63), D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), B(493.88)
 
-// Key: D minor (with modal interchange for sections)
-// D minor pentatonic: D(293.66), F(349.23), G(392.00), A(440.00), C(523.25)
-// D minor: D(293.66), E(329.63), F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25)
-// Relative major: F major: F(349.23), G(392.00), A(440.00), Bb(466.16), C(523.25), D(587.33), E(659.25)
+// Bass patterns (3 different patterns for variety)
+const BASS_PATTERN_A = [349.23, 0, 349.23, 0, 392.00, 0, 349.23, 0, 440.00, 349.23, 0, 349.23, 0, 392.00, 349.23, 0];
+const BASS_PATTERN_B = [311.13, 0, 311.13, 0, 349.23, 0, 392.00, 0, 349.23, 311.13, 0, 311.13, 0, 349.23, 392.00, 0];
+const BASS_PATTERN_C = [261.63, 0, 329.63, 0, 261.63, 0, 329.63, 0, 293.66, 0, 349.23, 0, 293.66, 0, 261.63, 0];
 
-// Extended multi-section compositions with a memorable main theme
-// Each section is 16 beats long (4 bars of 4/4)
-
-// MAIN MELODY - the catchy, memorable theme that will appear in variations
-// This melody is designed to be distinctive and recognizable
-const MAIN_MELODY = [
-  // Intro motif - question phrase
-  440.00, 0,      440.00, 523.25, 
-  587.33, 523.25, 440.00, 0,
-  
-  // Answer phrase
-  392.00, 0,      392.00, 440.00,
-  523.25, 466.16, 392.00, 0,
-  
-  // Rising motif - builds tension
-  349.23, 392.00, 440.00, 466.16,
-  523.25, 587.33, 659.25, 698.46,
-  
-  // Resolve with signature ending phrase
-  783.99, 698.46, 659.25, 587.33,
-  523.25, 466.16, 440.00, 392.00
+// Melody patterns (4 different patterns for variety)
+const MELODY_PATTERN_A = [
+  0, 523.25, 587.33, 659.25, 
+  523.25, 0, 0, 0, 
+  466.16, 523.25, 466.16, 0, 
+  440.00, 0, 392.00, 0
 ];
-
-// MELODY VARIATION 1 - higher octave with different ending
-const MELODY_VAR_1 = [
-  // Start with same recognizable motif
-  440.00 * 2, 0,          440.00 * 2, 523.25 * 2, 
-  587.33 * 2, 523.25 * 2, 440.00 * 2, 0,
-  
-  // Different answer
-  392.00 * 2, 440.00 * 2, 523.25 * 2, 587.33 * 2,
-  659.25 * 2, 587.33 * 2, 523.25 * 2, 0,
-  
-  // Descending pattern
-  523.25 * 2, 466.16 * 2, 440.00 * 2, 392.00 * 2,
-  349.23 * 2, 329.63 * 2, 293.66 * 2, 261.63 * 2,
-  
-  // Resolve with a twist
-  293.66 * 2, 349.23 * 2, 392.00 * 2, 440.00 * 2,
-  392.00 * 2, 349.23 * 2, 293.66 * 2, 0
+const MELODY_PATTERN_B = [
+  659.25, 587.33, 523.25, 0, 
+  587.33, 523.25, 466.16, 0,
+  523.25, 466.16, 440.00, 0,
+  466.16, 440.00, 392.00, 0
 ];
-
-// MELODY VARIATION 2 - subdued, mysterious version in lower register
-const MELODY_VAR_2 = [
-  // Main motif elements but altered
-  220.00, 0,      220.00, 261.63, 
-  293.66, 261.63, 220.00, 0,
-  
-  // New direction
-  196.00, 220.00, 246.94, 261.63,
-  293.66, 329.63, 349.23, 392.00,
-  
-  // Call back to main melody but in minor key
-  349.23, 0,      349.23, 392.00,
-  440.00, 466.16, 440.00, 392.00,
-  
-  // Unresolved ending to create tension
-  349.23, 329.63, 311.13, 293.66,
-  277.18, 261.63, 246.94, 0
-];
-
-// BRIDGE SECTION - contrasting material that provides relief from main theme
-const BRIDGE_MELODY = [
-  // Spacious, lyrical phrase
-  349.23, 0,      392.00, 0,
-  440.00, 0,      523.25, 0,
-  
-  // Continue bridge with rising motif
-  587.33, 659.25, 587.33, 523.25,
-  587.33, 659.25, 698.46, 783.99,
-  
-  // Descending pattern
-  698.46, 659.25, 587.33, 523.25,
-  493.88, 440.00, 392.00, 349.23,
-  
-  // Lead back to main theme
-  392.00, 440.00, 392.00, 349.23,
-  392.00, 440.00, 466.16, 0
-];
-
-// FINALE MELODY - triumphant closing section
-const FINALE_MELODY = [
-  // Bold statement of main theme elements
-  440.00, 523.25, 587.33, 659.25,
-  783.99, 880.00, 987.77, 880.00,
-  
-  // Echo phrase
-  783.99, 659.25, 587.33, 523.25,
+const MELODY_PATTERN_C = [
+  523.25, 0, 587.33, 0,
+  523.25, 587.33, 659.25, 0,
   587.33, 659.25, 783.99, 0,
-  
-  // Grand ascending pattern
-  523.25, 587.33, 659.25, 698.46,
-  783.99, 880.00, 987.77, 1046.50,
-  
-  // Final resolution 
-  1046.50, 987.77, 880.00, 783.99,
-  659.25, 587.33, 523.25, 440.00
+  659.25, 0, 587.33, 0
+];
+const MELODY_PATTERN_D = [
+  0, 0, 392.00, 440.00,
+  466.16, 523.25, 466.16, 440.00,
+  392.00, 349.23, 0, 0,
+  392.00, 440.00, 466.16, 523.25
 ];
 
-// BASS LINES - Providing harmonic foundation for each section
-// Main theme bass
-const BASS_MAIN = [
-  293.66/2, 0, 293.66/2, 0, 293.66/2, 0, 293.66/2, 0,
-  196.00/2, 0, 196.00/2, 0, 196.00/2, 0, 196.00/2, 0,
-  174.61/2, 0, 174.61/2, 0, 174.61/2, 0, 174.61/2, 0,
-  196.00/2, 0, 220.00/2, 0, 246.94/2, 0, 261.63/2, 0
+// Jazz chord fills (played occasionally for harmonic depth)
+const JAZZ_CHORD_PATTERN_A = [
+  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  0, 0, 0, 0,
+  [415.30, 523.25, 622.25], 0, 0, 0,  // Ab major
+  0, 0, 0, 0
+];
+const JAZZ_CHORD_PATTERN_B = [
+  0, 0, 0, 0,
+  [349.23, 440.00, 523.25], 0, 0, 0,  // F major
+  0, 0, 0, 0,
+  [329.63, 392.00, 493.88], 0, 0, 0,  // E minor
 ];
 
-// Variation bass with walking pattern
-const BASS_VAR = [
-  293.66/2, 0, 329.63/2, 0, 349.23/2, 0, 329.63/2, 0,
-  293.66/2, 0, 261.63/2, 0, 246.94/2, 0, 220.00/2, 0,
-  196.00/2, 0, 220.00/2, 0, 246.94/2, 0, 261.63/2, 0,
-  293.66/2, 0, 329.63/2, 0, 349.23/2, 0, 392.00/2, 0
-];
-
-// Bridge section bass (more open and sparse)
-const BASS_BRIDGE = [
-  174.61/2, 0, 0, 0, 174.61/2, 0, 0, 0,
-  196.00/2, 0, 0, 0, 196.00/2, 0, 0, 0,
-  220.00/2, 0, 0, 0, 220.00/2, 0, 0, 0,
-  246.94/2, 0, 261.63/2, 0, 293.66/2, 0, 329.63/2, 0
-];
-
-// Finale section bass (strong and driving)
-const BASS_FINALE = [
-  293.66/2, 293.66/2, 293.66/2, 293.66/2, 293.66/2, 293.66/2, 293.66/2, 293.66/2,
-  196.00/2, 196.00/2, 196.00/2, 196.00/2, 196.00/2, 196.00/2, 196.00/2, 196.00/2,
-  220.00/2, 220.00/2, 220.00/2, 220.00/2, 220.00/2, 220.00/2, 220.00/2, 220.00/2,
-  293.66/2, 329.63/2, 349.23/2, 392.00/2, 440.00/2, 392.00/2, 349.23/2, 293.66/2
-];
-
-// HARMONIC PADS - Add richness and atmosphere
-// Main theme harmony
-const HARMONY_MAIN = [
-  [293.66, 349.23, 440.00], 0, 0, 0, 0, 0, 0, 0, // Dm
-  [196.00, 293.66, 392.00], 0, 0, 0, 0, 0, 0, 0, // Gm
-  [174.61, 261.63, 349.23], 0, 0, 0, 0, 0, 0, 0, // F
-  [196.00, 293.66, 392.00], 0, 0, 0, 0, 0, 0, 0  // Gm
-];
-
-// Bridge section harmony (more colorful)
-const HARMONY_BRIDGE = [
-  [349.23, 440.00, 523.25], 0, 0, 0, 0, 0, 0, 0, // F
-  [392.00, 493.88, 587.33], 0, 0, 0, 0, 0, 0, 0, // G
-  [440.00, 523.25, 659.25], 0, 0, 0, 0, 0, 0, 0, // Am
-  [493.88, 587.33, 698.46], 0, 0, 0, 0, 0, 0, 0  // Bb
-];
-
-// DRUM PATTERNS - Various beat patterns for different sections
-// Main theme drums (steady but not intrusive)
-const DRUMS_MAIN = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0.5];
-
-// Variation drums (more complex)
-const DRUMS_VAR = [1, 0.5, 0.5, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0.5]; 
-
-// Bridge section drums (sparse, atmospheric)
-const DRUMS_BRIDGE = [1, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0.5, 0];
-
-// Finale drums (driving, energetic)
-const DRUMS_FINALE = [1, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5];
+// Varied drum patterns
+const DRUM_PATTERN_A = [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0];
+const DRUM_PATTERN_B = [1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0, 0.5, 0, 1, 0.5, 0.5, 0];
 const DRUM_PATTERN_C = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5, 1, 0, 0.5, 0.5];
 
 const SOUND_CONFIG: Record<string, SoundConfig> = {
@@ -369,72 +254,46 @@ export function useSound() {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
   
-  // Choose a specific pattern for each musical section, creating a complex multi-part composition
-  // This ensures the music has an extended form that doesn't feel repetitive
+  // Choose a specific pattern sequence based on current time
+  // This ensures the music has longer, more varied sequences
   const getPatternForSection = (patternType: string, sectionIndex: number) => {
-    // Create a musical structure like this:
-    // Intro → Main Theme → Variation 1 → Bridge → Main Theme → Variation 2 → Finale
-    // This creates a true song structure with a memorable theme that appears multiple times
-
-    // Determine which part of the music we're in based on section progression
-    const musicPart = Math.floor(sectionIndex / 2) % 7; // 7 distinct parts to the music
-    
     switch (patternType) {
-      case 'melody':
-        // Create a coherent musical journey
-        switch(musicPart) {
-          case 0: return MELODY_VAR_2; // Start with mysterious intro
-          case 1: return MAIN_MELODY;  // Introduce main theme
-          case 2: return MELODY_VAR_1; // First variation in higher register
-          case 3: return BRIDGE_MELODY; // Bridge section for contrast
-          case 4: return MAIN_MELODY;  // Return to main theme for familiarity
-          case 5: return MELODY_VAR_2; // Second variation in lower register for tension
-          case 6: return FINALE_MELODY; // End with triumphant finale
-        }
-        return MAIN_MELODY; // Default to main theme
-      
       case 'bass':
-        // Bass patterns match the melodic structure
-        switch(musicPart) {
-          case 0: return BASS_BRIDGE; // Sparse intro bass
-          case 1: return BASS_MAIN;   // Foundational main theme bass
-          case 2: return BASS_VAR;    // Walking bass for variation
-          case 3: return BASS_BRIDGE; // Open bridge bass
-          case 4: return BASS_MAIN;   // Return to main theme bass
-          case 5: return BASS_VAR;    // More movement for second variation
-          case 6: return BASS_FINALE; // Strong finale bass
-        }
-        return BASS_MAIN; // Default to main bass
+        // Alternate between different bass patterns in a more complex sequence
+        if (sectionIndex % 4 === 0) return BASS_PATTERN_A; 
+        if (sectionIndex % 4 === 1) return BASS_PATTERN_B;
+        if (sectionIndex % 4 === 2) return BASS_PATTERN_C;
+        return BASS_PATTERN_A;
       
-      case 'harmony':
-        // Add harmonic richness to certain sections
-        switch(musicPart) {
-          case 1: return HARMONY_MAIN;   // Harmonic support for main theme
-          case 3: return HARMONY_BRIDGE; // Colorful bridge harmonies
-          case 4: return HARMONY_MAIN;   // Return to main harmonies 
-          case 6: return HARMONY_MAIN;   // Strong harmonies for finale
-        }
-        return []; // No harmony in other sections for contrast
+      case 'melody':
+        // Create more varied melody sequences
+        if (sectionIndex % 8 === 0) return MELODY_PATTERN_A;
+        if (sectionIndex % 8 === 1) return MELODY_PATTERN_B;
+        if (sectionIndex % 8 === 2) return MELODY_PATTERN_C;
+        if (sectionIndex % 8 === 3) return MELODY_PATTERN_D;
+        if (sectionIndex % 8 === 4) return MELODY_PATTERN_B;
+        if (sectionIndex % 8 === 5) return MELODY_PATTERN_A;
+        if (sectionIndex % 8 === 6) return MELODY_PATTERN_D;
+        return MELODY_PATTERN_C;
+        
+      case 'chord':
+        // Add occasional jazz chords for harmonic interest
+        if (sectionIndex % 4 === 0) return JAZZ_CHORD_PATTERN_A;
+        if (sectionIndex % 4 === 2) return JAZZ_CHORD_PATTERN_B;
+        return []; // No chords in other sections
       
       case 'drums':
-        // Percussion matches the overall energy of each section
-        switch(musicPart) {
-          case 0: return DRUMS_BRIDGE; // Sparse intro drums
-          case 1: return DRUMS_MAIN;   // Steady main theme drums
-          case 2: return DRUMS_VAR;    // More complex variation drums
-          case 3: return DRUMS_BRIDGE; // Sparse bridge percussion
-          case 4: return DRUMS_MAIN;   // Return to main drums
-          case 5: return DRUMS_VAR;    // Complex second variation
-          case 6: return DRUMS_FINALE; // Energetic finale drums
-        }
-        return DRUMS_MAIN; // Default to main rhythm
+        // Alternate drum patterns for rhythmic variety
+        if (sectionIndex % 3 === 0) return DRUM_PATTERN_A;
+        if (sectionIndex % 3 === 1) return DRUM_PATTERN_B;
+        return DRUM_PATTERN_C;
       
       default:
         return [];
     }
   };
   
-  // Generate cinematic 8-bit music with a memorable melody using Web Audio API
+  // Generate 8-bit music using Web Audio API
   const startBackgroundMusic = () => {
     if (!musicEnabled) return;
     
@@ -443,7 +302,7 @@ export function useSound() {
       stopMusic();
       
       // Use Web Audio API for procedural music generation
-      console.log('Starting memorable adventure theme music');
+      console.log('Starting 8-bit funky background music');
       
       // Make sure we have an audio context
       if (!audioContextRef.current) {
@@ -453,7 +312,7 @@ export function useSound() {
       const context = audioContextRef.current;
       
       // Setup parameters for our 8-bit music
-      const bpm = 110; // Beats per minute (slightly slower for more cinematic feel)
+      const bpm = 120; // Beats per minute
       const noteDuration = 60 / bpm / 2; // Duration of a single 8th note in seconds
       const now = context.currentTime;
       
@@ -462,22 +321,25 @@ export function useSound() {
       masterGain.gain.value = 0.2; // Master volume
       masterGain.connect(context.destination);
       
-      // Define how many sections to play before looping
-      // A larger number creates a truly extended musical composition that won't feel repetitive
-      const sectionsToPlay = 14; // This creates a full musical composition with multiple movements
+      // Generate a random starting section to add variety
+      const startingSection = randomInt(0, 15);
       
-      // Schedule multiple sections of music to create an extended composition
+      // Define how many sections to play before looping (creates a longer, more varied piece)
+      const sectionsToPlay = 4; // This creates a 4x longer composition before looping
+      
+      // Schedule multiple sections of music to create a longer, more varied composition
       for (let section = 0; section < sectionsToPlay; section++) {
-        const sectionTime = now + section * (noteDuration * 32); // Each section is 32 notes long (extended sections)
+        const currentSection = (startingSection + section) % 16; // Cycle through 16 different pattern combinations
+        const sectionTime = now + section * (noteDuration * 16); // Each section is 16 notes long
         
-        // Get appropriate patterns for this section based on our musical form
-        const melodyPattern = getPatternForSection('melody', section);
-        const bassPattern = getPatternForSection('bass', section);
-        const harmonyPattern = getPatternForSection('harmony', section);
-        const drumPattern = getPatternForSection('drums', section);
+        // Get appropriate patterns for this section
+        const bassPattern = getPatternForSection('bass', currentSection);
+        const melodyPattern = getPatternForSection('melody', currentSection);
+        const chordPattern = getPatternForSection('chord', currentSection);
+        const drumPattern = getPatternForSection('drums', currentSection);
         
         // Schedule the bass pattern for this section
-        bassPattern.forEach((frequency: number, index: number) => {
+        bassPattern.forEach((frequency, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -501,7 +363,7 @@ export function useSound() {
         });
         
         // Schedule the melody pattern for this section
-        melodyPattern.forEach((frequency: number, index: number) => {
+        melodyPattern.forEach((frequency, index) => {
           if (frequency === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -509,7 +371,7 @@ export function useSound() {
           const gainNode = context.createGain();
           
           // Use different oscillator types for variety
-          oscillator.type = (section % 2 === 0) ? 'triangle' : 'sine';
+          oscillator.type = (currentSection % 2 === 0) ? 'triangle' : 'sine';
           oscillator.frequency.setValueAtTime(typeof frequency === 'number' ? frequency : 0, noteTime);
           
           gainNode.gain.setValueAtTime(0.15, noteTime);
@@ -525,15 +387,15 @@ export function useSound() {
           oscillator.stop(noteTime + noteDuration);
         });
         
-        // Schedule harmony patterns for richness and atmosphere
-        harmonyPattern.forEach((chord: any, index: number) => {
+        // Schedule the jazz chord patterns for harmonic depth
+        chordPattern.forEach((chord, index) => {
           if (chord === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
           
           // Each chord is an array of frequencies to play simultaneously
           if (Array.isArray(chord)) {
-            chord.forEach((frequency: number) => {
+            chord.forEach(frequency => {
               const oscillator = context.createOscillator();
               const gainNode = context.createGain();
               
@@ -556,7 +418,7 @@ export function useSound() {
         });
         
         // Schedule drum sounds for this section
-        drumPattern.forEach((hit: number, index: number) => {
+        drumPattern.forEach((hit, index) => {
           if (hit === 0) return; // Skip rests
           
           const noteTime = sectionTime + index * noteDuration;
@@ -613,8 +475,7 @@ export function useSound() {
       
       // Schedule the next batch of patterns after all sections finish
       // This creates an extended musical structure before repeating
-      // Use 32 notes per section (longer sections) × sectionsToPlay total sections
-      const totalDuration = sectionsToPlay * 32 * noteDuration;
+      const totalDuration = sectionsToPlay * 16 * noteDuration;
       const timerId = setTimeout(() => {
         if (musicEnabled) {
           startBackgroundMusic();
