@@ -285,18 +285,17 @@ export function useSound() {
       }
       
       // Start background music in response to user interaction
-      if (musicEnabled && !musicInitialized) {
-        console.log('Initializing music on first user interaction');
-        
+      if (musicEnabled && !musicInitialized && backgroundMusicElement) {
         // Try to play the music (must be in response to a user action)
         try {
-          // Use the startMusic function which handles stopping first
-          startMusic();
+          // Use the generateBackgroundMusic method instead of playing the audio file
+          // This won't interrupt already playing sound if it's working
+          startBackgroundMusic();
+          setMusicInitialized(true);
         } catch (err) {
           console.error('Error starting background music:', err);
-          // Try the regular audio element as a fallback if available
-          if (backgroundMusicElement) {
-            backgroundMusicElement.play()
+          // Try the regular audio element as a fallback
+          backgroundMusicElement.play()
             .then(() => {
               console.log('Background music started successfully via HTML Audio element');
               setMusicInitialized(true);
@@ -305,7 +304,6 @@ export function useSound() {
               console.error('Error playing background music via HTML Audio element:', err);
               // Game can continue without music
             });
-          }
         }
       }
     } catch (error) {
@@ -519,17 +517,20 @@ export function useSound() {
   
   // Generate 8-bit music using Web Audio API with our Road Trip Adventure theme
   const startBackgroundMusic = () => {
-    console.log('startBackgroundMusic called');
     if (!musicEnabled) return;
     
     try {
-      // IMPORTANT: Always stop any existing music first to prevent overlapping songs
-      // This is critical to fix the issue of multiple songs playing at once
-      stopMusic();
+      // Check if music is already playing to avoid restarting it
+      if (musicGainRef.current && activeOscillators.current.length > 0) {
+        console.log('Background music already playing, not restarting');
+        return;
+      }
       
       // Clean up any previous music if none is currently playing
-      // Note: We've already called stopMusic() at the start of this function,
-      // but let's make 100% certain we don't have multiple audio streams playing
+      stopMusic();
+      
+      // Use Web Audio API for procedural music generation
+      console.log('Starting 8-bit funky background music');
       
       // Make sure we have an audio context
       if (!audioContextRef.current) {
@@ -779,83 +780,17 @@ export function useSound() {
         });
       }
       
-      // Calculate the total duration of the music sequence
+      // Schedule the next batch of patterns after all sections finish
+      // This creates an extended musical structure before repeating
       const totalDuration = sectionsToPlay * 32 * noteDuration;
-      
-      // Set up a timer just before the expected end of the music
-      const timeUntilCheck = (totalDuration * 1000) - 5000; // Check 5 seconds before expected end
-      
-      // Primary looping mechanism - timer that fires once near the end 
-      const mainLoopTimer = setTimeout(() => {
-        console.log('Music loop timer fired, checking if music needs to restart');
-        
-        // Setup a polling interval that checks more frequently as we approach
-        // the expected end of the song
-        let checkCount = 0;
-        const maxChecks = 10;
-        const endMonitorInterval = setInterval(() => {
-          checkCount++;
-          console.log(`Music loop check #${checkCount} of ${maxChecks}`);
-          
-          // If we've exceeded our check limit, force a restart to prevent endless
-          // polling when something's wrong
-          if (checkCount >= maxChecks) {
-            console.log('Music loop max checks reached, forcing restart');
-            clearInterval(endMonitorInterval);
-            
-            if (musicEnabled) {
-              stopMusic();
-              setTimeout(() => startBackgroundMusic(), 200);
-            }
-            return;
-          }
-          
-          // Check if music has stopped or if we're past the expected end time
-          const currentTime = Date.now();
-          const expectedEndTime = (now + totalDuration) * 1000;
-          const timeRemaining = expectedEndTime - currentTime;
-          
-          console.log(`Music remaining time: ${Math.round(timeRemaining / 1000)}s`);
-          
-          if (musicEnabled && (
-              activeOscillators.current.length === 0 || 
-              currentTime > expectedEndTime
-          )) {
-            console.log('Music loop detected end of song, restarting fresh music sequence');
-            clearInterval(endMonitorInterval);
-            
-            // Stagger the restart to avoid stuttering
-            stopMusic();
-            setTimeout(() => {
-              try {
-                // Only restart if still enabled
-                if (musicEnabled) {
-                  startBackgroundMusic();
-                }
-              } catch (error) {
-                console.error('Error restarting music loop:', error);
-              }
-            }, 200);
-          }
-        }, 1000); // Check every second
-        
-        // Store the interval so we can clear it if needed
-        audioNodesTimers.current.push(endMonitorInterval);
-        
-      }, timeUntilCheck);
-      
-      // Backup timer that will definitely restart at the expected end time plus a buffer
-      const backupTimer = setTimeout(() => {
-        console.log('Music backup loop timer fired, ensuring music continues');
+      const timerId = setTimeout(() => {
         if (musicEnabled) {
-          stopMusic();
-          setTimeout(() => startBackgroundMusic(), 200);
+          startBackgroundMusic();
         }
-      }, totalDuration * 1000 + 2000); // 2 second buffer after expected end
+      }, totalDuration * 1000);
       
-      // Store timers for cleanup
-      audioNodesTimers.current.push(mainLoopTimer);
-      audioNodesTimers.current.push(backupTimer);
+      // Track the timer ID for clean shutdown
+      audioNodesTimers.current.push(timerId);
       
       // Store this for volume control
       musicGainRef.current = masterGain;
@@ -882,9 +817,8 @@ export function useSound() {
       console.log("Music toggled to:", newState);
       
       if (newState) {
-        // Turn music on using our new staggered function
-        // This ensures we stop first and then start with a delay
-        startMusic();
+        // Turn music on
+        startBackgroundMusic();
       } else {
         // Turn music off - use stopMusic to clean up all audio resources
         stopMusic();
@@ -935,9 +869,7 @@ export function useSound() {
       
       // Clear any pending timers
       audioNodesTimers.current.forEach(timer => {
-        // Clear both timeout and interval timers
         clearTimeout(timer);
-        clearInterval(timer);
       });
       
       // Clean up Web Audio API resources
@@ -952,13 +884,10 @@ export function useSound() {
     };
   }, []);
 
-  // Explicitly start the background music with clean stop first
+  // Explicitly start the background music
   const startMusic = () => {
     if (musicEnabled) {
-      // Always stop first to prevent multiple songs playing
-      stopMusic();
-      // Use a slight delay to ensure clean transition
-      setTimeout(() => startBackgroundMusic(), 100);
+      startBackgroundMusic();
     }
   };
   
@@ -985,9 +914,7 @@ export function useSound() {
       
       // Clean up any pending timers
       audioNodesTimers.current.forEach(timer => {
-        // Clear both timeout and interval timers
         clearTimeout(timer);
-        clearInterval(timer);
       });
       
       // Clear timer array

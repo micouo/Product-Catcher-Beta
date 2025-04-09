@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSound } from "../../hooks/use-sound";
+import { useSound } from "../../hooks/use-sound-new";
 import Background from "./Background";
 import car1Image from "@assets/car 1.png";
 import pauseImage from "@assets/pause.png";
