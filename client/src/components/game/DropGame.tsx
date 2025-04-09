@@ -618,11 +618,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
     if (!isPlaying) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default scrolling behavior for arrow keys during gameplay
-      if (isPlaying && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.key)) {
-        e.preventDefault();
-      }
-      
       // Handle each key separately without using else if to allow multiple keys
       switch (e.key) {
         case "Escape":
