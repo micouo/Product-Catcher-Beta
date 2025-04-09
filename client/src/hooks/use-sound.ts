@@ -520,7 +520,13 @@ export function useSound() {
     if (!musicEnabled) return;
     
     try {
-      // Clean up any previous music first
+      // Check if music is already playing to avoid restarting it
+      if (musicGainRef.current && activeOscillators.current.length > 0) {
+        console.log('Background music already playing, not restarting');
+        return;
+      }
+      
+      // Clean up any previous music if none is currently playing
       stopMusic();
       
       // Use Web Audio API for procedural music generation
