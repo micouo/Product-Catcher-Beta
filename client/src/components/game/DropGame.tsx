@@ -1503,6 +1503,11 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   <div className="flex-1">
                     <p className="text-xl text-white mb-1">Your Score:</p>
                     <p className="text-3xl font-bold text-blue-400">{score}</p>
+                    {score >= 200 && (
+                      <p className="text-sm text-yellow-300 font-medium mt-1">
+                        Congratulations! You've earned a 5% discount at participating University District stores! 🏆
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -1522,11 +1527,13 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                     </div>
                     
                     {/* Current score highlighted */}
-                    <div className="bg-blue-900 bg-opacity-50 rounded-md p-1 mb-1 grid grid-cols-12 gap-2 text-white text-sm">
+                    <div className={`${score >= 200 ? 'bg-yellow-900 bg-opacity-50' : 'bg-blue-900 bg-opacity-50'} rounded-md p-1 mb-1 grid grid-cols-12 gap-2 ${score >= 200 ? 'text-yellow-200' : 'text-white'} text-sm`}>
                       <div className="col-span-1 font-bold">★</div>
                       <div className="col-span-4 font-bold truncate">{playerName}</div>
                       <div className="col-span-3 capitalize truncate">{selectedCar}</div>
-                      <div className="col-span-2 font-bold">{score}</div>
+                      <div className="col-span-2 font-bold">
+                        {score}{score >= 200 && ' 🏆'}
+                      </div>
                       <div className="col-span-2">Today</div>
                     </div>
                     
@@ -1535,12 +1542,26 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                       savedScores.map((savedScore, index) => (
                         <div 
                           key={index}
-                          className={`${index % 2 === 0 ? 'bg-gray-700' : 'bg-gray-700 bg-opacity-50'} rounded-md p-1 mb-1 grid grid-cols-12 gap-2 ${index === 0 ? 'text-gray-200' : 'text-gray-300'} text-sm`}
+                          className={`${
+                            savedScore.score >= 200 
+                              ? 'bg-yellow-900 bg-opacity-40' 
+                              : index % 2 === 0 
+                                ? 'bg-gray-700' 
+                                : 'bg-gray-700 bg-opacity-50'
+                          } rounded-md p-1 mb-1 grid grid-cols-12 gap-2 ${
+                            savedScore.score >= 200 
+                              ? 'text-yellow-200' 
+                              : index === 0 
+                                ? 'text-gray-200' 
+                                : 'text-gray-300'
+                          } text-sm`}
                         >
                           <div className="col-span-1">{index + 1}</div>
                           <div className="col-span-4 truncate">{savedScore.name}</div>
                           <div className="col-span-3 capitalize truncate">{savedScore.car}</div>
-                          <div className="col-span-2">{savedScore.score}</div>
+                          <div className="col-span-2 font-medium">
+                            {savedScore.score}{savedScore.score >= 200 && ' 🏆'}
+                          </div>
                           <div className="col-span-2">{savedScore.date}</div>
                         </div>
                       ))
