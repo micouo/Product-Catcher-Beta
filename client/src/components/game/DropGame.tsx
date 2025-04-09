@@ -1503,11 +1503,6 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   <div className="flex-1">
                     <p className="text-xl text-white mb-1">Your Score:</p>
                     <p className="text-3xl font-bold text-blue-400">{score}</p>
-                    {score >= 200 && (
-                      <p className="text-sm text-yellow-300 font-medium mt-1">
-                        Congratulations! You've earned a 5% discount at participating University District stores! 🏆
-                      </p>
-                    )}
                   </div>
                 </div>
                 
