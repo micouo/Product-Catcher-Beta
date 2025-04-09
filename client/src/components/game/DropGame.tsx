@@ -1462,21 +1462,29 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                   )}
                 </div>
 
-                {/* Car selection on the right */}
-                <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+                {/* Car selection on the right - fixed height container */}
+                <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col items-center h-[340px]">
                   <p className="text-xl font-semibold mb-4 text-blue-400">
                     Choose Your Car:
                   </p>
 
-                  {/* Car preview area */}
+                  {/* Car preview area - fixed size container */}
                   <div className="bg-gray-700 rounded-lg w-full h-40 mb-4 flex items-center justify-center relative">
-                    {/* Current selected car display */}
+                    {/* Current selected car display - fixed size container for the image */}
                     <div className="w-40 h-32 relative flex justify-center items-center">
-                      <img
-                        src={carImages[selectedCar]?.src}
-                        alt={selectedCar}
-                        className="w-full h-full object-contain"
-                      />
+                      {/* Fixed size car image display with defined aspect ratio */}
+                      <div className="w-40 h-32 relative flex justify-center items-center overflow-hidden">
+                        <img
+                          src={carImages[selectedCar]?.src}
+                          alt={selectedCar}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                          }}
+                        />
+                      </div>
                     </div>
 
                     {/* Car selection arrows */}
@@ -1512,11 +1520,13 @@ export default function DropGame({ onScoreUpdate, onGameOver, onGameStart }: Gam
                     {selectedCar}
                   </p>
 
-                  {/* Display car description */}
-                  <p className="text-sm text-gray-300 mb-4 text-center px-2">
-                    {carConfigs[selectedCar]?.description ||
-                      "Choose your car wisely"}
-                  </p>
+                  {/* Display car description with fixed height */}
+                  <div className="h-16 flex items-center justify-center">
+                    <p className="text-sm text-gray-300 text-center px-2">
+                      {carConfigs[selectedCar]?.description ||
+                        "Choose your car wisely"}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
